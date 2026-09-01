@@ -134,3 +134,16 @@
 	}
 }
 
+
+
+.control {
+  @apply flex flex-col gap-2;
+}
+
+.control-header {
+  @apply flex items-center justify-between gap-2;
+}
+
+.control-value {
+  @apply text-muted-foreground text-xs;
+}
