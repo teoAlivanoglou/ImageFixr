@@ -3,12 +3,16 @@
 	import { Sun, Moon, Undo2, Redo2 } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
+	import { cn } from '$lib/utils';
 
-	let { onExport }: { onExport: () => void } = $props();
+	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
 </script>
 
 <div
-	class="col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-6"
+	class={cn(
+		"col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-6",
+		className
+	)}
 >
 	<div class="flex shrink items-center gap-3">
 		<div

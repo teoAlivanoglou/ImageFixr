@@ -6,6 +6,16 @@
 	import ForegroundControls from './components/Sidebar/ForegroundControls.svelte';
 	import ImageDropzone from './components/Sidebar/ImageDropzone.svelte';
 	import CanvasControls from './components/Sidebar/CanvasControls.svelte';
+	import { cn } from '$lib/utils';
+	import Button from './components/ui/button/button.svelte';
+	import { Link2, Link2Off } from '@lucide/svelte';
+
+	let { class: className }: { class?: string } = $props();
+
+	let hasForeground = $derived(Boolean(media.current.fgName));
+	let hasBackground = $derived(
+		media.current.link ? Boolean(media.current.fgName) : Boolean(media.current.bgName)
+	);
 
 	$effect(() => {
 		document.documentElement.classList.toggle('dark', theme.current);
@@ -69,12 +79,19 @@
 <svelte:window onkeydown={handleKeydown} onpointerup={commitHistory} />
 
 <aside
-	class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-6 [&_label]:text-sm! [&_label,span]:font-light!"
+	class={cn(
+		'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto border-r border-sidebar-border bg-sidebar p-6 [&_label]:text-sm! [&_label,span]:font-light!',
+		className
+	)}
 >
-	<BackgroundControls />
-	<Separator />
-	<ForegroundControls />
-	<Separator />
+	{#if hasBackground}
+		<BackgroundControls />
+		<Separator />
+	{/if}
+	{#if hasForeground}
+		<ForegroundControls />
+		<Separator />
+	{/if}
 	<CanvasControls />
 	<Separator class="mt-auto" />
 
@@ -88,12 +105,27 @@
 		onRemove={() => removeImage('foreground')}
 	/>
 
+	<Button
+		variant="ghost"
+		size="default"
+		class="-my-3! self-center"
+		onclick={() => (media.current.link = !media.current.link)}
+	>
+		{#if media.current.link}
+			<Link2 class="rotate-90" />
+		{:else}
+			<Link2Off class="rotate-90" />
+		{/if}
+	</Button>
 	<!-- Background Dropzone -->
 	<ImageDropzone
 		label="Background"
-		fileName={media.current.bgName}
-		placeholder={media.current.fgName ? 'Using foreground' : 'Uses foreground if empty'}
-		onSelect={(file) => handleFileSelect(file, 'background')}
+		fileName={media.current.link ? '' : media.current.bgName}
+		placeholder={media.current.link ? 'Using foreground image' : 'Drop or choose an image'}
+		onSelect={(file) => {
+			media.current.link = false;
+			handleFileSelect(file, 'background');
+		}}
 		onRemove={() => removeImage('background')}
 	/>
 	<!-- </div> -->

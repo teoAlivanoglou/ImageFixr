@@ -3,6 +3,7 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { ellipsizeMiddle } from "$lib/state.svelte";
+    import { cn } from "$lib/utils";
 
     let {
         label,
@@ -10,12 +11,14 @@
         placeholder = "Drop or choose an image",
         onSelect,
         onRemove,
+        class: className,
     }: {
         label: string;
         fileName?: string;
         placeholder?: string;
         onSelect: (file: File) => void;
         onRemove: () => void;
+        class?: string;
     } = $props();
 
     let isDragging = $state(false);
@@ -24,7 +27,11 @@
 
 <label
     class:dragging={isDragging}
-    class={`relative flex min-h-18 cursor-pointer flex-col justify-center gap-1 rounded-md border border-dashed border-sidebar-border p-3 transition-colors hover:border-ring hover:bg-muted ${isDragging ? "border-ring bg-muted" : ""}`}
+    class={cn(
+        "relative flex min-h-18 cursor-pointer flex-col justify-center gap-1 rounded-md border border-dashed border-sidebar-border p-3 transition-colors hover:border-ring hover:bg-muted",
+        isDragging && "border-ring bg-muted",
+        className
+    )}
     ondragover={(e) => {
         e.preventDefault();
         isDragging = true;

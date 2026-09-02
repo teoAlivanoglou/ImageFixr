@@ -2,9 +2,12 @@
 	import { theme, history } from '$lib/state.svelte';
 	import { Sun, Moon, Undo, Redo } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
+
+	let { class: className }: { class?: string } = $props();
 </script>
 
-<div class="flex items-center justify-between">
+<div class={cn("flex items-center justify-between", className)}>
 	<h1 class="flex items-center gap-2 text-2xl leading-8 font-medium tracking-tight">
 		ImageFixr
 		<span

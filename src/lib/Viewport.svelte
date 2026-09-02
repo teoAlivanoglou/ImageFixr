@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import {
 		Application,
 		Sprite,
@@ -11,6 +12,9 @@
 	import { useResizeObserver } from 'runed';
 	import { settings, appState, media } from './state.svelte';
 	import { loadImageStorage } from './image-db';
+	import { cn } from './utils';
+
+	let { class: className }: { class?: string } = $props();
 
 	let containerEl = $state<HTMLElement | null>(null);
 
@@ -43,7 +47,15 @@
 				logicalWidth / bgSprite.texture.width,
 				logicalHeight / bgSprite.texture.height
 			);
-			bgSprite.scale.set(coverScale * appState.bgActualScale);
+			const baseWidth = bgSprite.texture.width * coverScale * appState.bgActualScale;
+			const baseHeight = bgSprite.texture.height * coverScale * appState.bgActualScale;
+
+			// Base anti-bleed offset (2px) + dynamic blur edge expansion (bgBlur / 2)
+			const autoBlurOffset = 2 + settings.current.bgBlur / 2;
+			const offsetPixels = autoBlurOffset * 2;
+
+			bgSprite.width = baseWidth + offsetPixels;
+			bgSprite.height = baseHeight + offsetPixels;
 			bgSprite.position.set(logicalWidth / 2, logicalHeight / 2);
 		}
 
@@ -107,6 +119,52 @@
 		}
 	}
 
+	function parseColorString(colorStr: string): { color: string; alpha: number } {
+		if (!colorStr) return { color: '#000000', alpha: 1 };
+		const raw = colorStr.trim();
+
+		let r = 0;
+		let g = 0;
+		let b = 0;
+		let a = 1;
+
+		if (raw.startsWith('#')) {
+			const hex = raw.slice(1);
+			const normalized =
+				hex.length <= 4
+					? hex
+							.split('')
+							.map((char) => `${char}${char}`)
+							.join('')
+					: hex;
+
+			r = parseInt(normalized.slice(0, 2), 16) || 0;
+			g = parseInt(normalized.slice(2, 4), 16) || 0;
+			b = parseInt(normalized.slice(4, 6), 16) || 0;
+			if (normalized.length === 8) {
+				a = parseInt(normalized.slice(6, 8), 16) / 255;
+			}
+		} else {
+			const rgbaMatch = raw.match(
+				/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i
+			);
+			if (rgbaMatch) {
+				r = parseInt(rgbaMatch[1], 10) || 0;
+				g = parseInt(rgbaMatch[2], 10) || 0;
+				b = parseInt(rgbaMatch[3], 10) || 0;
+				a = rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1;
+			}
+		}
+
+		// Premultiply RGB by Alpha so WebGL premultiplied canvas compositing works correctly
+		const pr = Math.round(r * a);
+		const pg = Math.round(g * a);
+		const pb = Math.round(b * a);
+
+		const premultipliedHex = `#${((1 << 24) + (pr << 16) + (pg << 8) + pb).toString(16).slice(1)}`;
+		return { color: premultipliedHex, alpha: a };
+	}
+
 	$effect(() => {
 		if (!containerEl) return;
 		const app = new Application();
@@ -114,9 +172,12 @@
 
 		let destroyed = false;
 		void (async () => {
+			const initialBg = untrack(() => settings.current.bgColor);
+			const parsedBg = parseColorString(initialBg);
 			await app.init({
 				resizeTo: containerEl,
-				backgroundColor: 0x1099bb,
+				backgroundColor: parsedBg.color,
+				backgroundAlpha: parsedBg.alpha,
 				resolution: window.devicePixelRatio || 1,
 				autoDensity: true
 			});
@@ -140,6 +201,15 @@
 		};
 	});
 
+	$effect(() => {
+		const bg = settings.current.bgColor;
+		if (pixiApp?.renderer) {
+			const parsed = parseColorString(bg);
+			pixiApp.renderer.background.color = parsed.color;
+			pixiApp.renderer.background.alpha = parsed.alpha;
+		}
+	});
+
 	useResizeObserver(
 		() => containerEl,
 		(entries) => {
@@ -156,6 +226,7 @@
 		bgBlurFilter.strength = appState.bgActualBlur * stageScale;
 
 		// Track reactive settings properties
+		const _bgBlur = settings.current.bgBlur;
 		const _filtering = settings.current.filtering;
 		const _autoMipmaps = settings.current.autoGenerateMipmaps;
 		const _mipmapFilter = settings.current.mipmapFilter;
@@ -209,10 +280,13 @@
 		});
 	});
 
-	// Sync background texture from IndexedDB when version or filtering/mipmap settings change
+	// Sync background texture from IndexedDB when version, link toggle, or filtering/mipmap settings change
 	$effect(() => {
-		const name = media.current.bgName;
-		const version = media.current.bgVersion;
+		const isLinked = media.current.link;
+		const name = isLinked ? media.current.fgName : media.current.bgName;
+		const version = isLinked ? media.current.fgVersion : media.current.bgVersion;
+		const targetStorage = isLinked ? 'foreground' : 'background';
+
 		const _filtering = settings.current.filtering;
 		const _autoMipmaps = settings.current.autoGenerateMipmaps;
 		const _mipmapFilter = settings.current.mipmapFilter;
@@ -225,7 +299,7 @@
 			return;
 		}
 
-		void loadImageStorage('background').then((data) => {
+		void loadImageStorage(targetStorage).then((data) => {
 			if (!data) {
 				if (bgTexture) {
 					bgTexture.destroy(true);
@@ -267,14 +341,13 @@
 	// Sync background sprite
 	$effect(() => {
 		if (!scene) return;
-		const tex = bgTexture || fgTexture;
 
 		if (bgSprite) {
 			scene.removeChild(bgSprite).destroy();
 			bgSprite = undefined;
 		}
-		if (tex) {
-			bgSprite = new Sprite(tex);
+		if (bgTexture) {
+			bgSprite = new Sprite(bgTexture);
 			bgSprite.anchor.set(0.5);
 			bgSprite.filters = [bgBlurFilter];
 			scene.addChildAt(bgSprite, 0);
@@ -330,17 +403,20 @@
 
 		renderTexture.destroy(true);
 
-		// Fill solid canvas background color (#1099bb) on export canvas
+		// Fill canvas background color on export canvas
 		const exportCanvas = document.createElement('canvas');
 		exportCanvas.width = logicalWidth;
 		exportCanvas.height = logicalHeight;
 		const ctx = exportCanvas.getContext('2d');
 
 		if (ctx) {
+			const parsedBg = parseColorString(settings.current.bgColor);
 			ctx.imageSmoothingEnabled = true;
 			ctx.imageSmoothingQuality = 'high';
-			ctx.fillStyle = '#1099bb';
+			ctx.fillStyle = parsedBg.color;
+			ctx.globalAlpha = parsedBg.alpha;
 			ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+			ctx.globalAlpha = 1.0;
 			ctx.drawImage(extractedCanvas as HTMLCanvasElement, 0, 0);
 		}
 
@@ -398,8 +474,15 @@
 	}
 </script>
 
-<main
-	class="min-h-0 min-w-0 self-center justify-self-center overflow-hidden bg-muted"
-	style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100%, calc(100dvh * var(--aspect-width) / var(--aspect-height))); aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
-	bind:this={containerEl}
-></main>
+<div
+	class={cn(
+		'@container-size relative flex h-full min-h-0 w-full min-w-0 items-center justify-center overflow-hidden bg-background',
+		className
+	)}
+>
+	<main
+		bind:this={containerEl}
+		class="checkerboard-bg shrink-0 overflow-hidden rounded-lg border border-border/50 shadow-md"
+		style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100cqw, calc(100cqh * var(--aspect-width) / var(--aspect-height))); aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
+	></main>
+</div>

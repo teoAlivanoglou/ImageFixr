@@ -147,3 +147,11 @@
 .control-value {
   @apply text-muted-foreground text-xs;
 }
+
+.checkerboard-bg {
+	background: repeating-conic-gradient(var(--background) 0 25%, var(--muted) 0 50%) 50% / 1.5em 1.5em;
+}
+
+.dark .checkerboard-bg {
+	background: repeating-conic-gradient(var(--background) 0 25%, var(--card) 0 50%) 50% / 1.5em 1.5em;
+}
