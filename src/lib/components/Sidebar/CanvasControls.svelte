@@ -17,24 +17,6 @@
 </script>
 
 <div class={cn('flex flex-col gap-4', className)}>
-	<div class="flex flex-col gap-2">
-		<Label for="aspect-ratio">Canvas Aspect Ratio</Label>
-		<Select
-			type="single"
-			bind:value={settings.current.aspectRatio}
-			onValueChange={() => commitHistory()}
-		>
-			<SelectTrigger id="aspect-ratio" class="w-full">
-				{settings.current.aspectRatio}
-			</SelectTrigger>
-			<SelectContent>
-				<SelectItem value="1:1">1:1</SelectItem>
-				<SelectItem value="4:3">4:3</SelectItem>
-				<SelectItem value="16:9">16:9</SelectItem>
-			</SelectContent>
-		</Select>
-	</div>
-
 	<div class="flex items-center justify-between gap-2">
 		<Label for="background-color">Background Color</Label>
 		<Popover.Root>

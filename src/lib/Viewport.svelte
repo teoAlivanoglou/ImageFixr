@@ -82,18 +82,25 @@
 		}
 	}
 
-	function resizeScene(w: number, h: number) {
+	function resizeScene(w?: number, h?: number) {
 		if (!pixiApp || !scene) return;
+
+		const targetW = w ?? containerEl?.clientWidth ?? pixiApp.screen.width;
+		const targetH = h ?? containerEl?.clientHeight ?? pixiApp.screen.height;
+
+		if (targetW <= 0 || targetH <= 0) return;
+
+		pixiApp.renderer.resize(targetW, targetH);
 
 		const logicalHeight = getLogicalHeight();
 		const scale = Math.min(
-			pixiApp.screen.width / logicalWidth,
-			pixiApp.screen.height / logicalHeight
+			targetW / logicalWidth,
+			targetH / logicalHeight
 		);
 
 		scene.scale.set(scale);
-		scene.x = (pixiApp.screen.width - logicalWidth * scale) / 2;
-		scene.y = (pixiApp.screen.height - logicalHeight * scale) / 2;
+		scene.x = (targetW - logicalWidth * scale) / 2;
+		scene.y = (targetH - logicalHeight * scale) / 2;
 
 		stageScale = scale;
 
@@ -101,21 +108,18 @@
 	}
 
 	function applyScaleMode(texture: Texture | undefined) {
-		if (!texture?.source) return;
+		if (!texture || texture.destroyed || !texture.source || texture.source.destroyed) return;
 		const mode = settings.current.filtering === 'linear' ? 'linear' : 'nearest';
 		const autoMipmaps = settings.current.autoGenerateMipmaps;
 		const mipmapMode = settings.current.mipmapFilter;
 
-		texture.source.autoGenerateMipmaps = autoMipmaps;
-		texture.source.magFilter = mode;
-		texture.source.minFilter = mode;
-		texture.source.mipmapFilter = mipmapMode;
-
-		if (texture.source.style) {
-			texture.source.style.magFilter = mode;
-			texture.source.style.minFilter = mode;
-			texture.source.style.mipmapFilter = mipmapMode;
-			texture.source.style.update();
+		try {
+			texture.source.autoGenerateMipmaps = autoMipmaps;
+			texture.source.magFilter = mode;
+			texture.source.minFilter = mode;
+			texture.source.mipmapFilter = mipmapMode;
+		} catch (err) {
+			console.warn('Unable to set texture scale mode:', err);
 		}
 	}
 
@@ -222,14 +226,18 @@
 
 	// Reload and recreate textures from scratch when settings change
 	$effect(() => {
-		fgBlurFilter.strength = appState.fgActualBlur * stageScale;
-		bgBlurFilter.strength = appState.bgActualBlur * stageScale;
-
 		// Track reactive settings properties
+		const _aspectRatio = settings.current.aspectRatio;
+		const _fgScale = settings.current.fgScale;
+		const _bgScale = settings.current.bgScale;
+		const _fgBlur = settings.current.fgBlur;
 		const _bgBlur = settings.current.bgBlur;
 		const _filtering = settings.current.filtering;
 		const _autoMipmaps = settings.current.autoGenerateMipmaps;
 		const _mipmapFilter = settings.current.mipmapFilter;
+
+		fgBlurFilter.strength = appState.fgActualBlur * stageScale;
+		bgBlurFilter.strength = appState.bgActualBlur * stageScale;
 
 		if (fgTexture) {
 			applyScaleMode(fgTexture);
@@ -238,7 +246,11 @@
 			applyScaleMode(bgTexture);
 		}
 
-		updateImageLayout();
+		if (pixiApp && scene) {
+			resizeScene();
+		} else {
+			updateImageLayout();
+		}
 	});
 
 	// Sync foreground texture from IndexedDB when version or filtering/mipmap settings change
@@ -251,8 +263,9 @@
 
 		if (!name) {
 			if (fgTexture) {
-				fgTexture.destroy(true);
+				const old = fgTexture;
 				fgTexture = undefined;
+				old.destroy(true);
 			}
 			return;
 		}
@@ -260,8 +273,9 @@
 		void loadImageStorage('foreground').then((data) => {
 			if (!data) {
 				if (fgTexture) {
-					fgTexture.destroy(true);
+					const old = fgTexture;
 					fgTexture = undefined;
+					old.destroy(true);
 				}
 				return;
 			}
@@ -270,7 +284,9 @@
 			image.src = objectUrl;
 			void image.decode().then(() => {
 				if (fgTexture) {
-					fgTexture.destroy(true);
+					const old = fgTexture;
+					fgTexture = undefined;
+					old.destroy(true);
 				}
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
@@ -293,8 +309,9 @@
 
 		if (!name) {
 			if (bgTexture) {
-				bgTexture.destroy(true);
+				const old = bgTexture;
 				bgTexture = undefined;
+				old.destroy(true);
 			}
 			return;
 		}
@@ -302,8 +319,9 @@
 		void loadImageStorage(targetStorage).then((data) => {
 			if (!data) {
 				if (bgTexture) {
-					bgTexture.destroy(true);
+					const old = bgTexture;
 					bgTexture = undefined;
+					old.destroy(true);
 				}
 				return;
 			}
@@ -312,7 +330,9 @@
 			image.src = objectUrl;
 			void image.decode().then(() => {
 				if (bgTexture) {
-					bgTexture.destroy(true);
+					const old = bgTexture;
+					bgTexture = undefined;
+					old.destroy(true);
 				}
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
@@ -483,6 +503,6 @@
 	<main
 		bind:this={containerEl}
 		class="checkerboard-bg shrink-0 overflow-hidden rounded-xs"
-		style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100cqw, calc(100cqh * var(--aspect-width) / var(--aspect-height))); aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
+		style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100cqw, calc(100cqh * var(--aspect-width) / var(--aspect-height))); max-height: 100cqh; max-width: 100cqw; aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
 	></main>
 </div>

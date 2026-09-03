@@ -1,16 +1,32 @@
 <script lang="ts">
-	import { theme, history } from '$lib/state.svelte';
+	import { theme, history, commitHistory, settings } from '$lib/state.svelte';
 	import { Sun, Moon, Undo2, Redo2 } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
+	import {
+		Select,
+		SelectContent,
+		SelectItem,
+		SelectTrigger
+	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
 
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
+
+	const ASPECT_RATIOS = [
+		{ value: '16:9', label: '16:9 Landscape' },
+		{ value: '4:3', label: '4:3 Standard' },
+		{ value: '1:1', label: '1:1 Square' },
+		{ value: '9:16', label: '9:16 Portrait' },
+		{ value: '4:5', label: '4:5 Social' },
+		{ value: '3:2', label: '3:2 Photo' },
+		{ value: '21:9', label: '21:9 Ultrawide' }
+	];
 </script>
 
 <div
 	class={cn(
-		"col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-6",
+		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-6',
 		className
 	)}
 >
@@ -64,5 +80,23 @@
 		</Button>
 	</ButtonGroup.Root>
 
-	<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
+	<div class="flex items-center gap-3">
+		<Select
+			type="single"
+			bind:value={settings.current.aspectRatio}
+			onValueChange={() => commitHistory()}
+		>
+			<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
+				<span class="text-muted-foreground">Ratio:</span>
+				{settings.current.aspectRatio}
+			</SelectTrigger>
+			<SelectContent>
+				{#each ASPECT_RATIOS as ratio (ratio.value)}
+					<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
+				{/each}
+			</SelectContent>
+		</Select>
+
+		<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
+	</div>
 </div>

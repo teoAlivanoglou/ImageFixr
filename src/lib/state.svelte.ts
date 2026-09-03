@@ -11,7 +11,7 @@ export type Settings = {
 	bgBlur: number;
 	bgScale: number;
 	filtering: 'linear' | 'nearest';
-	aspectRatio: '16:9' | '4:3' | '1:1';
+	aspectRatio: string;
 	autoGenerateMipmaps: boolean;
 	mipmapFilter: 'linear' | 'nearest';
 	swatches: string[];
