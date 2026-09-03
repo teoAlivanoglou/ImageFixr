@@ -9,6 +9,7 @@
 	import { cn } from '$lib/utils';
 	import Button from './components/ui/button/button.svelte';
 	import { Link2, Link2Off } from '@lucide/svelte';
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -93,6 +94,7 @@
 		<Separator />
 	{/if}
 	<CanvasControls />
+
 	<Separator class="mt-auto" />
 
 	<!-- <div class="grid gap-3 px-8 pt-6 pb-4"> -->
