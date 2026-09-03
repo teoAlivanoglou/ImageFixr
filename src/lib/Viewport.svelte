@@ -482,7 +482,7 @@
 >
 	<main
 		bind:this={containerEl}
-		class="checkerboard-bg shrink-0 overflow-hidden rounded-lg border border-border/50 shadow-md"
+		class="checkerboard-bg shrink-0 overflow-hidden rounded-xs"
 		style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100cqw, calc(100cqh * var(--aspect-width) / var(--aspect-height))); aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
 	></main>
 </div>
