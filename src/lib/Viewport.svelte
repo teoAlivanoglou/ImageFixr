@@ -98,10 +98,7 @@
 		}
 
 		const logicalHeight = getLogicalHeight();
-		const scale = Math.min(
-			targetW / logicalWidth,
-			targetH / logicalHeight
-		);
+		const scale = Math.min(targetW / logicalWidth, targetH / logicalHeight);
 
 		scene.scale.set(scale);
 		scene.x = (targetW - logicalWidth * scale) / 2;
