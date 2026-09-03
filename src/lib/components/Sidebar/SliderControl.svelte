@@ -23,9 +23,7 @@
 		formatValue?: (val: number) => string;
 	} = $props();
 
-	const formattedValue = $derived(
-		formatValue ? formatValue(value) : String(value)
-	);
+	const formattedValue = $derived(formatValue ? formatValue(value) : String(value));
 
 	const canReset = $derived(
 		defaultValue !== null && defaultValue !== undefined && value !== defaultValue
@@ -41,10 +39,15 @@
 				onclick={() => {
 					if (defaultValue !== null) value = defaultValue;
 				}}
-				class="group flex cursor-pointer items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+				class="group flex cursor-pointer items-center gap-1.5"
 			>
-				<Undo size={14} />
-				<span class="control-value font-mono transition-colors group-hover:text-foreground!">{formattedValue}</span>
+				<Undo
+					size={14}
+					class="text-muted-foreground transition-colors group-hover:text-foreground"
+				/>
+				<span class="control-value font-mono text-muted-foreground">
+					{formattedValue}
+				</span>
 			</button>
 		{:else}
 			<span class="control-value font-mono text-muted-foreground">{formattedValue}</span>

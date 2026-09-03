@@ -21,7 +21,7 @@
 		<Label for="background-color">Background Color</Label>
 		<Popover.Root>
 			<Popover.Trigger>
-				<Button variant="outline" class="checkerboard-bg relative h-8 w-14 overflow-hidden p-0">
+				<Button variant="outline" class="relative h-8 w-14 overflow-hidden p-0">
 					<span class="absolute inset-0" style={`background-color: ${settings.current.bgColor}`}
 					></span>
 				</Button>
