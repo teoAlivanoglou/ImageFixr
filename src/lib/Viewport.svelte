@@ -90,7 +90,12 @@
 
 		if (targetW <= 0 || targetH <= 0) return;
 
-		pixiApp.renderer.resize(targetW, targetH);
+		if (
+			Math.round(pixiApp.screen.width) !== Math.round(targetW) ||
+			Math.round(pixiApp.screen.height) !== Math.round(targetH)
+		) {
+			pixiApp.renderer.resize(targetW, targetH);
+		}
 
 		const logicalHeight = getLogicalHeight();
 		const scale = Math.min(
@@ -246,8 +251,8 @@
 			applyScaleMode(bgTexture);
 		}
 
-		if (pixiApp && scene) {
-			resizeScene();
+		if (pixiApp && scene && containerEl) {
+			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
 		} else {
 			updateImageLayout();
 		}
