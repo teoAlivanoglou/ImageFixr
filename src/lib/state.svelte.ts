@@ -10,13 +10,60 @@ export type Settings = {
 	fgScale: number;
 	bgBlur: number;
 	bgScale: number;
+	fgBorderEnabled: boolean;
+	fgBorderWidth: number;
+	fgBorderColor: string;
+	fgBorderPosition: 'inner' | 'center' | 'outer';
+	fgDropShadowStrength: number;
+	fgDropShadowAlpha: number;
+	fgDropShadowSpread: number;
+	fgDropShadowOffsetX: number;
+	fgDropShadowOffsetY: number;
+	fgDropShadowQuality: number;
+	fgDropShadowExtra: number;
+	fgDropShadowEnabled: boolean;
+	fgDropShadowMode: 'simple' | 'advanced';
+	fgDropShadowSimpleSize: number;
 	filtering: 'linear' | 'nearest';
 	aspectRatio: string;
 	autoGenerateMipmaps: boolean;
 	mipmapFilter: 'linear' | 'nearest';
 	swatches: string[];
 	bgColor: string;
+	bgEnabled: boolean;
+	bgSource: 'none' | 'link' | 'custom';
+	shadowOnly: boolean;
+	advancedSettingsEnabled: boolean;
 };
+
+export const DEFAULT_SWATCHES = [
+	'#000000',
+	'#ffffff',
+	'#6b7280',
+	'#ef4444',
+	'#f97316',
+	'#eab308',
+	'#22c55e',
+	'#3b82f6',
+	'#8b5cf6',
+	'#ec4899',
+	'#007595'
+];
+
+export function resetSwatches() {
+	settings.current.swatches = [...DEFAULT_SWATCHES];
+	commitHistory();
+	console.log(
+		'%c[ImageFixr] Swatches reset to default:',
+		'color: #007595; font-weight: bold;',
+		settings.current.swatches
+	);
+	return settings.current.swatches;
+}
+
+if (typeof window !== 'undefined') {
+	(window as any).resetSwatches = resetSwatches;
+}
 
 export const settings = new PersistedState<Settings>(
 	'image-fixr-settings',
@@ -25,43 +72,89 @@ export const settings = new PersistedState<Settings>(
 		fgScale: 1,
 		bgBlur: 0,
 		bgScale: 1,
+		bgEnabled: true,
+		bgSource: 'link',
+		fgBorderEnabled: false,
+		fgBorderWidth: 0,
+		fgBorderColor: '#000000',
+		fgBorderPosition: 'outer',
+		fgDropShadowStrength: 16,
+		fgDropShadowAlpha: 100,
+		fgDropShadowSpread: 8,
+		fgDropShadowOffsetX: 0,
+		fgDropShadowOffsetY: 0,
+		fgDropShadowQuality: 5,
+		fgDropShadowExtra: 0,
+		fgDropShadowEnabled: true,
+		fgDropShadowMode: 'simple',
+		fgDropShadowSimpleSize: 16,
 		filtering: 'linear',
 		aspectRatio: '16:9',
 		autoGenerateMipmaps: true,
 		mipmapFilter: 'nearest',
-		swatches: [
-			'#000000',
-			'#ffffff',
-			'#6b7280',
-			'#ef4444',
-			'#f97316',
-			'#eab308',
-			'#22c55e',
-			'#3b82f6',
-			'#8b5cf6',
-			'#ec4899'
-		],
-		bgColor: '#000000'
+		swatches: [...DEFAULT_SWATCHES],
+		bgColor: '#007595',
+		shadowOnly: false,
+		advancedSettingsEnabled: false
 	},
 	{ storage: 'local', syncTabs: true }
 );
 
-if (!settings.current.bgColor) {
-	settings.current.bgColor = '#000000';
+if (settings.current.bgEnabled === undefined) {
+	settings.current.bgEnabled = true;
+}
+if (!settings.current.bgSource) {
+	settings.current.bgSource = 'link';
+}
+if (!settings.current.bgColor || settings.current.bgColor === '#000000') {
+	settings.current.bgColor = '#007595';
+}
+if (settings.current.shadowOnly === undefined) {
+	settings.current.shadowOnly = false;
+}
+if (settings.current.fgBorderEnabled === undefined) {
+	const legacyOutline = (settings.current as Record<string, unknown>).fgOutlineEnabled;
+	const legacyWidth = (settings.current as Record<string, unknown>).fgOutlineWidth;
+	settings.current.fgBorderEnabled =
+		typeof legacyOutline === 'boolean'
+			? legacyOutline
+			: typeof legacyWidth === 'number' && legacyWidth > 0;
+}
+if (settings.current.fgBorderWidth === undefined) {
+	settings.current.fgBorderWidth = (settings.current as any).fgOutlineWidth ?? 0;
+}
+if (!settings.current.fgBorderColor) {
+	settings.current.fgBorderColor = (settings.current as any).fgOutlineColor ?? '#000000';
+}
+if (settings.current.fgBorderPosition === undefined) {
+	settings.current.fgBorderPosition = 'outer';
+}
+if (settings.current.fgDropShadowSpread === undefined) {
+	settings.current.fgDropShadowSpread = 0;
+}
+if (settings.current.fgDropShadowOffsetX === undefined) {
+	settings.current.fgDropShadowOffsetX = 0;
+}
+if (settings.current.fgDropShadowOffsetY === undefined) {
+	settings.current.fgDropShadowOffsetY = 0;
+}
+if (settings.current.fgDropShadowExtra === undefined) {
+	settings.current.fgDropShadowExtra = 0;
+}
+if (settings.current.fgDropShadowEnabled === undefined) {
+	settings.current.fgDropShadowEnabled = true;
+}
+if (settings.current.fgDropShadowMode === undefined) {
+	settings.current.fgDropShadowMode = 'simple';
+}
+if (settings.current.fgDropShadowSimpleSize === undefined) {
+	settings.current.fgDropShadowSimpleSize = 16;
+}
+if (settings.current.advancedSettingsEnabled === undefined) {
+	settings.current.advancedSettingsEnabled = false;
 }
 if (!settings.current.swatches || !Array.isArray(settings.current.swatches)) {
-	settings.current.swatches = [
-		'#000000',
-		'#ffffff',
-		'#6b7280',
-		'#ef4444',
-		'#f97316',
-		'#eab308',
-		'#22c55e',
-		'#3b82f6',
-		'#8b5cf6',
-		'#ec4899'
-	];
+	settings.current.swatches = [...DEFAULT_SWATCHES];
 }
 
 export const historyState = $state<{ value: Settings }>({

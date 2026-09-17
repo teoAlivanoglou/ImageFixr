@@ -10,7 +10,7 @@
 	type Hsv = { h: number; s: number; v: number };
 
 	let {
-		value = $bindable('#7c3aed'),
+		value = $bindable('#007595'),
 		onChange,
 		swatches = $bindable([
 			'#000000',
@@ -22,7 +22,8 @@
 			'#22c55e',
 			'#3b82f6',
 			'#8b5cf6',
-			'#ec4899'
+			'#ec4899',
+			'#007595'
 		]),
 		class: className
 	}: {
@@ -478,7 +479,13 @@
 			variant="outline"
 			size="icon-xs"
 			onclick={addSwatch}
-			title="Save current color to swatches"
+			oncontextmenu={(e) => {
+				e.preventDefault();
+				if (typeof (window as any).resetSwatches === 'function') {
+					(window as any).resetSwatches();
+				}
+			}}
+			title="Save current color (Right-click to reset swatches)"
 			class="h-6 w-6 rounded-md"
 		>
 			<Plus class="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />

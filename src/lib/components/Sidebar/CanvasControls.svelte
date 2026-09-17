@@ -6,41 +6,70 @@
 		SelectItem,
 		SelectTrigger
 	} from '$lib/components/ui/select/index.js';
-	import { ColorPicker } from '$lib/components/ui/color-picker';
 	import { commitHistory, settings } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	import { Switch } from '$lib/components/ui/switch';
 
 	let { class: className }: { class?: string } = $props();
 </script>
 
-<div class={cn('flex flex-col gap-4', className)}>
-	<div class="flex items-center justify-between gap-2">
-		<Label for="background-color">Background Color</Label>
-		<Popover.Root>
-			<Popover.Trigger>
-				<Button variant="outline" class="relative h-8 w-14 overflow-hidden p-0">
-					<span class="absolute inset-0" style={`background-color: ${settings.current.bgColor}`}
-					></span>
-				</Button>
-			</Popover.Trigger>
-			<Popover.Content side="right" align="end" class="border-none bg-transparent p-0 shadow-none">
-				<ColorPicker
-					bind:value={settings.current.bgColor}
-					bind:swatches={settings.current.swatches}
-					onChange={() => commitHistory()}
-				/>
-			</Popover.Content>
-		</Popover.Root>
+<div class={cn('flex flex-col', className)}>
+	<!-- Advanced Section -->
+	<div
+		class="mt-1 flex h-7 items-center gap-2 text-xs transition-colors"
+	>
+		<Switch
+			id="advanced-enable"
+			size="sm"
+			bind:checked={settings.current.advancedSettingsEnabled}
+			onCheckedChange={() => commitHistory()}
+			aria-label="Toggle Advanced Settings"
+		/>
+		<span
+			role="button"
+			tabindex="-1"
+			class={cn(
+				'cursor-pointer select-none text-[11px] font-medium tracking-wider uppercase transition-colors',
+				settings.current.advancedSettingsEnabled
+					? 'text-muted-foreground'
+					: 'text-muted-foreground/45'
+			)}
+			onclick={() => {
+				settings.current.advancedSettingsEnabled = !settings.current.advancedSettingsEnabled;
+				commitHistory();
+			}}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					settings.current.advancedSettingsEnabled = !settings.current.advancedSettingsEnabled;
+					commitHistory();
+				}
+			}}
+		>
+			Advanced
+		</span>
+		<div class="h-px flex-1 bg-border/40"></div>
 	</div>
 
-	<Accordion.Root type="single" class="w-full border-0 bg-transparent! px-0!" value="item-1">
-		<Accordion.Item value="item-1" class="bg-transparent! px-0!">
-			<Accordion.Trigger class="px-0! text-sm! font-light">Advanced</Accordion.Trigger>
-			<!-- <Accordion.Content class="bg-transparent! px-0! py-2"> -->
-			<Accordion.Content class={cn('flex flex-col gap-4 bg-transparent! px-0! py-2', className)}>
+	<div
+		class={cn(
+			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+			settings.current.advancedSettingsEnabled
+				? 'grid-rows-[1fr] opacity-100'
+				: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+		)}
+	>
+		<div class="overflow-hidden">
+			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+				<div class="flex items-center justify-between gap-2 py-1">
+					<Label for="shadow-only">Shadow Only (Debug)</Label>
+					<Switch
+						id="shadow-only"
+						bind:checked={settings.current.shadowOnly}
+						onCheckedChange={() => commitHistory()}
+					/>
+				</div>
+
 				<div class="control flex flex-col gap-2">
 					<Label for="filtering">Texture Filtering</Label>
 					<Select
@@ -78,27 +107,36 @@
 					</Select>
 				</div>
 
-				{#if settings.current.autoGenerateMipmaps}
-					<div class="control flex flex-col gap-2">
-						<Label for="mipmap-filter">Mipmap Filter</Label>
-						<Select
-							type="single"
-							bind:value={settings.current.mipmapFilter}
-							onValueChange={() => commitHistory()}
-						>
-							<SelectTrigger id="mipmap-filter" class="w-full">
-								{settings.current.mipmapFilter === 'linear'
-									? 'Linear (Trilinear)'
-									: 'Nearest (Bilinear)'}
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="linear">Linear (Trilinear)</SelectItem>
-								<SelectItem value="nearest">Nearest (Bilinear)</SelectItem>
-							</SelectContent>
-						</Select>
+				<div
+					class={cn(
+						'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+						settings.current.autoGenerateMipmaps
+							? 'grid-rows-[1fr] opacity-100'
+							: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+					)}
+				>
+					<div class="overflow-hidden">
+						<div class="control flex flex-col gap-2">
+							<Label for="mipmap-filter">Mipmap Filter</Label>
+							<Select
+								type="single"
+								bind:value={settings.current.mipmapFilter}
+								onValueChange={() => commitHistory()}
+							>
+								<SelectTrigger id="mipmap-filter" class="w-full">
+									{settings.current.mipmapFilter === 'linear'
+										? 'Linear (Trilinear)'
+										: 'Nearest (Bilinear)'}
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="linear">Linear (Trilinear)</SelectItem>
+									<SelectItem value="nearest">Nearest (Bilinear)</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
-				{/if}
-			</Accordion.Content>
-		</Accordion.Item>
-	</Accordion.Root>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
