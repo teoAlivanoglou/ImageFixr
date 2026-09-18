@@ -2,6 +2,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Slider } from '$lib/components/ui/slider';
 	import { Undo } from '@lucide/svelte';
+	import { commitHistory } from '$lib/state.svelte';
 
 	let {
 		id,
@@ -37,7 +38,10 @@
 			<button
 				aria-label="Reset value"
 				onclick={() => {
-					if (defaultValue !== null) value = defaultValue;
+					if (defaultValue !== null) {
+						value = defaultValue;
+						commitHistory();
+					}
 				}}
 				class="group flex cursor-pointer items-center gap-1.5"
 			>

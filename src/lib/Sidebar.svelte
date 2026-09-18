@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { theme, history, commitHistory } from '$lib/state.svelte';
 	import ForegroundControls from './components/Sidebar/ForegroundControls.svelte';
+	import MarginControls from './components/Sidebar/MarginControls.svelte';
 	import BorderControls from './components/Sidebar/BorderControls.svelte';
 	import DropShadowControls from './components/Sidebar/DropShadowControls.svelte';
 	import BackgroundControls from './components/Sidebar/BackgroundControls.svelte';
@@ -40,6 +41,7 @@
 >
 	<ForegroundControls />
 	<BackgroundControls />
+	<MarginControls />
 
 	<BorderControls />
 	<DropShadowControls />

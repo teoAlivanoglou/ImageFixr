@@ -13,7 +13,7 @@
 		Graphics
 	} from 'pixi.js';
 	import { useResizeObserver } from 'runed';
-	import { settings, appState, media } from './state.svelte';
+	import { settings, appState, media, SAFE_AREA_PRESETS } from './state.svelte';
 	import { loadImageStorage } from './image-db';
 	import { cn } from './utils';
 	import { ClampedBlurFilter } from './filters/clamped-blur-filter';
@@ -37,13 +37,11 @@
 			shadowUniforms: {
 				uQuadSize: { value: new Float32Array([100, 100]), type: 'vec2<f32>' },
 				uBoxHalfSize: { value: new Float32Array([50, 50]), type: 'vec2<f32>' },
-				uOutline: { value: 0, type: 'f32' },
-				uOutlineColor: { value: new Float32Array([0, 0, 0, 1]), type: 'vec4<f32>' },
 				uBlur: { value: 20, type: 'f32' },
 				uAlpha: { value: 1, type: 'f32' },
 				uSpread: { value: 0, type: 'f32' },
 				uOffset: { value: new Float32Array([0, 0]), type: 'vec2<f32>' },
-				uColor: { value: new Float32Array([0, 0, 0]), type: 'vec3<f32>' }
+				uShadowColor: { value: new Float32Array([0, 0, 0]), type: 'vec3<f32>' }
 			}
 		}
 	});
@@ -66,15 +64,45 @@
 	let bgTexture = $state<Texture | undefined>(undefined);
 
 	let stageScale = $state(1);
-	const logicalWidth = 1920;
 
-	function getLogicalHeight() {
-		return (logicalWidth * appState.aspectHeight) / appState.aspectWidth;
+	function getLogicalDimensions() {
+		const aspectW = appState.aspectWidth;
+		const aspectH = appState.aspectHeight;
+		const targetAspect = aspectW / aspectH;
+
+		const refTexture =
+			fgTexture || (settings.current.bgSource === 'custom' ? bgTexture : undefined);
+
+		if (refTexture && refTexture.width > 0 && refTexture.height > 0) {
+			const imgW = refTexture.width;
+			const imgH = refTexture.height;
+			const imgAspect = imgW / imgH;
+
+			if (targetAspect >= imgAspect) {
+				// Canvas is wider than image: height matches image, width expands to target aspect ratio
+				const height = imgH;
+				const width = Math.round(height * targetAspect);
+				return { width, height };
+			} else {
+				// Canvas is taller than image: width matches image, height expands to target aspect ratio
+				const width = imgW;
+				const height = Math.round(width / targetAspect);
+				return { width, height };
+			}
+		}
+
+		// Fallback when no image is loaded yet: base on 1920
+		const baseSize = 1920;
+		if (targetAspect >= 1) {
+			return { width: baseSize, height: Math.round(baseSize / targetAspect) };
+		} else {
+			return { width: Math.round(baseSize * targetAspect), height: baseSize };
+		}
 	}
 
 	function updateImageLayout() {
 		if (!scene) return;
-		const logicalHeight = getLogicalHeight();
+		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 
 		if (bgColorGraphic) {
 			const bgEnabled = settings.current.bgEnabled;
@@ -82,10 +110,9 @@
 			bgColorGraphic.clear();
 			if (bgEnabled) {
 				const [r, g, b, a] = parseRgbaColor(colorStr);
-				const hexCol = (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255);
-				bgColorGraphic
-					.rect(0, 0, logicalWidth, logicalHeight)
-					.fill({ color: hexCol, alpha: a });
+				const hexCol =
+					(Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255);
+				bgColorGraphic.rect(0, 0, logicalWidth, logicalHeight).fill({ color: hexCol, alpha: a });
 				bgColorGraphic.visible = true;
 			} else {
 				bgColorGraphic.visible = false;
@@ -106,13 +133,65 @@
 		}
 
 		if (fgSprite && fgSprite.texture) {
+			const marginsActive = settings.current.fgMarginEnabled;
+			const standard = marginsActive ? settings.current.fgSafeAreaStandard || 'none' : 'none';
+			const standardPreset = SAFE_AREA_PRESETS[standard] || SAFE_AREA_PRESETS.none;
+			const standardPercent = standardPreset.marginPercent;
+
+			const minDim = Math.min(logicalWidth, logicalHeight);
+			const baseMarginPx = minDim * (standardPercent / 100);
+
+			const valTop =
+				marginsActive && settings.current.fgMarginTopEnabled
+					? Math.max(0, settings.current.fgMarginTop ?? 0)
+					: 0;
+			const valRight =
+				marginsActive && settings.current.fgMarginRightEnabled
+					? Math.max(0, settings.current.fgMarginRight ?? 0)
+					: 0;
+			const valBottom =
+				marginsActive && settings.current.fgMarginBottomEnabled
+					? Math.max(0, settings.current.fgMarginBottom ?? 0)
+					: 0;
+			const valLeft =
+				marginsActive && settings.current.fgMarginLeftEnabled
+					? Math.max(0, settings.current.fgMarginLeft ?? 0)
+					: 0;
+
+			const unitTop = settings.current.fgMarginTopUnit || 'percent';
+			const unitRight = settings.current.fgMarginRightUnit || 'percent';
+			const unitBottom = settings.current.fgMarginBottomUnit || 'percent';
+			const unitLeft = settings.current.fgMarginLeftUnit || 'percent';
+
+			const customMarginTopPx = unitTop === 'percent' ? minDim * (valTop / 100) : valTop;
+			const customMarginRightPx = unitRight === 'percent' ? minDim * (valRight / 100) : valRight;
+			const customMarginBottomPx =
+				unitBottom === 'percent' ? minDim * (valBottom / 100) : valBottom;
+			const customMarginLeftPx = unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft;
+
+			const totalMarginTopPx = Math.min(minDim * 0.48, baseMarginPx + customMarginTopPx);
+			const totalMarginRightPx = Math.min(minDim * 0.48, baseMarginPx + customMarginRightPx);
+			const totalMarginBottomPx = Math.min(minDim * 0.48, baseMarginPx + customMarginBottomPx);
+			const totalMarginLeftPx = Math.min(minDim * 0.48, baseMarginPx + customMarginLeftPx);
+
+			const safeLeft = totalMarginLeftPx;
+			const safeTop = totalMarginTopPx;
+			const safeRight = Math.max(safeLeft, logicalWidth - totalMarginRightPx);
+			const safeBottom = Math.max(safeTop, logicalHeight - totalMarginBottomPx);
+
+			const safeWidth = Math.max(0, safeRight - safeLeft);
+			const safeHeight = Math.max(0, safeBottom - safeTop);
+
+			const safeCenterX = safeLeft + safeWidth / 2;
+			const safeCenterY = safeTop + safeHeight / 2;
+
 			const containScale = Math.min(
-				logicalWidth / fgSprite.texture.width,
-				logicalHeight / fgSprite.texture.height
+				safeWidth / fgSprite.texture.width,
+				safeHeight / fgSprite.texture.height
 			);
 			const fgCoverScale = Math.max(
-				logicalWidth / fgSprite.texture.width,
-				logicalHeight / fgSprite.texture.height
+				safeWidth / fgSprite.texture.width,
+				safeHeight / fgSprite.texture.height
 			);
 
 			const val = Math.min(2.0, Math.max(0.0, appState.fgActualScale));
@@ -130,28 +209,21 @@
 			const borderWidth = borderEnabled ? settings.current.fgBorderWidth : 0;
 			const borderPosition = settings.current.fgBorderPosition || 'outer';
 
-			// Shrink sprite depending on border position so overall footprint stays constant:
-			// 'inner': 0 shrink (border overlays inner edge of full sprite)
-			// 'center': 1x borderWidth shrink (border straddles half-inside, half-outside)
-			// 'outer': 2x borderWidth shrink (border surrounds sprite completely without covering image)
-			const shrinkMultiplier = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 1 : 2;
-			const shrinkPixels = borderWidth * shrinkMultiplier;
-
-			const spriteW = Math.max(0, targetW - shrinkPixels);
-			const spriteH = Math.max(0, targetH - shrinkPixels);
-
-			fgSprite.width = spriteW;
-			fgSprite.height = spriteH;
-			fgSprite.position.set(logicalWidth / 2, logicalHeight / 2);
+			fgSprite.width = targetW;
+			fgSprite.height = targetH;
+			fgSprite.position.set(safeCenterX, safeCenterY);
 
 			if (fgBorder) {
 				fgBorder.clear();
 				if (borderEnabled && borderWidth > 0) {
 					const [br, bg, bb, ba] = parseRgbaColor(settings.current.fgBorderColor);
-					const hexCol = (Math.round(br * 255) << 16) + (Math.round(bg * 255) << 8) + Math.round(bb * 255);
-					fgBorder.rect(-targetW / 2, -targetH / 2, targetW, targetH)
-						.stroke({ width: borderWidth, color: hexCol, alpha: ba, alignment: 1 });
-					fgBorder.position.set(logicalWidth / 2, logicalHeight / 2);
+					const hexCol =
+						(Math.round(br * 255) << 16) + (Math.round(bg * 255) << 8) + Math.round(bb * 255);
+					const alignment = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 0.5 : 1;
+					fgBorder
+						.rect(-targetW / 2, -targetH / 2, targetW, targetH)
+						.stroke({ width: borderWidth, color: hexCol, alpha: ba, alignment });
+					fgBorder.position.set(safeCenterX, safeCenterY);
 					fgBorder.visible = !settings.current.shadowOnly;
 				} else {
 					fgBorder.visible = false;
@@ -184,23 +256,35 @@
 					}
 				}
 
+				// If border is outer or center, the shadow bounds should start from the outer border's edge
+				let shadowBoxW = targetW;
+				let shadowBoxH = targetH;
+				if (borderEnabled && borderWidth > 0) {
+					if (borderPosition === 'outer') {
+						shadowBoxW += borderWidth * 2;
+						shadowBoxH += borderWidth * 2;
+					} else if (borderPosition === 'center') {
+						shadowBoxW += borderWidth;
+						shadowBoxH += borderWidth;
+					}
+				}
+
 				const padding = Math.max(
-					blur * 4 + Math.abs(spread) + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+					blur * 3 + Math.abs(spread) + Math.max(Math.abs(offsetX), Math.abs(offsetY)) + 20,
 					40
 				);
-				const quadW = targetW + padding * 2;
-				const quadH = targetH + padding * 2;
+				const quadW = shadowBoxW + padding * 2;
+				const quadH = shadowBoxH + padding * 2;
 
 				fgShadowMesh.width = quadW;
 				fgShadowMesh.height = quadH;
-				fgShadowMesh.position.set(logicalWidth / 2, logicalHeight / 2);
+				fgShadowMesh.position.set(safeCenterX, safeCenterY);
 
 				const uniforms = sdfShader.resources.shadowUniforms.uniforms;
 				uniforms.uQuadSize[0] = quadW;
 				uniforms.uQuadSize[1] = quadH;
-				uniforms.uBoxHalfSize[0] = targetW / 2;
-				uniforms.uBoxHalfSize[1] = targetH / 2;
-				uniforms.uOutline = 0;
+				uniforms.uBoxHalfSize[0] = shadowBoxW / 2;
+				uniforms.uBoxHalfSize[1] = shadowBoxH / 2;
 				uniforms.uBlur = blur;
 				uniforms.uAlpha = alpha;
 				uniforms.uSpread = spread;
@@ -225,7 +309,7 @@
 			pixiApp.renderer.resize(targetW, targetH);
 		}
 
-		const logicalHeight = getLogicalHeight();
+		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 		const scale = Math.min(targetW / logicalWidth, targetH / logicalHeight);
 
 		scene.scale.set(scale);
@@ -233,6 +317,8 @@
 		scene.y = (targetH - logicalHeight * scale) / 2;
 
 		stageScale = scale;
+		
+		pixiApp.render();
 
 		updateImageLayout();
 	}
@@ -296,9 +382,15 @@
 	function parseColorString(colorStr: string): { color: string; alpha: number } {
 		if (!colorStr) return { color: '#000000', alpha: 1 };
 		const [r, g, b, a] = parseRgbaColor(colorStr);
-		const hexR = Math.round(r * 255).toString(16).padStart(2, '0');
-		const hexG = Math.round(g * 255).toString(16).padStart(2, '0');
-		const hexB = Math.round(b * 255).toString(16).padStart(2, '0');
+		const hexR = Math.round(r * 255)
+			.toString(16)
+			.padStart(2, '0');
+		const hexG = Math.round(g * 255)
+			.toString(16)
+			.padStart(2, '0');
+		const hexB = Math.round(b * 255)
+			.toString(16)
+			.padStart(2, '0');
 		return { color: `#${hexR}${hexG}${hexB}`, alpha: a };
 	}
 
@@ -307,8 +399,8 @@
 			(settings.current.bgSource === 'link'
 				? Boolean(media.current.fgName)
 				: settings.current.bgSource === 'custom'
-				? Boolean(media.current.bgName)
-				: false)
+					? Boolean(media.current.bgName)
+					: false)
 	);
 
 	$effect(() => {
@@ -383,6 +475,20 @@
 		const _bgSource = settings.current.bgSource;
 		const _bgColor = settings.current.bgColor;
 		const _fgScale = settings.current.fgScale;
+		const _safeAreaStandard = settings.current.fgSafeAreaStandard;
+		const _fgMarginTop = settings.current.fgMarginTop;
+		const _fgMarginRight = settings.current.fgMarginRight;
+		const _fgMarginBottom = settings.current.fgMarginBottom;
+		const _fgMarginLeft = settings.current.fgMarginLeft;
+		const _fgMarginTopUnit = settings.current.fgMarginTopUnit;
+		const _fgMarginRightUnit = settings.current.fgMarginRightUnit;
+		const _fgMarginBottomUnit = settings.current.fgMarginBottomUnit;
+		const _fgMarginLeftUnit = settings.current.fgMarginLeftUnit;
+		const _fgMarginTopEnabled = settings.current.fgMarginTopEnabled;
+		const _fgMarginRightEnabled = settings.current.fgMarginRightEnabled;
+		const _fgMarginBottomEnabled = settings.current.fgMarginBottomEnabled;
+		const _fgMarginLeftEnabled = settings.current.fgMarginLeftEnabled;
+		const _fgMarginEnabled = settings.current.fgMarginEnabled;
 		const _bgScale = settings.current.bgScale;
 		const _fgBlur = settings.current.fgBlur;
 		const _bgBlur = settings.current.bgBlur;
@@ -438,13 +544,18 @@
 		}
 	});
 
+	// Narrowed reactive variables to prevent full settings object from triggering recreation
+	const filteringMode = $derived(settings.current.filtering);
+	const mipmapEnabled = $derived(settings.current.autoGenerateMipmaps);
+	const mipmapMode = $derived(settings.current.mipmapFilter);
+
 	// Sync foreground texture from IndexedDB when version or filtering/mipmap settings change
 	$effect(() => {
 		const name = media.current.fgName;
 		const _version = media.current.fgVersion;
-		const _filtering = settings.current.filtering;
-		const _autoMipmaps = settings.current.autoGenerateMipmaps;
-		const _mipmapFilter = settings.current.mipmapFilter;
+		const _f = filteringMode;
+		const _m = mipmapEnabled;
+		const _mf = mipmapMode;
 
 		if (!name) {
 			if (fgTexture) {
@@ -468,11 +579,21 @@
 			const image = new Image();
 			image.src = objectUrl;
 			void image.decode().then(() => {
+				const isRecreate = Boolean(fgTexture);
 				if (fgTexture) {
 					const old = fgTexture;
 					fgTexture = undefined;
 					old.destroy(true);
 				}
+				console.log(
+					isRecreate
+						? '[Texture] Recreating foreground texture'
+						: '[Texture] Creating foreground texture',
+					{
+						width: image.naturalWidth,
+						height: image.naturalHeight
+					}
+				);
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				fgTexture = tex;
@@ -481,19 +602,22 @@
 		});
 	});
 
+	const bgEnabledMode = $derived(settings.current.bgEnabled);
+	const bgSourceMode = $derived(settings.current.bgSource);
+
 	// Sync background texture from IndexedDB when version, bgSource, or filtering/mipmap settings change
 	$effect(() => {
-		const bgEnabled = settings.current.bgEnabled;
-		const bgSource = settings.current.bgSource;
+		const bgEnabled = bgEnabledMode;
+		const bgSource = bgSourceMode;
 		const isLinked = bgSource === 'link';
 		const isCustom = bgSource === 'custom';
 		const name = isLinked ? media.current.fgName : isCustom ? media.current.bgName : '';
 		const _version = isLinked ? media.current.fgVersion : isCustom ? media.current.bgVersion : 0;
 		const targetStorage = isLinked ? 'foreground' : 'background';
 
-		const _filtering = settings.current.filtering;
-		const _autoMipmaps = settings.current.autoGenerateMipmaps;
-		const _mipmapFilter = settings.current.mipmapFilter;
+		const _f = filteringMode;
+		const _m = mipmapEnabled;
+		const _mf = mipmapMode;
 
 		if (!bgEnabled || bgSource === 'none' || !name) {
 			if (bgTexture) {
@@ -517,11 +641,22 @@
 			const image = new Image();
 			image.src = objectUrl;
 			void image.decode().then(() => {
+				const isRecreate = Boolean(bgTexture);
 				if (bgTexture) {
 					const old = bgTexture;
 					bgTexture = undefined;
 					old.destroy(true);
 				}
+				console.log(
+					isRecreate
+						? '[Texture] Recreating background texture'
+						: '[Texture] Creating background texture',
+					{
+						source: bgSource,
+						width: image.naturalWidth,
+						height: image.naturalHeight
+					}
+				);
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				bgTexture = tex;
@@ -590,11 +725,11 @@
 	});
 
 	export async function renderAndSave() {
-		if (!pixiApp?.renderer || !scene || !fgSprite) return;
+		if (!pixiApp?.renderer || !scene) return;
 
-		const logicalHeight = getLogicalHeight();
+		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 
-		// Create a fixed 1920x(logicalHeight) render texture
+		// Create a fixed logicalWidth x logicalHeight render texture
 		const renderTexture = RenderTexture.create({
 			width: logicalWidth,
 			height: logicalHeight
@@ -687,6 +822,13 @@
 		} catch (error) {
 			if (error instanceof DOMException && error.name === 'AbortError') return;
 			console.error('Unable to save rendered image:', error);
+		}
+	}
+
+	export function forceResize() {
+		if (containerEl && pixiApp) {
+			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
+			pixiApp.render();
 		}
 	}
 </script>

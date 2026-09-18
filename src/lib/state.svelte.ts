@@ -5,9 +5,39 @@ export const theme = new PersistedState('image-fixr-theme', false, {
 	syncTabs: true
 });
 
+export type SafeAreaStandard =
+	'none' | 'smpte-title' | 'smpte-action' | 'legacy-action' | 'legacy-title' | 'custom';
+
+export type MarginUnit = 'percent' | 'pixel';
+
+export const SAFE_AREA_PRESETS: Record<SafeAreaStandard, { label: string; marginPercent: number }> =
+	{
+		none: { label: 'None', marginPercent: 0 },
+		'smpte-title': { label: 'Title Safe', marginPercent: 5 },
+		'smpte-action': { label: 'Action Safe', marginPercent: 3.5 },
+		'legacy-action': { label: 'Legacy Action Safe (90%)', marginPercent: 5 },
+		'legacy-title': { label: 'Legacy Title Safe (80%)', marginPercent: 10 },
+		custom: { label: 'Custom', marginPercent: 0 }
+	};
+
 export type Settings = {
 	fgBlur: number;
 	fgScale: number;
+	fgSafeAreaStandard: SafeAreaStandard;
+	fgMarginTop: number;
+	fgMarginRight: number;
+	fgMarginBottom: number;
+	fgMarginLeft: number;
+	fgMarginTopUnit: MarginUnit;
+	fgMarginRightUnit: MarginUnit;
+	fgMarginBottomUnit: MarginUnit;
+	fgMarginLeftUnit: MarginUnit;
+	fgMarginTopEnabled: boolean;
+	fgMarginRightEnabled: boolean;
+	fgMarginBottomEnabled: boolean;
+	fgMarginLeftEnabled: boolean;
+	fgMarginsLinked: boolean;
+	fgMarginEnabled: boolean;
 	bgBlur: number;
 	bgScale: number;
 	fgBorderEnabled: boolean;
@@ -70,6 +100,21 @@ export const settings = new PersistedState<Settings>(
 	{
 		fgBlur: 0,
 		fgScale: 1,
+		fgSafeAreaStandard: 'none',
+		fgMarginTop: 0,
+		fgMarginRight: 0,
+		fgMarginBottom: 0,
+		fgMarginLeft: 0,
+		fgMarginTopUnit: 'percent',
+		fgMarginRightUnit: 'percent',
+		fgMarginBottomUnit: 'percent',
+		fgMarginLeftUnit: 'percent',
+		fgMarginTopEnabled: false,
+		fgMarginRightEnabled: false,
+		fgMarginBottomEnabled: false,
+		fgMarginLeftEnabled: false,
+		fgMarginsLinked: true,
+		fgMarginEnabled: false,
 		bgBlur: 0,
 		bgScale: 1,
 		bgEnabled: true,
@@ -150,6 +195,62 @@ if (settings.current.fgDropShadowMode === undefined) {
 if (settings.current.fgDropShadowSimpleSize === undefined) {
 	settings.current.fgDropShadowSimpleSize = 16;
 }
+if (settings.current.fgSafeAreaStandard === undefined) {
+	settings.current.fgSafeAreaStandard = 'none';
+}
+const legacyMargin = (settings.current as any).fgMargin ?? 0;
+const legacyUnit = (settings.current as any).fgMarginUnit ?? 'percent';
+
+if (settings.current.fgMarginTop === undefined) {
+	settings.current.fgMarginTop = legacyMargin;
+}
+if (settings.current.fgMarginRight === undefined) {
+	settings.current.fgMarginRight = legacyMargin;
+}
+if (settings.current.fgMarginBottom === undefined) {
+	settings.current.fgMarginBottom = legacyMargin;
+}
+if (settings.current.fgMarginLeft === undefined) {
+	settings.current.fgMarginLeft = legacyMargin;
+}
+if (settings.current.fgMarginTopUnit === undefined) {
+	settings.current.fgMarginTopUnit = legacyUnit;
+}
+if (settings.current.fgMarginRightUnit === undefined) {
+	settings.current.fgMarginRightUnit = legacyUnit;
+}
+if (settings.current.fgMarginBottomUnit === undefined) {
+	settings.current.fgMarginBottomUnit = legacyUnit;
+}
+if (settings.current.fgMarginLeftUnit === undefined) {
+	settings.current.fgMarginLeftUnit = legacyUnit;
+}
+if (settings.current.fgMarginsLinked === undefined) {
+	settings.current.fgMarginsLinked = true;
+}
+if (settings.current.fgMarginTopEnabled === undefined) {
+	settings.current.fgMarginTopEnabled = (settings.current.fgMarginTop ?? 0) > 0;
+}
+if (settings.current.fgMarginRightEnabled === undefined) {
+	settings.current.fgMarginRightEnabled = (settings.current.fgMarginRight ?? 0) > 0;
+}
+if (settings.current.fgMarginBottomEnabled === undefined) {
+	settings.current.fgMarginBottomEnabled = (settings.current.fgMarginBottom ?? 0) > 0;
+}
+if (settings.current.fgMarginLeftEnabled === undefined) {
+	settings.current.fgMarginLeftEnabled = (settings.current.fgMarginLeft ?? 0) > 0;
+}
+if (settings.current.fgMarginEnabled === undefined) {
+	settings.current.fgMarginEnabled =
+		(settings.current.fgSafeAreaStandard !== undefined &&
+			settings.current.fgSafeAreaStandard !== 'none') ||
+		Boolean(
+			settings.current.fgMarginTopEnabled ||
+			settings.current.fgMarginRightEnabled ||
+			settings.current.fgMarginBottomEnabled ||
+			settings.current.fgMarginLeftEnabled
+		);
+}
 if (settings.current.advancedSettingsEnabled === undefined) {
 	settings.current.advancedSettingsEnabled = false;
 }
@@ -225,6 +326,36 @@ export class AppState {
 	}
 	get bgActualScale() {
 		return settings.current.bgScale;
+	}
+	get fgSafeAreaStandard() {
+		return settings.current.fgSafeAreaStandard ?? 'none';
+	}
+	get fgMarginTop() {
+		return settings.current.fgMarginTop ?? 0;
+	}
+	get fgMarginRight() {
+		return settings.current.fgMarginRight ?? 0;
+	}
+	get fgMarginBottom() {
+		return settings.current.fgMarginBottom ?? 0;
+	}
+	get fgMarginLeft() {
+		return settings.current.fgMarginLeft ?? 0;
+	}
+	get fgMarginsLinked() {
+		return settings.current.fgMarginsLinked ?? true;
+	}
+	get fgMarginTopEnabled() {
+		return settings.current.fgMarginTopEnabled ?? false;
+	}
+	get fgMarginRightEnabled() {
+		return settings.current.fgMarginRightEnabled ?? false;
+	}
+	get fgMarginBottomEnabled() {
+		return settings.current.fgMarginBottomEnabled ?? false;
+	}
+	get fgMarginLeftEnabled() {
+		return settings.current.fgMarginLeftEnabled ?? false;
 	}
 }
 

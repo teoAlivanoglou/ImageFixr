@@ -1,11 +1,14 @@
 <script lang="ts">
 	import SliderControl from './SliderControl.svelte';
 	import ColorControl from './ColorControl.svelte';
-	import { Switch } from '$lib/components/ui/switch';
+	import SectionHeader from './SectionHeader.svelte';
+	import { ChevronDown } from '@lucide/svelte';
 	import { settings, media, commitHistory } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
+
+	let isCollapsed = $state(false);
 
 	let hasForeground = $derived(Boolean(media.current.fgName));
 </script>
@@ -13,71 +16,24 @@
 <div
 	class={cn(
 		'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-		hasForeground
-			? 'grid-rows-[1fr] opacity-100'
-			: 'grid-rows-[0fr] opacity-0 pointer-events-none',
+		hasForeground ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
 		className
 	)}
 >
 	<div class="overflow-hidden">
 		<div class="flex flex-col">
-			<!-- Header with Enabled/Disabled Switch -->
-			<div
-				class="mt-1 flex h-7 items-center justify-between gap-2 text-xs transition-colors"
+			<SectionHeader
+				title="Border"
+				hasSwitch={true}
+				bind:enabled={settings.current.fgBorderEnabled}
+				bind:isCollapsed
+				onEnableChange={() => {
+					if (settings.current.fgBorderWidth === 0) settings.current.fgBorderWidth = 10;
+					commitHistory();
+				}}
 			>
-				<div class="flex items-center gap-2">
-					<Switch
-						id="fg-border-enable"
-						size="sm"
-						bind:checked={settings.current.fgBorderEnabled}
-						onCheckedChange={(checked) => {
-							if (checked && settings.current.fgBorderWidth === 0) {
-								settings.current.fgBorderWidth = 10;
-							}
-							commitHistory();
-						}}
-						aria-label="Toggle Border"
-					/>
-					<span
-						role="button"
-						tabindex="-1"
-						class={cn(
-							'cursor-pointer select-none text-[11px] font-medium tracking-wider uppercase transition-colors',
-							settings.current.fgBorderEnabled
-								? 'text-muted-foreground'
-								: 'text-muted-foreground/45'
-						)}
-						onclick={() => {
-							settings.current.fgBorderEnabled = !settings.current.fgBorderEnabled;
-							if (settings.current.fgBorderWidth === 0) {
-								settings.current.fgBorderWidth = 10;
-							}
-							commitHistory();
-						}}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								settings.current.fgBorderEnabled = !settings.current.fgBorderEnabled;
-								if (settings.current.fgBorderWidth === 0) {
-									settings.current.fgBorderWidth = 10;
-								}
-								commitHistory();
-							}
-						}}
-					>
-						Border
-					</span>
-				</div>
-
-				<div class="h-px flex-1 bg-border/40"></div>
-
 				<div
-					class={cn(
-						'relative inline-grid grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs transition-opacity duration-150',
-						settings.current.fgBorderEnabled
-							? 'opacity-100'
-							: 'opacity-0 pointer-events-none'
-					)}
+					class="relative inline-grid grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
 				>
 					<div
 						class={cn(
@@ -134,14 +90,14 @@
 						Outer
 					</button>
 				</div>
-			</div>
+			</SectionHeader>
 
 			<div
 				class={cn(
 					'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-					settings.current.fgBorderEnabled
+					settings.current.fgBorderEnabled && !isCollapsed
 						? 'grid-rows-[1fr] opacity-100'
-						: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+						: 'pointer-events-none grid-rows-[0fr] opacity-0'
 				)}
 			>
 				<div class="overflow-hidden">
@@ -157,10 +113,7 @@
 								defaultValue={10}
 							/>
 						</div>
-						<ColorControl
-							bind:value={settings.current.fgBorderColor}
-							ariaLabel="Border Color"
-						/>
+						<ColorControl bind:value={settings.current.fgBorderColor} ariaLabel="Border Color" />
 					</div>
 				</div>
 			</div>

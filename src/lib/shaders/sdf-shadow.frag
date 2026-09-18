@@ -5,13 +5,11 @@ out vec4 finalColor;
 
 uniform vec2 uQuadSize;
 uniform vec2 uBoxHalfSize;
-uniform float uOutline;
-uniform vec4 uOutlineColor;
 uniform float uBlur;
 uniform float uAlpha;
 uniform float uSpread;
 uniform vec2 uOffset;
-uniform vec3 uColor;
+uniform vec3 uShadowColor;
 
 // High-precision Gaussian error function (erf)
 float erf(float x) {
@@ -31,19 +29,11 @@ float gaussianBox1D(float p, float halfSize, float sigma) {
 void main() {
     vec2 p = (vUV - 0.5) * uQuadSize;
 
-    // 1. Outline: simple axis-aligned box check
-    vec2 d = abs(p) - (uBoxHalfSize + uOutline);
-    float isInsideOutline = (uOutline > 0.0 && max(d.x, d.y) <= 0.0) ? 1.0 : 0.0;
-    float outlineAlpha = uOutlineColor.a * isInsideOutline;
-
-    // 2. Drop Shadow: Gaussian box blurred outward from outline + spread
     vec2 shadowPos = p - uOffset;
-    vec2 shadowBox = max(uBoxHalfSize + vec2(uOutline + uSpread), vec2(0.0));
-    float shadowAlpha = gaussianBox1D(shadowPos.x, shadowBox.x, uBlur) * 
-                        gaussianBox1D(shadowPos.y, shadowBox.y, uBlur) * uAlpha;
+    vec2 shadowBox = max(uBoxHalfSize + vec2(uSpread), vec2(0.0));
+    float sigma = max(uBlur * 0.5, 0.001);
+    float shadowAlpha = gaussianBox1D(shadowPos.x, shadowBox.x, sigma) * 
+                        gaussianBox1D(shadowPos.y, shadowBox.y, sigma) * uAlpha;
 
-    // Premultiplied composite: outline on top of shadow
-    vec4 outlineCol = vec4(uOutlineColor.rgb * outlineAlpha, outlineAlpha);
-    vec4 shadowCol = vec4(uColor * shadowAlpha, shadowAlpha);
-    finalColor = outlineCol + shadowCol * (1.0 - outlineAlpha);
+    finalColor = vec4(uShadowColor * shadowAlpha, shadowAlpha);
 }

@@ -2,13 +2,16 @@
 	import SliderControl from './SliderControl.svelte';
 	import ColorControl from './ColorControl.svelte';
 	import ImageDropzone from './ImageDropzone.svelte';
-	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
+	import SectionHeader from './SectionHeader.svelte';
+	import { ChevronDown } from '@lucide/svelte';
 	import { settings, appState, media, commitHistory } from '$lib/state.svelte';
 	import { saveImageStorage, deleteImageStorage } from '$lib/image-db';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
+
+	let isCollapsed = $state(false);
 
 	let slidersHeight = $state<number>(44);
 	let dropzoneHeight = $state<number>(32);
@@ -40,48 +43,23 @@
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<!-- Header with Enabled/Disabled Switch -->
-	<div class="mt-1 flex h-7 items-center gap-2 text-xs transition-colors">
-		<Switch
-			id="bg-enable"
-			size="sm"
-			bind:checked={settings.current.bgEnabled}
-			onCheckedChange={() => commitHistory()}
-			aria-label="Toggle Background"
-		/>
-		<span
-			role="button"
-			tabindex="-1"
-			class={cn(
-				'cursor-pointer select-none text-[11px] font-medium tracking-wider uppercase transition-colors',
-				settings.current.bgEnabled ? 'text-muted-foreground' : 'text-muted-foreground/45'
-			)}
-			onclick={() => {
-				settings.current.bgEnabled = !settings.current.bgEnabled;
-				commitHistory();
-			}}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					settings.current.bgEnabled = !settings.current.bgEnabled;
-					commitHistory();
-				}
-			}}
-		>
-			Background
-		</span>
-		<div class="h-px flex-1 bg-border/40"></div>
-	</div>
+	<SectionHeader
+		title="Background"
+		hasSwitch={true}
+		bind:enabled={settings.current.bgEnabled}
+		bind:isCollapsed
+		onEnableChange={commitHistory}
+	/>
 
 	<div
 		class={cn(
 			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-			settings.current.bgEnabled
+			settings.current.bgEnabled && !isCollapsed
 				? 'grid-rows-[1fr] opacity-100'
-				: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+				: 'pointer-events-none grid-rows-[0fr] opacity-0'
 		)}
 	>
-		<div class="overflow-hidden -mx-2.5 px-2.5">
+		<div class="-mx-2.5 overflow-hidden px-2.5">
 			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
 				<!-- Color Row -->
 				<ColorControl
@@ -95,7 +73,9 @@
 				<!-- Image Source Row: Label on left, compact pill buttons on right -->
 				<div class="flex items-center justify-between gap-2">
 					<Label>Image</Label>
-					<div class="relative inline-grid grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs">
+					<div
+						class="relative inline-grid grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
+					>
 						<div
 							class={cn(
 								'absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/3)] rounded bg-background shadow-xs transition-transform duration-200 ease-out',
@@ -155,8 +135,10 @@
 
 				<!-- Dynamic Image Controls (Scale & Blur and Custom Dropzone) -->
 				<div
-					class="relative overflow-hidden -mx-2.5 px-2.5 transition-[height,opacity] duration-200 ease-out"
-					style="height: {imageControlsHeight}px; opacity: {settings.current.bgSource !== 'none' ? 1 : 0}; pointer-events: {settings.current.bgSource !== 'none' ? 'auto' : 'none'};"
+					class="relative -mx-2.5 overflow-hidden px-2.5 transition-[height,opacity] duration-200 ease-out"
+					style="height: {imageControlsHeight}px; opacity: {settings.current.bgSource !== 'none'
+						? 1
+						: 0}; pointer-events: {settings.current.bgSource !== 'none' ? 'auto' : 'none'};"
 				>
 					<div class="flex flex-col gap-3">
 						<!-- Scale & Blur Sliders -->
@@ -191,10 +173,10 @@
 								'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
 								settings.current.bgSource === 'custom'
 									? 'grid-rows-[1fr] opacity-100'
-									: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+									: 'pointer-events-none grid-rows-[0fr] opacity-0'
 							)}
 						>
-							<div class="overflow-hidden -mx-2.5 px-2.5">
+							<div class="-mx-2.5 overflow-hidden px-2.5">
 								<div bind:clientHeight={dropzoneHeight} class="w-full self-start">
 									<ImageDropzone
 										label="Image"

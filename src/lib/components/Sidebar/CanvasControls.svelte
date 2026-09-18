@@ -9,54 +9,28 @@
 	import { commitHistory, settings } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
 	import { Switch } from '$lib/components/ui/switch';
+	import SectionHeader from './SectionHeader.svelte';
 
 	let { class: className }: { class?: string } = $props();
+
+	let isCollapsed = $state(false);
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<!-- Advanced Section -->
-	<div
-		class="mt-1 flex h-7 items-center gap-2 text-xs transition-colors"
-	>
-		<Switch
-			id="advanced-enable"
-			size="sm"
-			bind:checked={settings.current.advancedSettingsEnabled}
-			onCheckedChange={() => commitHistory()}
-			aria-label="Toggle Advanced Settings"
-		/>
-		<span
-			role="button"
-			tabindex="-1"
-			class={cn(
-				'cursor-pointer select-none text-[11px] font-medium tracking-wider uppercase transition-colors',
-				settings.current.advancedSettingsEnabled
-					? 'text-muted-foreground'
-					: 'text-muted-foreground/45'
-			)}
-			onclick={() => {
-				settings.current.advancedSettingsEnabled = !settings.current.advancedSettingsEnabled;
-				commitHistory();
-			}}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					settings.current.advancedSettingsEnabled = !settings.current.advancedSettingsEnabled;
-					commitHistory();
-				}
-			}}
-		>
-			Advanced
-		</span>
-		<div class="h-px flex-1 bg-border/40"></div>
-	</div>
+	<SectionHeader
+		title="Advanced"
+		hasSwitch={true}
+		bind:enabled={settings.current.advancedSettingsEnabled}
+		bind:isCollapsed
+		onEnableChange={commitHistory}
+	/>
 
 	<div
 		class={cn(
 			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-			settings.current.advancedSettingsEnabled
+			settings.current.advancedSettingsEnabled && !isCollapsed
 				? 'grid-rows-[1fr] opacity-100'
-				: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+				: 'pointer-events-none grid-rows-[0fr] opacity-0'
 		)}
 	>
 		<div class="overflow-hidden">
@@ -112,7 +86,7 @@
 						'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
 						settings.current.autoGenerateMipmaps
 							? 'grid-rows-[1fr] opacity-100'
-							: 'grid-rows-[0fr] opacity-0 pointer-events-none'
+							: 'pointer-events-none grid-rows-[0fr] opacity-0'
 					)}
 				>
 					<div class="overflow-hidden">

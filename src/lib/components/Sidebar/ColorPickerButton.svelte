@@ -35,7 +35,9 @@
 			class={cn('relative h-8 w-12 shrink-0 overflow-hidden p-0', className)}
 			aria-label={ariaLabel}
 		>
-			<span class="absolute inset-0 opacity-20 bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] [background-size:8px_8px]"></span>
+			<span
+				class="absolute inset-0 bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] [background-size:8px_8px] opacity-20"
+			></span>
 			<span class="absolute inset-0" style={`background-color: ${value}`}></span>
 		</Button>
 	</Popover.Trigger>

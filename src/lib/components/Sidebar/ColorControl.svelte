@@ -23,16 +23,8 @@
 {#if label}
 	<div class={cn('flex items-center justify-between gap-2', className)}>
 		<Label for={id}>{label}</Label>
-		<ColorPickerButton
-			bind:value
-			class={buttonClass}
-			ariaLabel={ariaLabel ?? `${label} Color`}
-		/>
+		<ColorPickerButton bind:value class={buttonClass} ariaLabel={ariaLabel ?? `${label} Color`} />
 	</div>
 {:else}
-	<ColorPickerButton
-		bind:value
-		class={cn(buttonClass, className)}
-		ariaLabel={ariaLabel}
-	/>
+	<ColorPickerButton bind:value class={cn(buttonClass, className)} {ariaLabel} />
 {/if}

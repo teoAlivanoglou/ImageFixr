@@ -7,7 +7,7 @@
 	let { class: className }: { class?: string } = $props();
 </script>
 
-<div class={cn("flex items-center justify-between", className)}>
+<div class={cn('flex items-center justify-between', className)}>
 	<h1 class="flex items-center gap-2 text-2xl leading-8 font-medium tracking-tight">
 		ImageFixr
 		<span

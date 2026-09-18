@@ -1,10 +1,12 @@
 <script lang="ts">
 	import SliderControl from './SliderControl.svelte';
-	import { Switch } from '$lib/components/ui/switch';
+	import SectionHeader from './SectionHeader.svelte';
 	import { settings, media, commitHistory } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
+
+	let isCollapsed = $state(false);
 
 	let hasForeground = $derived(Boolean(media.current.fgName));
 
@@ -25,48 +27,15 @@
 >
 	<div class="overflow-hidden">
 		<div class="flex flex-col">
-			<!-- Header with Enabled/Disabled Switch -->
-			<div class="mt-1 flex h-7 items-center justify-between gap-2 text-xs transition-colors">
-				<div class="flex items-center gap-2">
-					<Switch
-						id="fg-shadow-enable"
-						size="sm"
-						bind:checked={settings.current.fgDropShadowEnabled}
-						onCheckedChange={() => commitHistory()}
-						aria-label="Toggle Drop Shadow"
-					/>
-					<span
-						role="button"
-						tabindex="-1"
-						class={cn(
-							'cursor-pointer text-[11px] font-medium tracking-wider uppercase transition-colors select-none',
-							settings.current.fgDropShadowEnabled
-								? 'text-muted-foreground'
-								: 'text-muted-foreground/45'
-						)}
-						onclick={() => {
-							settings.current.fgDropShadowEnabled = !settings.current.fgDropShadowEnabled;
-							commitHistory();
-						}}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								settings.current.fgDropShadowEnabled = !settings.current.fgDropShadowEnabled;
-								commitHistory();
-							}
-						}}
-					>
-						Shadow
-					</span>
-				</div>
-
-				<div class="h-px flex-1 bg-border/40"></div>
-
+			<SectionHeader
+				title="Shadow"
+				hasSwitch={true}
+				bind:enabled={settings.current.fgDropShadowEnabled}
+				bind:isCollapsed
+				onEnableChange={commitHistory}
+			>
 				<div
-					class={cn(
-						'relative inline-grid grid-cols-2 rounded-md border border-input bg-muted/40 p-0.5 text-xs transition-opacity duration-150',
-						settings.current.fgDropShadowEnabled ? 'opacity-100' : 'pointer-events-none opacity-0'
-					)}
+					class="relative inline-grid grid-cols-2 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
 				>
 					<div
 						class={cn(
@@ -107,12 +76,12 @@
 						Advanced
 					</button>
 				</div>
-			</div>
+			</SectionHeader>
 
 			<div
 				class={cn(
 					'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-					settings.current.fgDropShadowEnabled
+					settings.current.fgDropShadowEnabled && !isCollapsed
 						? 'grid-rows-[1fr] opacity-100'
 						: 'pointer-events-none grid-rows-[0fr] opacity-0'
 				)}
