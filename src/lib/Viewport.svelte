@@ -103,6 +103,8 @@
 	function updateImageLayout() {
 		if (!scene) return;
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+		const minDim = Math.min(logicalWidth, logicalHeight);
+		const pixelScale = minDim / 1080;
 
 		if (bgColorGraphic) {
 			const bgEnabled = settings.current.bgEnabled;
@@ -163,11 +165,11 @@
 			const unitBottom = settings.current.fgMarginBottomUnit || 'percent';
 			const unitLeft = settings.current.fgMarginLeftUnit || 'percent';
 
-			const customMarginTopPx = unitTop === 'percent' ? minDim * (valTop / 100) : valTop;
-			const customMarginRightPx = unitRight === 'percent' ? minDim * (valRight / 100) : valRight;
+			const customMarginTopPx = unitTop === 'percent' ? minDim * (valTop / 100) : valTop * pixelScale;
+			const customMarginRightPx = unitRight === 'percent' ? minDim * (valRight / 100) : valRight * pixelScale;
 			const customMarginBottomPx =
-				unitBottom === 'percent' ? minDim * (valBottom / 100) : valBottom;
-			const customMarginLeftPx = unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft;
+				unitBottom === 'percent' ? minDim * (valBottom / 100) : valBottom * pixelScale;
+			const customMarginLeftPx = unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft * pixelScale;
 
 			const totalMarginTopPx = Math.min(minDim * 0.48, baseMarginPx + customMarginTopPx);
 			const totalMarginRightPx = Math.min(minDim * 0.48, baseMarginPx + customMarginRightPx);
@@ -206,7 +208,7 @@
 			const targetH = fgSprite.texture.height * fgBaseScale;
 
 			const borderEnabled = settings.current.fgBorderEnabled;
-			const borderWidth = borderEnabled ? settings.current.fgBorderWidth : 0;
+			const borderWidth = borderEnabled ? settings.current.fgBorderWidth * pixelScale : 0;
 			const borderPosition = settings.current.fgBorderPosition || 'outer';
 
 			const shrinkMultiplier = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 1 : 2;
@@ -249,16 +251,16 @@
 				if (shadowEnabled) {
 					alpha = settings.current.fgDropShadowAlpha / 100;
 					if (shadowMode === 'simple') {
-						const simpleSize = settings.current.fgDropShadowSimpleSize;
+						const simpleSize = settings.current.fgDropShadowSimpleSize * pixelScale;
 						blur = simpleSize;
 						spread = Math.round(simpleSize * 0.5);
 						offsetX = 0;
 						offsetY = 0;
 					} else {
-						blur = settings.current.fgDropShadowStrength;
-						spread = settings.current.fgDropShadowSpread;
-						offsetX = settings.current.fgDropShadowOffsetX;
-						offsetY = settings.current.fgDropShadowOffsetY;
+						blur = settings.current.fgDropShadowStrength * pixelScale;
+						spread = settings.current.fgDropShadowSpread * pixelScale;
+						offsetX = settings.current.fgDropShadowOffsetX * pixelScale;
+						offsetY = settings.current.fgDropShadowOffsetY * pixelScale;
 					}
 				}
 
@@ -506,8 +508,11 @@
 		const _shadowOffsetY = settings.current.fgDropShadowOffsetY;
 		const _shadowOnly = settings.current.shadowOnly;
 
-		fgBlurFilter.strength = appState.fgActualBlur * stageScale;
-		bgBlurFilter.strength = appState.bgActualBlur * stageScale;
+		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+		const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
+
+		fgBlurFilter.strength = appState.fgActualBlur * pixelScale * stageScale;
+		bgBlurFilter.strength = appState.bgActualBlur * pixelScale * stageScale;
 
 		if (fgSprite) {
 			fgSprite.visible = !settings.current.shadowOnly;
@@ -742,8 +747,9 @@
 		scene.scale.set(1);
 		scene.x = 0;
 		scene.y = 0;
-		fgBlurFilter.strength = appState.fgActualBlur;
-		bgBlurFilter.strength = appState.bgActualBlur;
+		const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
+		fgBlurFilter.strength = appState.fgActualBlur * pixelScale;
+		bgBlurFilter.strength = appState.bgActualBlur * pixelScale;
 
 		updateImageLayout();
 
@@ -757,8 +763,8 @@
 		scene.scale.set(oldScaleX, oldScaleY);
 		scene.x = oldX;
 		scene.y = oldY;
-		fgBlurFilter.strength = appState.fgActualBlur * stageScale;
-		bgBlurFilter.strength = appState.bgActualBlur * stageScale;
+		fgBlurFilter.strength = appState.fgActualBlur * pixelScale * stageScale;
+		bgBlurFilter.strength = appState.bgActualBlur * pixelScale * stageScale;
 
 		updateImageLayout();
 
