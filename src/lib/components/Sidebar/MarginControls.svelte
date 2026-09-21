@@ -8,7 +8,7 @@
 	} from '$lib/components/ui/select/index.js';
 	import { Slider } from '$lib/components/ui/slider/index.js';
 	import { Switch } from '$lib/components/ui/switch';
-	import { Undo, Minus, Plus, ChevronUp, ChevronDown, ChevronsLeftRight } from '@lucide/svelte';
+	import { Undo } from '@lucide/svelte';
 	import SectionHeader from './SectionHeader.svelte';
 	import { settings, media, commitHistory, SAFE_AREA_PRESETS } from '$lib/state.svelte';
 	import type { MarginUnit } from '$lib/state.svelte';
@@ -78,6 +78,10 @@
 
 	function handleSideValueInput(side: Side, rawValue: string) {
 		const sideInfo = SIDES.find((s) => s.key === side)!;
+		if (rawValue === '') {
+			settings.current[sideInfo.valProp] = 0;
+			return;
+		}
 		let num = parseFloat(rawValue);
 		if (isNaN(num)) num = 0;
 		const max = settings.current[sideInfo.unitProp] === 'percent' ? 40 : 300;
@@ -95,50 +99,6 @@
 		const sideInfo = SIDES.find((s) => s.key === side)!;
 		settings.current[sideInfo.valProp] = 0;
 		commitHistory();
-	}
-
-	function stepValue(side: Side, delta: number) {
-		const sideInfo = SIDES.find((s) => s.key === side)!;
-		const max = settings.current[sideInfo.unitProp] === 'percent' ? 40 : 300;
-		const current = settings.current[sideInfo.valProp] || 0;
-		settings.current[sideInfo.valProp] = Math.min(max, Math.max(0, current + delta));
-		commitHistory();
-	}
-
-	let isScrubbing = $state(false);
-	let scrubStartX = 0;
-	let scrubStartVal = 0;
-
-	function handleScrubStart(e: PointerEvent) {
-		const target = e.currentTarget as HTMLElement;
-		target.setPointerCapture(e.pointerId);
-		isScrubbing = true;
-		scrubStartX = e.clientX;
-		scrubStartVal = settings.current.fgMarginLeft || 0;
-
-		const onPointerMove = (ev: PointerEvent) => {
-			if (!isScrubbing) return;
-			const delta = ev.clientX - scrubStartX;
-			const mult = ev.shiftKey ? 5 : ev.altKey ? 0.2 : 1;
-			const max = settings.current.fgMarginLeftUnit === 'percent' ? 40 : 300;
-			const next = Math.min(max, Math.max(0, Math.round(scrubStartVal + delta * 0.5 * mult)));
-			settings.current.fgMarginLeft = next;
-		};
-
-		const onPointerUp = (ev: PointerEvent) => {
-			isScrubbing = false;
-			try {
-				target.releasePointerCapture(ev.pointerId);
-			} catch {}
-			target.removeEventListener('pointermove', onPointerMove as EventListener);
-			target.removeEventListener('pointerup', onPointerUp as EventListener);
-			target.removeEventListener('pointercancel', onPointerUp as EventListener);
-			commitHistory();
-		};
-
-		target.addEventListener('pointermove', onPointerMove as EventListener);
-		target.addEventListener('pointerup', onPointerUp as EventListener);
-		target.addEventListener('pointercancel', onPointerUp as EventListener);
 	}
 </script>
 
@@ -250,166 +210,53 @@
 												<div class="w-5 shrink-0"></div>
 											{/if}
 
-											<!-- Control: Different per side (with joined unit toggle) -->
-											{#if side.key === 'top'}
-												<!-- TOP: Chevron Stepper (Joined with Px/%) -->
-												<div
-													class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
-												>
+											<!-- Slider with Keyboard-Editable Input (Joined with Px/%) -->
+											<div
+												class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 pl-2 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
+											>
+												<div class="flex min-w-0 flex-1 items-center gap-1.5">
+													<Slider
+														type="single"
+														bind:value={settings.current[side.valProp]}
+														min={0}
+														max={settings.current[side.unitProp] === 'percent' ? 40 : 300}
+														step={1}
+														onValueCommit={() => commitHistory()}
+														class="flex-1 py-1 **:data-[slot=slider-track]:bg-foreground/12 dark:**:data-[slot=slider-track]:bg-white/18"
+													/>
 													<input
 														type="number"
 														min="0"
-														max={settings.current.fgMarginTopUnit === 'percent' ? 40 : 300}
+														max={settings.current[side.unitProp] === 'percent' ? 40 : 300}
 														step="1"
-														value={settings.current.fgMarginTop}
+														value={settings.current[side.valProp]}
 														oninput={(e) =>
-															handleSideValueInput('top', (e.target as HTMLInputElement).value)}
+															handleSideValueInput(side.key, (e.target as HTMLInputElement).value)}
 														onchange={() => commitHistory()}
-														class="h-7 w-full min-w-0 flex-1 [appearance:textfield] bg-transparent py-0.5 pr-1 pl-2.5 text-right font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+														onfocus={(e) => (e.target as HTMLInputElement).select()}
+														onblur={(e) => {
+															(e.target as HTMLInputElement).value = String(
+																settings.current[side.valProp]
+															);
+														}}
+														onkeydown={(e) => {
+															if (e.key === 'Enter' || e.key === 'Escape') {
+																(e.target as HTMLInputElement).blur();
+															}
+														}}
+														class="h-7 w-8 shrink-0 [appearance:textfield] bg-transparent text-right font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 													/>
-													<div class="flex flex-col items-center justify-center px-0.5">
-														<button
-															type="button"
-															class="flex h-3 w-4 cursor-pointer items-center justify-center rounded-xs text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
-															onclick={() => stepValue('top', 1)}
-															tabindex="-1"
-															title="Increment"
-														>
-															<ChevronUp size={10} />
-														</button>
-														<button
-															type="button"
-															class="flex h-3 w-4 cursor-pointer items-center justify-center rounded-xs text-muted-foreground/70 transition-colors hover:bg-muted/50 hover:text-foreground"
-															onclick={() => stepValue('top', -1)}
-															tabindex="-1"
-															title="Decrement"
-														>
-															<ChevronDown size={10} />
-														</button>
-													</div>
-													<div class="h-4 w-px shrink-0 bg-border/60"></div>
-													<button
-														type="button"
-														onclick={() => toggleSideUnit('top')}
-														class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-														title={`Click to switch to ${settings.current.fgMarginTopUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
-													>
-														{settings.current.fgMarginTopUnit === 'percent' ? '%' : 'px'}
-													</button>
 												</div>
-											{:else if side.key === 'right'}
-												<!-- RIGHT: Slider (Joined with Px/%) -->
-												<div
-													class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 pl-2 transition-colors dark:bg-input/30"
+												<div class="mx-1 h-4 w-px shrink-0 bg-border/60"></div>
+												<button
+													type="button"
+													onclick={() => toggleSideUnit(side.key)}
+													class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+													title={`Click to switch to ${settings.current[side.unitProp] === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
 												>
-													<div class="flex min-w-0 flex-1 items-center gap-2">
-														<Slider
-															type="single"
-															bind:value={settings.current.fgMarginRight}
-															min={0}
-															max={settings.current.fgMarginRightUnit === 'percent' ? 40 : 300}
-															step={1}
-															onValueCommit={() => commitHistory()}
-															class="flex-1 py-1 **:data-[slot=slider-track]:bg-foreground/12 dark:**:data-[slot=slider-track]:bg-white/18"
-														/>
-														<span
-															class="w-6 shrink-0 text-right font-mono text-xs text-foreground select-none"
-														>
-															{settings.current.fgMarginRight}
-														</span>
-													</div>
-													<div class="mx-1 h-4 w-px shrink-0 bg-border/60"></div>
-													<button
-														type="button"
-														onclick={() => toggleSideUnit('right')}
-														class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-														title={`Click to switch to ${settings.current.fgMarginRightUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
-													>
-														{settings.current.fgMarginRightUnit === 'percent' ? '%' : 'px'}
-													</button>
-												</div>
-											{:else if side.key === 'bottom'}
-												<!-- BOTTOM: Stepper | - | Value | + | Px/% | -->
-												<div
-													class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
-												>
-													<button
-														type="button"
-														class="flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-														onclick={() => stepValue('bottom', -1)}
-														tabindex="-1"
-														title="Decrease margin"
-													>
-														<Minus size={12} />
-													</button>
-													<div class="h-4 w-px shrink-0 bg-border/60"></div>
-													<input
-														type="number"
-														min="0"
-														max={settings.current.fgMarginBottomUnit === 'percent' ? 40 : 300}
-														step="1"
-														value={settings.current.fgMarginBottom}
-														oninput={(e) =>
-															handleSideValueInput('bottom', (e.target as HTMLInputElement).value)}
-														onchange={() => commitHistory()}
-														class="h-7 w-full min-w-0 flex-1 [appearance:textfield] bg-transparent px-1 text-center font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-													/>
-													<div class="h-4 w-px shrink-0 bg-border/60"></div>
-													<button
-														type="button"
-														class="flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-														onclick={() => stepValue('bottom', 1)}
-														tabindex="-1"
-														title="Increase margin"
-													>
-														<Plus size={12} />
-													</button>
-													<div class="h-4 w-px shrink-0 bg-border/60"></div>
-													<button
-														type="button"
-														onclick={() => toggleSideUnit('bottom')}
-														class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-														title={`Click to switch to ${settings.current.fgMarginBottomUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
-													>
-														{settings.current.fgMarginBottomUnit === 'percent' ? '%' : 'px'}
-													</button>
-												</div>
-											{:else if side.key === 'left'}
-												<!-- LEFT: Figma Style Scrubbable (Joined with Px/%) -->
-												<div
-													class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
-												>
-													<button
-														type="button"
-														tabindex="-1"
-														class="flex h-7 w-6 shrink-0 cursor-ew-resize items-center justify-center rounded-l-md text-muted-foreground/50 transition-colors select-none hover:text-foreground"
-														title="Drag horizontally to scrub (Shift: 5x, Alt: fine)"
-														onpointerdown={handleScrubStart}
-													>
-														<ChevronsLeftRight size={11} />
-													</button>
-													<input
-														type="number"
-														min="0"
-														max={settings.current.fgMarginLeftUnit === 'percent' ? 40 : 300}
-														step="1"
-														value={settings.current.fgMarginLeft}
-														oninput={(e) =>
-															handleSideValueInput('left', (e.target as HTMLInputElement).value)}
-														onchange={() => commitHistory()}
-														class="h-7 w-full min-w-0 flex-1 [appearance:textfield] bg-transparent px-2 text-right font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-													/>
-													<div class="h-4 w-px shrink-0 bg-border/60"></div>
-													<button
-														type="button"
-														onclick={() => toggleSideUnit('left')}
-														class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-														title={`Click to switch to ${settings.current.fgMarginLeftUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
-													>
-														{settings.current.fgMarginLeftUnit === 'percent' ? '%' : 'px'}
-													</button>
-												</div>
-											{/if}
+													{settings.current[side.unitProp] === 'percent' ? '%' : 'px'}
+												</button>
+											</div>
 										</div>
 									{/if}
 								{/each}
