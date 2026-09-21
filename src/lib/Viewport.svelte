@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, tick } from 'svelte';
 	import {
 		Application,
 		Sprite,
@@ -563,7 +563,7 @@
 			if (fgTexture) {
 				const old = fgTexture;
 				fgTexture = undefined;
-				old.destroy(true);
+				tick().then(() => old.destroy(true));
 			}
 			return;
 		}
@@ -573,7 +573,7 @@
 				if (fgTexture) {
 					const old = fgTexture;
 					fgTexture = undefined;
-					old.destroy(true);
+					tick().then(() => old.destroy(true));
 				}
 				return;
 			}
@@ -582,11 +582,8 @@
 			image.src = objectUrl;
 			void image.decode().then(() => {
 				const isRecreate = Boolean(fgTexture);
-				if (fgTexture) {
-					const old = fgTexture;
-					fgTexture = undefined;
-					old.destroy(true);
-				}
+				const old = fgTexture;
+				
 				console.log(
 					isRecreate
 						? '[Texture] Recreating foreground texture'
@@ -599,6 +596,10 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				fgTexture = tex;
+				
+				if (old) {
+					tick().then(() => old.destroy(true));
+				}
 				URL.revokeObjectURL(objectUrl);
 			});
 		});
@@ -625,7 +626,7 @@
 			if (bgTexture) {
 				const old = bgTexture;
 				bgTexture = undefined;
-				old.destroy(true);
+				tick().then(() => old.destroy(true));
 			}
 			return;
 		}
@@ -635,7 +636,7 @@
 				if (bgTexture) {
 					const old = bgTexture;
 					bgTexture = undefined;
-					old.destroy(true);
+					tick().then(() => old.destroy(true));
 				}
 				return;
 			}
@@ -644,11 +645,8 @@
 			image.src = objectUrl;
 			void image.decode().then(() => {
 				const isRecreate = Boolean(bgTexture);
-				if (bgTexture) {
-					const old = bgTexture;
-					bgTexture = undefined;
-					old.destroy(true);
-				}
+				const old = bgTexture;
+				
 				console.log(
 					isRecreate
 						? '[Texture] Recreating background texture'
@@ -662,6 +660,10 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				bgTexture = tex;
+				
+				if (old) {
+					tick().then(() => old.destroy(true));
+				}
 				URL.revokeObjectURL(objectUrl);
 			});
 		});
