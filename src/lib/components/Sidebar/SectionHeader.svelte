@@ -67,13 +67,13 @@
 						aria-label={`Toggle ${title}`}
 					/>
 				</div>
-				<span class="select-none text-[11px] font-medium tracking-wider uppercase">
+				<span class="text-[11px] font-medium tracking-wider uppercase select-none">
 					{title}
 				</span>
 			</div>
 		{:else}
 			<span
-				class="pointer-events-none relative z-10 select-none text-[11px] font-medium tracking-wider text-muted-foreground uppercase transition-colors peer-hover:text-foreground"
+				class="pointer-events-none relative z-10 text-[11px] font-medium tracking-wider text-muted-foreground uppercase transition-colors select-none peer-hover:text-foreground"
 			>
 				{title}
 			</span>
@@ -86,7 +86,7 @@
 
 		<!-- Pill Buttons (Desktop/Wide: inline) -->
 		{#if (!hasSwitch || enabled) && !isCollapsed && children}
-			<div class="pointer-events-auto relative z-10 hidden items-center @[340px]:flex">
+			<div class="pointer-events-auto relative z-10 hidden items-center @[350px]:flex">
 				{@render children()}
 			</div>
 		{/if}
@@ -103,7 +103,7 @@
 
 	<!-- Pill Buttons (Narrow: dedicated full-width row) -->
 	{#if (!hasSwitch || enabled) && !isCollapsed && children}
-		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[340px]:hidden">
+		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[350px]:hidden">
 			{@render children()}
 		</div>
 	{/if}

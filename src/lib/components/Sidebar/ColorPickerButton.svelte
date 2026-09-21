@@ -4,52 +4,24 @@
 	import { ColorPicker } from '$lib/components/ui/color-picker';
 	import { Palette } from '@lucide/svelte';
 	import { settings, commitHistory } from '$lib/state.svelte';
+	import { parseColorRgb } from '$lib/viewport/color-utils';
 	import { cn } from '$lib/utils';
 
 	let {
 		value = $bindable(),
 		swatches = $bindable(settings.current.swatches),
 		onChange,
+		onValueCommit,
 		class: className,
 		ariaLabel = 'Color picker'
 	}: {
 		value: string;
 		swatches?: string[];
 		onChange?: (value: string) => void;
+		onValueCommit?: (value: string) => void;
 		class?: string;
 		ariaLabel?: string;
 	} = $props();
-
-	function parseColorRgb(color: string): { r: number; g: number; b: number } {
-		if (!color) return { r: 0, g: 0, b: 0 };
-		const str = color.trim();
-		if (str.startsWith('#')) {
-			const raw = str.slice(1);
-			if (raw.length === 3 || raw.length === 4) {
-				return {
-					r: parseInt(raw[0] + raw[0], 16),
-					g: parseInt(raw[1] + raw[1], 16),
-					b: parseInt(raw[2] + raw[2], 16)
-				};
-			}
-			if (raw.length >= 6) {
-				return {
-					r: parseInt(raw.slice(0, 2), 16),
-					g: parseInt(raw.slice(2, 4), 16),
-					b: parseInt(raw.slice(4, 6), 16)
-				};
-			}
-		}
-		const rgbMatch = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-		if (rgbMatch) {
-			return {
-				r: parseInt(rgbMatch[1], 10),
-				g: parseInt(rgbMatch[2], 10),
-				b: parseInt(rgbMatch[3], 10)
-			};
-		}
-		return { r: 0, g: 0, b: 0 };
-	}
 
 	let iconColor = $derived.by(() => {
 		const { r, g, b } = parseColorRgb(value);
@@ -57,16 +29,16 @@
 		return lum > 140 ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.45)';
 	});
 
-	function handleChange(val: string) {
-		if (onChange) {
-			onChange(val);
+	function handleCommit(val: string) {
+		if (onValueCommit) {
+			onValueCommit(val);
 		} else {
 			commitHistory();
 		}
 	}
 </script>
 
-<Popover.Root>
+<Popover.Root onOpenChange={(open) => { if (!open) handleCommit(value); }}>
 	<Popover.Trigger>
 		<Button
 			variant="outline"
@@ -87,6 +59,6 @@
 		</Button>
 	</Popover.Trigger>
 	<Popover.Content side="right" align="end" class="border-none bg-transparent p-0 shadow-none">
-		<ColorPicker bind:value bind:swatches onChange={handleChange} />
+		<ColorPicker bind:value bind:swatches {onChange} onValueCommit={handleCommit} />
 	</Popover.Content>
 </Popover.Root>

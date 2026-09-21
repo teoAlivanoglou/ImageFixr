@@ -101,191 +101,149 @@ if (typeof window !== 'undefined') {
 	(window as any).resetSwatches = resetSwatches;
 }
 
+export const SETTINGS_DEFAULTS: Settings = {
+	fgBlur: 0,
+	fgScale: 1,
+	fgSafeAreaStandard: 'smpte-action',
+	fgMarginTop: 0,
+	fgMarginRight: 0,
+	fgMarginBottom: 0,
+	fgMarginLeft: 0,
+	fgMarginTopUnit: 'percent',
+	fgMarginRightUnit: 'percent',
+	fgMarginBottomUnit: 'percent',
+	fgMarginLeftUnit: 'percent',
+	fgMarginTopEnabled: false,
+	fgMarginRightEnabled: false,
+	fgMarginBottomEnabled: false,
+	fgMarginLeftEnabled: false,
+	fgMarginsLinked: false,
+	fgMarginEnabled: true,
+	bgBlur: 100,
+	bgScale: 1,
+	bgEnabled: true,
+	bgSource: 'link',
+	fgBorderEnabled: true,
+	fgBorderWidth: 10,
+	fgBorderColor: '#DED7D0',
+	fgBorderPosition: 'outer',
+	fgDropShadowStrength: 16,
+	fgDropShadowAlpha: 100,
+	fgDropShadowSpread: 8,
+	fgDropShadowOffsetX: 0,
+	fgDropShadowOffsetY: 0,
+	fgDropShadowQuality: 5,
+	fgDropShadowExtra: 0,
+	fgDropShadowEnabled: true,
+	fgDropShadowMode: 'simple',
+	fgDropShadowSimpleSize: 16,
+	filtering: 'linear',
+	aspectRatio: '16:9',
+	autoGenerateMipmaps: true,
+	mipmapFilter: 'nearest',
+	swatches: [...DEFAULT_SWATCHES],
+	bgColor: '#007595',
+	shadowOnly: false,
+	advancedSettingsEnabled: false,
+	fgCollapsed: false,
+	bgCollapsed: false,
+	fgMarginCollapsed: true,
+	fgBorderCollapsed: true,
+	fgDropShadowCollapsed: true,
+	advancedCollapsed: true
+};
+
 export const settings = new PersistedState<Settings>(
 	'image-fixr-settings',
-	{
-		fgBlur: 0,
-		fgScale: 1,
-		fgSafeAreaStandard: 'none',
-		fgMarginTop: 0,
-		fgMarginRight: 0,
-		fgMarginBottom: 0,
-		fgMarginLeft: 0,
-		fgMarginTopUnit: 'percent',
-		fgMarginRightUnit: 'percent',
-		fgMarginBottomUnit: 'percent',
-		fgMarginLeftUnit: 'percent',
-		fgMarginTopEnabled: false,
-		fgMarginRightEnabled: false,
-		fgMarginBottomEnabled: false,
-		fgMarginLeftEnabled: false,
-		fgMarginsLinked: true,
-		fgMarginEnabled: false,
-		bgBlur: 0,
-		bgScale: 1,
-		bgEnabled: true,
-		bgSource: 'link',
-		fgBorderEnabled: false,
-		fgBorderWidth: 0,
-		fgBorderColor: '#000000',
-		fgBorderPosition: 'outer',
-		fgDropShadowStrength: 16,
-		fgDropShadowAlpha: 100,
-		fgDropShadowSpread: 8,
-		fgDropShadowOffsetX: 0,
-		fgDropShadowOffsetY: 0,
-		fgDropShadowQuality: 5,
-		fgDropShadowExtra: 0,
-		fgDropShadowEnabled: true,
-		fgDropShadowMode: 'simple',
-		fgDropShadowSimpleSize: 16,
-		filtering: 'linear',
-		aspectRatio: '16:9',
-		autoGenerateMipmaps: true,
-		mipmapFilter: 'nearest',
-		swatches: [...DEFAULT_SWATCHES],
-		bgColor: '#007595',
-		shadowOnly: false,
-		advancedSettingsEnabled: false,
-		fgCollapsed: false,
-		bgCollapsed: true,
-		fgMarginCollapsed: true,
-		fgBorderCollapsed: true,
-		fgDropShadowCollapsed: true,
-		advancedCollapsed: true
-	},
+	{ ...SETTINGS_DEFAULTS },
 	{ storage: 'local', syncTabs: true }
 );
 
-if (settings.current.bgEnabled === undefined) {
-	settings.current.bgEnabled = true;
+// --- Settings migration ---
+// Fill in any keys that are missing from persisted state (e.g. newly added settings).
+// Legacy rename: fgOutline* → fgBorder*
+{
+	const legacy = settings.current as Record<string, unknown>;
+	if (settings.current.fgBorderEnabled === undefined) {
+		settings.current.fgBorderEnabled =
+			typeof legacy.fgOutlineEnabled === 'boolean'
+				? legacy.fgOutlineEnabled
+				: typeof legacy.fgOutlineWidth === 'number' && legacy.fgOutlineWidth > 0;
+	}
+	if (settings.current.fgBorderWidth === undefined) {
+		settings.current.fgBorderWidth = (legacy.fgOutlineWidth as number) ?? 10;
+	}
+	if (!settings.current.fgBorderColor) {
+		settings.current.fgBorderColor = (legacy.fgOutlineColor as string) ?? '#DED7D0';
+	}
 }
-if (!settings.current.bgSource) {
-	settings.current.bgSource = 'link';
+
+// Migrate 'action' alias to 'smpte-action'
+if ((settings.current.fgSafeAreaStandard as string) === 'action') {
+	settings.current.fgSafeAreaStandard = 'smpte-action';
 }
-if (!settings.current.bgColor || settings.current.bgColor === '#000000') {
+
+// Legacy: per-side margins from single fgMargin value
+{
+	const legacy = settings.current as Record<string, unknown>;
+	const legacyMargin = (legacy.fgMargin as number) ?? 0;
+	const legacyUnit = (legacy.fgMarginUnit as MarginUnit) ?? 'percent';
+	const sides = ['Top', 'Right', 'Bottom', 'Left'] as const;
+	for (const side of sides) {
+		const valKey = `fgMargin${side}` as keyof Settings;
+		const unitKey = `fgMargin${side}Unit` as keyof Settings;
+		if ((settings.current as any)[valKey] === undefined) {
+			(settings.current as any)[valKey] = legacyMargin;
+		}
+		if ((settings.current as any)[unitKey] === undefined) {
+			(settings.current as any)[unitKey] = legacyUnit;
+		}
+	}
+}
+
+// Fill all remaining undefined keys from defaults
+for (const key of Object.keys(SETTINGS_DEFAULTS) as Array<keyof Settings>) {
+	if ((settings.current as any)[key] === undefined) {
+		(settings.current as any)[key] = SETTINGS_DEFAULTS[key];
+	}
+}
+
+// Special sentinel: override stale bgColor
+if (settings.current.bgColor === '#000000') {
 	settings.current.bgColor = '#007595';
 }
-if (settings.current.shadowOnly === undefined) {
-	settings.current.shadowOnly = false;
-}
-if (settings.current.fgBorderEnabled === undefined) {
-	const legacyOutline = (settings.current as Record<string, unknown>).fgOutlineEnabled;
-	const legacyWidth = (settings.current as Record<string, unknown>).fgOutlineWidth;
-	settings.current.fgBorderEnabled =
-		typeof legacyOutline === 'boolean'
-			? legacyOutline
-			: typeof legacyWidth === 'number' && legacyWidth > 0;
-}
-if (settings.current.fgBorderWidth === undefined) {
-	settings.current.fgBorderWidth = (settings.current as any).fgOutlineWidth ?? 0;
-}
-if (!settings.current.fgBorderColor) {
-	settings.current.fgBorderColor = (settings.current as any).fgOutlineColor ?? '#000000';
-}
-if (settings.current.fgBorderPosition === undefined) {
-	settings.current.fgBorderPosition = 'outer';
-}
-if (settings.current.fgDropShadowSpread === undefined) {
-	settings.current.fgDropShadowSpread = 0;
-}
-if (settings.current.fgDropShadowOffsetX === undefined) {
-	settings.current.fgDropShadowOffsetX = 0;
-}
-if (settings.current.fgDropShadowOffsetY === undefined) {
-	settings.current.fgDropShadowOffsetY = 0;
-}
-if (settings.current.fgDropShadowExtra === undefined) {
-	settings.current.fgDropShadowExtra = 0;
-}
-if (settings.current.fgDropShadowEnabled === undefined) {
-	settings.current.fgDropShadowEnabled = true;
-}
-if (settings.current.fgDropShadowMode === undefined) {
-	settings.current.fgDropShadowMode = 'simple';
-}
-if (settings.current.fgDropShadowSimpleSize === undefined) {
-	settings.current.fgDropShadowSimpleSize = 16;
-}
-if (settings.current.fgSafeAreaStandard === undefined) {
-	settings.current.fgSafeAreaStandard = 'none';
-}
-const legacyMargin = (settings.current as any).fgMargin ?? 0;
-const legacyUnit = (settings.current as any).fgMarginUnit ?? 'percent';
 
-if (settings.current.fgMarginTop === undefined) {
-	settings.current.fgMarginTop = legacyMargin;
+// Derive fgMarginEnabled if it was missing
+if (
+	settings.current.fgMarginEnabled === false &&
+	((settings.current.fgSafeAreaStandard !== 'none') ||
+		settings.current.fgMarginTopEnabled || settings.current.fgMarginRightEnabled ||
+		settings.current.fgMarginBottomEnabled || settings.current.fgMarginLeftEnabled)
+) {
+	settings.current.fgMarginEnabled = true;
 }
-if (settings.current.fgMarginRight === undefined) {
-	settings.current.fgMarginRight = legacyMargin;
-}
-if (settings.current.fgMarginBottom === undefined) {
-	settings.current.fgMarginBottom = legacyMargin;
-}
-if (settings.current.fgMarginLeft === undefined) {
-	settings.current.fgMarginLeft = legacyMargin;
-}
-if (settings.current.fgMarginTopUnit === undefined) {
-	settings.current.fgMarginTopUnit = legacyUnit;
-}
-if (settings.current.fgMarginRightUnit === undefined) {
-	settings.current.fgMarginRightUnit = legacyUnit;
-}
-if (settings.current.fgMarginBottomUnit === undefined) {
-	settings.current.fgMarginBottomUnit = legacyUnit;
-}
-if (settings.current.fgMarginLeftUnit === undefined) {
-	settings.current.fgMarginLeftUnit = legacyUnit;
-}
-if (settings.current.fgMarginsLinked === undefined) {
-	settings.current.fgMarginsLinked = true;
-}
-if (settings.current.fgMarginTopEnabled === undefined) {
-	settings.current.fgMarginTopEnabled = (settings.current.fgMarginTop ?? 0) > 0;
-}
-if (settings.current.fgMarginRightEnabled === undefined) {
-	settings.current.fgMarginRightEnabled = (settings.current.fgMarginRight ?? 0) > 0;
-}
-if (settings.current.fgMarginBottomEnabled === undefined) {
-	settings.current.fgMarginBottomEnabled = (settings.current.fgMarginBottom ?? 0) > 0;
-}
-if (settings.current.fgMarginLeftEnabled === undefined) {
-	settings.current.fgMarginLeftEnabled = (settings.current.fgMarginLeft ?? 0) > 0;
-}
-if (settings.current.fgMarginEnabled === undefined) {
-	settings.current.fgMarginEnabled =
-		(settings.current.fgSafeAreaStandard !== undefined &&
-			settings.current.fgSafeAreaStandard !== 'none') ||
-		Boolean(
-			settings.current.fgMarginTopEnabled ||
-			settings.current.fgMarginRightEnabled ||
-			settings.current.fgMarginBottomEnabled ||
-			settings.current.fgMarginLeftEnabled
-		);
-}
-if (settings.current.advancedSettingsEnabled === undefined) {
-	settings.current.advancedSettingsEnabled = false;
-}
-if (settings.current.fgCollapsed === undefined) {
-	settings.current.fgCollapsed = false;
-}
-if (settings.current.bgCollapsed === undefined) {
-	settings.current.bgCollapsed = true;
-}
-if (settings.current.fgMarginCollapsed === undefined) {
-	settings.current.fgMarginCollapsed = true;
-}
-if (settings.current.fgBorderCollapsed === undefined) {
-	settings.current.fgBorderCollapsed = true;
-}
-if (settings.current.fgDropShadowCollapsed === undefined) {
-	settings.current.fgDropShadowCollapsed = true;
-}
-if (settings.current.advancedCollapsed === undefined) {
-	settings.current.advancedCollapsed = true;
-}
-if (!settings.current.swatches || !Array.isArray(settings.current.swatches)) {
+
+// Ensure swatches array is valid
+if (!Array.isArray(settings.current.swatches)) {
 	settings.current.swatches = [...DEFAULT_SWATCHES];
+}
+
+const UI_ONLY_KEYS: (keyof Settings)[] = [
+	'fgCollapsed',
+	'bgCollapsed',
+	'fgMarginCollapsed',
+	'fgBorderCollapsed',
+	'fgDropShadowCollapsed',
+	'advancedCollapsed',
+	'swatches'
+];
+
+function getVisualSnapshot(s: Settings): Record<string, unknown> {
+	const copy: Record<string, unknown> = { ...s };
+	for (const key of UI_ONLY_KEYS) {
+		delete copy[key];
+	}
+	return copy;
 }
 
 export const historyState = $state<{ value: Settings }>({
@@ -296,7 +254,7 @@ export let history: StateHistory<Settings>;
 
 export function commitHistory() {
 	const next = $state.snapshot(settings.current);
-	if (JSON.stringify(next) !== JSON.stringify(historyState.value)) {
+	if (JSON.stringify(getVisualSnapshot(next)) !== JSON.stringify(getVisualSnapshot(historyState.value))) {
 		// console.log("[History Recorded]", next);
 		historyState.value = next;
 	}
@@ -306,15 +264,16 @@ $effect.root(() => {
 	history = new StateHistory(
 		() => historyState.value,
 		(val) => {
-			const currentCollapsed = {
+			const currentUi = {
 				fgCollapsed: settings.current.fgCollapsed,
 				bgCollapsed: settings.current.bgCollapsed,
 				fgMarginCollapsed: settings.current.fgMarginCollapsed,
 				fgBorderCollapsed: settings.current.fgBorderCollapsed,
 				fgDropShadowCollapsed: settings.current.fgDropShadowCollapsed,
-				advancedCollapsed: settings.current.advancedCollapsed
+				advancedCollapsed: settings.current.advancedCollapsed,
+				swatches: settings.current.swatches
 			};
-			Object.assign(settings.current, val, currentCollapsed);
+			Object.assign(settings.current, val, currentUi);
 			historyState.value = $state.snapshot(settings.current);
 		},
 		{ capacity: 50 }
@@ -363,36 +322,6 @@ export class AppState {
 	}
 	get bgActualScale() {
 		return settings.current.bgScale;
-	}
-	get fgSafeAreaStandard() {
-		return settings.current.fgSafeAreaStandard ?? 'none';
-	}
-	get fgMarginTop() {
-		return settings.current.fgMarginTop ?? 0;
-	}
-	get fgMarginRight() {
-		return settings.current.fgMarginRight ?? 0;
-	}
-	get fgMarginBottom() {
-		return settings.current.fgMarginBottom ?? 0;
-	}
-	get fgMarginLeft() {
-		return settings.current.fgMarginLeft ?? 0;
-	}
-	get fgMarginsLinked() {
-		return settings.current.fgMarginsLinked ?? true;
-	}
-	get fgMarginTopEnabled() {
-		return settings.current.fgMarginTopEnabled ?? false;
-	}
-	get fgMarginRightEnabled() {
-		return settings.current.fgMarginRightEnabled ?? false;
-	}
-	get fgMarginBottomEnabled() {
-		return settings.current.fgMarginBottomEnabled ?? false;
-	}
-	get fgMarginLeftEnabled() {
-		return settings.current.fgMarginLeftEnabled ?? false;
 	}
 }
 

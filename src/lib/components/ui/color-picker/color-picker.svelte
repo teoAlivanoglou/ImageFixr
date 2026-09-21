@@ -12,6 +12,7 @@
 	let {
 		value = $bindable('#007595'),
 		onChange,
+		onValueCommit,
 		swatches = $bindable([
 			'#000000',
 			'#ffffff',
@@ -29,6 +30,7 @@
 	}: {
 		value?: string;
 		onChange?: (value: string) => void;
+		onValueCommit?: (value: string) => void;
 		swatches?: string[];
 		class?: string;
 	} = $props();
@@ -78,7 +80,7 @@
 		return `#${base}${a}`;
 	}
 
-	function rgbToHsv({ r, g, b }: Rgb): Hsv {
+	function rgbToHsv({ r, g, b }: Rgb, fallbackHue = 0, fallbackSat = 0): Hsv {
 		const rn = r / 255;
 		const gn = g / 255;
 		const bn = b / 255;
@@ -86,20 +88,20 @@
 		const min = Math.min(rn, gn, bn);
 		const diff = max - min;
 
-		let h = 0;
-		if (diff !== 0) {
+		let h = fallbackHue;
+		if (diff > 0.0001) {
 			if (max === rn) h = ((gn - bn) / diff) % 6;
 			else if (max === gn) h = (bn - rn) / diff + 2;
 			else h = (rn - gn) / diff + 4;
+
+			h = Math.round(h * 60);
+			if (h < 0) h += 360;
 		}
 
-		h = Math.round(h * 60);
-		if (h < 0) h += 360;
+		const s = max === 0 ? fallbackSat : (diff / max) * 100;
+		const v = max * 100;
 
-		const s = max === 0 ? 0 : diff / max;
-		const v = max;
-
-		return { h, s: round(s * 100, 1), v: round(v * 100, 1) };
+		return { h, s: round(s, 1), v: round(v, 1) };
 	}
 
 	function hsvToRgb({ h, s, v }: Hsv): Rgb {
@@ -218,23 +220,31 @@
 	let hsv = $state<Hsv>(rgbToHsv(initialParsed.rgb));
 	let alpha = $state(initialParsed.a);
 	let format = $state<PickerFormat>('hex');
+	let lastEmittedHex = (value || '').trim().toLowerCase();
 
 	$effect(() => {
+		const currentVal = (value || '#000000').trim().toLowerCase();
+		if (currentVal === lastEmittedHex) return;
 		const next = parseHex(value || '#000000');
 		if (!next) return;
-		hsv = rgbToHsv(next.rgb);
+		hsv = rgbToHsv(next.rgb, hsv.h, hsv.s);
 		alpha = next.a;
+		lastEmittedHex = currentVal;
 	});
 
 	let rgb = $derived(hsvToRgb(hsv));
 	let hsl = $derived(rgbToHsl(rgb));
 	let hex = $derived(rgbToHex(rgb, alpha));
 
-	function emit(nextHsv: Hsv, nextAlpha: number) {
+	function emit(nextHsv: Hsv, nextAlpha: number, isCommit = false) {
 		const nextRgb = hsvToRgb(nextHsv);
 		const nextHex = rgbToHex(nextRgb, nextAlpha);
+		lastEmittedHex = nextHex.toLowerCase();
 		value = nextHex;
 		onChange?.(nextHex);
+		if (isCommit) {
+			onValueCommit?.(nextHex);
+		}
 	}
 
 	function updatePlane(clientX: number, clientY: number, el: HTMLElement) {
@@ -258,6 +268,14 @@
 		updatePlane(event.clientX, event.clientY, event.currentTarget as HTMLElement);
 	}
 
+	function handlePlanePointerUp(event: PointerEvent) {
+		const target = event.currentTarget as HTMLElement;
+		if (target.hasPointerCapture(event.pointerId)) {
+			target.releasePointerCapture(event.pointerId);
+		}
+		emit(hsv, alpha, true);
+	}
+
 	async function pickFromScreen() {
 		if (typeof window === 'undefined' || !('EyeDropper' in window)) return;
 
@@ -270,10 +288,10 @@
 			const parsedColor = parseHex(result.sRGBHex);
 			if (!parsedColor) return;
 
-			const nextHsv = rgbToHsv(parsedColor.rgb);
+			const nextHsv = rgbToHsv(parsedColor.rgb, hsv.h, hsv.s);
 			hsv = nextHsv;
 			alpha = 1;
-			emit(nextHsv, 1);
+			emit(nextHsv, 1, true);
 		} catch {
 			// User cancelled eyedropper
 		}
@@ -292,10 +310,10 @@
 		if (format === 'hex') {
 			const parsedHex = parseHex(raw);
 			if (!parsedHex) return;
-			const next = rgbToHsv(parsedHex.rgb);
+			const next = rgbToHsv(parsedHex.rgb, hsv.h, hsv.s);
 			hsv = next;
 			alpha = parsedHex.a;
-			emit(next, parsedHex.a);
+			emit(next, parsedHex.a, true);
 			return;
 		}
 
@@ -307,9 +325,9 @@
 				g: clamp(parts[1], 0, 255),
 				b: clamp(parts[2], 0, 255)
 			};
-			const next = rgbToHsv(nextRgb);
+			const next = rgbToHsv(nextRgb, hsv.h, hsv.s);
 			hsv = next;
-			emit(next, alpha);
+			emit(next, alpha, true);
 			return;
 		}
 
@@ -320,9 +338,9 @@
 		if (parts.length !== 3 || parts.some((v) => Number.isNaN(v))) return;
 
 		const nextRgb = hslToRgb(parts[0], parts[1], parts[2]);
-		const next = rgbToHsv(nextRgb);
+		const next = rgbToHsv(nextRgb, hsv.h, hsv.s);
 		hsv = next;
-		emit(next, alpha);
+		emit(next, alpha, true);
 	}
 
 	function addSwatch() {
@@ -358,6 +376,8 @@
 			aria-valuenow={hsv.s}
 			onpointerdown={handlePlanePointerDown}
 			onpointermove={handlePlanePointerMove}
+			onpointerup={handlePlanePointerUp}
+			onpointercancel={handlePlanePointerUp}
 		>
 			<div
 				class="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md ring-1 ring-black/20 transition-transform hover:scale-110"
@@ -381,6 +401,9 @@
 					hsv = next;
 					emit(next, alpha);
 				}}
+				onchange={() => {
+					emit(hsv, alpha, true);
+				}}
 				class="color-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
 				style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);"
 			/>
@@ -399,6 +422,9 @@
 					const nextAlpha = Number(e.currentTarget.value) / 100;
 					alpha = nextAlpha;
 					emit(hsv, nextAlpha);
+				}}
+				onchange={() => {
+					emit(hsv, alpha, true);
 				}}
 				class="color-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
 				style={`background: linear-gradient(to right, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0), rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1));`}
@@ -455,10 +481,10 @@
 				onclick={() => {
 					const parsedSwatch = parseHex(swatch);
 					if (!parsedSwatch) return;
-					const next = rgbToHsv(parsedSwatch.rgb);
+					const next = rgbToHsv(parsedSwatch.rgb, hsv.h, hsv.s);
 					hsv = next;
 					alpha = parsedSwatch.a;
-					emit(next, parsedSwatch.a);
+					emit(next, parsedSwatch.a, true);
 				}}
 				oncontextmenu={(e) => {
 					e.preventDefault();

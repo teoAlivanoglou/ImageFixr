@@ -3,20 +3,27 @@
 	import {
 		Application,
 		Sprite,
-		BlurFilter,
 		Container,
 		Texture,
-		RenderTexture,
 		Mesh,
 		PlaneGeometry,
 		Shader,
 		Graphics
 	} from 'pixi.js';
 	import { useResizeObserver } from 'runed';
-	import { settings, appState, media, SAFE_AREA_PRESETS } from './state.svelte';
-	import { loadImageStorage, saveImageStorage } from './image-db';
+	import { settings, appState, media } from './state.svelte';
+	import { loadImageStorage } from './image-db';
+	import { selectImage } from './media-actions';
 	import { cn } from './utils';
 	import { ClampedBlurFilter } from './filters/clamped-blur-filter';
+	import { parseRgbaColor, rgbToHexNumber } from './viewport/color-utils';
+	import {
+		computeLogicalDimensions,
+		computeFitTransform,
+		computeBgSpriteLayout,
+		computeFgLayout
+	} from './viewport/layout';
+	import { renderAndSave as exportRenderedImage } from './viewport/export';
 	import sdfShadowVert from './shaders/sdf-shadow.vert?raw';
 	import sdfShadowFrag from './shaders/sdf-shadow.frag?raw';
 
@@ -24,16 +31,6 @@
 
 	let containerEl = $state<HTMLElement | null>(null);
 	let isDragging = $state(false);
-
-	async function handleFileSelect(file: File) {
-		if (!file.type.startsWith('image/')) return;
-		await saveImageStorage('foreground', file);
-		media.current = {
-			...media.current,
-			fgName: file.name,
-			fgVersion: Date.now()
-		};
-	}
 
 	const fgBlurFilter = new ClampedBlurFilter({ strength: 0, quality: 4 });
 	const bgBlurFilter = new ClampedBlurFilter({ strength: 0, quality: 4 });
@@ -77,54 +74,25 @@
 	let stageScale = $state(1);
 
 	function getLogicalDimensions() {
-		const aspectW = appState.aspectWidth;
-		const aspectH = appState.aspectHeight;
-		const targetAspect = aspectW / aspectH;
-
 		const refTexture =
 			fgTexture || (settings.current.bgSource === 'custom' ? bgTexture : undefined);
-
-		if (refTexture && refTexture.width > 0 && refTexture.height > 0) {
-			const imgW = refTexture.width;
-			const imgH = refTexture.height;
-			const imgAspect = imgW / imgH;
-
-			if (targetAspect >= imgAspect) {
-				// Canvas is wider than image: height matches image, width expands to target aspect ratio
-				const height = imgH;
-				const width = Math.round(height * targetAspect);
-				return { width, height };
-			} else {
-				// Canvas is taller than image: width matches image, height expands to target aspect ratio
-				const width = imgW;
-				const height = Math.round(width / targetAspect);
-				return { width, height };
-			}
-		}
-
-		// Fallback when no image is loaded yet: base on 1920
-		const baseSize = 1920;
-		if (targetAspect >= 1) {
-			return { width: baseSize, height: Math.round(baseSize / targetAspect) };
-		} else {
-			return { width: Math.round(baseSize * targetAspect), height: baseSize };
-		}
+		return computeLogicalDimensions(
+			appState.aspectWidth,
+			appState.aspectHeight,
+			refTexture?.width,
+			refTexture?.height
+		);
 	}
 
 	function updateImageLayout() {
 		if (!scene) return;
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
-		const minDim = Math.min(logicalWidth, logicalHeight);
-		const pixelScale = minDim / 1080;
 
 		if (bgColorGraphic) {
-			const bgEnabled = settings.current.bgEnabled;
-			const colorStr = settings.current.bgColor;
 			bgColorGraphic.clear();
-			if (bgEnabled) {
-				const [r, g, b, a] = parseRgbaColor(colorStr);
-				const hexCol =
-					(Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255);
+			if (settings.current.bgEnabled) {
+				const [r, g, b, a] = parseRgbaColor(settings.current.bgColor);
+				const hexCol = rgbToHexNumber(r, g, b);
 				bgColorGraphic.rect(0, 0, logicalWidth, logicalHeight).fill({ color: hexCol, alpha: a });
 				bgColorGraphic.visible = true;
 			} else {
@@ -133,173 +101,65 @@
 		}
 
 		if (bgSprite && bgSprite.texture) {
-			const coverScale = Math.max(
-				logicalWidth / bgSprite.texture.width,
-				logicalHeight / bgSprite.texture.height
+			const bgLayout = computeBgSpriteLayout(
+				logicalWidth,
+				logicalHeight,
+				bgSprite.texture.width,
+				bgSprite.texture.height,
+				appState.bgActualScale
 			);
-			const baseWidth = bgSprite.texture.width * coverScale * appState.bgActualScale;
-			const baseHeight = bgSprite.texture.height * coverScale * appState.bgActualScale;
-
-			bgSprite.width = baseWidth;
-			bgSprite.height = baseHeight;
-			bgSprite.position.set(logicalWidth / 2, logicalHeight / 2);
+			bgSprite.width = bgLayout.width;
+			bgSprite.height = bgLayout.height;
+			bgSprite.position.set(bgLayout.x, bgLayout.y);
 		}
 
 		if (fgSprite && fgSprite.texture) {
-			const marginsActive = settings.current.fgMarginEnabled;
-			const standard = marginsActive ? settings.current.fgSafeAreaStandard || 'none' : 'none';
-			const standardPreset = SAFE_AREA_PRESETS[standard] || SAFE_AREA_PRESETS.none;
-			const standardPercent = standardPreset.marginPercent;
-
-			const minDim = Math.min(logicalWidth, logicalHeight);
-			const baseMarginPx = minDim * (standardPercent / 100);
-
-			const valTop =
-				marginsActive && settings.current.fgMarginTopEnabled
-					? Math.max(0, settings.current.fgMarginTop ?? 0)
-					: 0;
-			const valRight =
-				marginsActive && settings.current.fgMarginRightEnabled
-					? Math.max(0, settings.current.fgMarginRight ?? 0)
-					: 0;
-			const valBottom =
-				marginsActive && settings.current.fgMarginBottomEnabled
-					? Math.max(0, settings.current.fgMarginBottom ?? 0)
-					: 0;
-			const valLeft =
-				marginsActive && settings.current.fgMarginLeftEnabled
-					? Math.max(0, settings.current.fgMarginLeft ?? 0)
-					: 0;
-
-			const unitTop = settings.current.fgMarginTopUnit || 'percent';
-			const unitRight = settings.current.fgMarginRightUnit || 'percent';
-			const unitBottom = settings.current.fgMarginBottomUnit || 'percent';
-			const unitLeft = settings.current.fgMarginLeftUnit || 'percent';
-
-			const customMarginTopPx = unitTop === 'percent' ? minDim * (valTop / 100) : valTop * pixelScale;
-			const customMarginRightPx = unitRight === 'percent' ? minDim * (valRight / 100) : valRight * pixelScale;
-			const customMarginBottomPx =
-				unitBottom === 'percent' ? minDim * (valBottom / 100) : valBottom * pixelScale;
-			const customMarginLeftPx = unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft * pixelScale;
-
-			const totalMarginTopPx = Math.min(minDim * 0.48, baseMarginPx + customMarginTopPx);
-			const totalMarginRightPx = Math.min(minDim * 0.48, baseMarginPx + customMarginRightPx);
-			const totalMarginBottomPx = Math.min(minDim * 0.48, baseMarginPx + customMarginBottomPx);
-			const totalMarginLeftPx = Math.min(minDim * 0.48, baseMarginPx + customMarginLeftPx);
-
-			const safeLeft = totalMarginLeftPx;
-			const safeTop = totalMarginTopPx;
-			const safeRight = Math.max(safeLeft, logicalWidth - totalMarginRightPx);
-			const safeBottom = Math.max(safeTop, logicalHeight - totalMarginBottomPx);
-
-			const safeWidth = Math.max(0, safeRight - safeLeft);
-			const safeHeight = Math.max(0, safeBottom - safeTop);
-
-			const safeCenterX = safeLeft + safeWidth / 2;
-			const safeCenterY = safeTop + safeHeight / 2;
-
-			const containScale = Math.min(
-				safeWidth / fgSprite.texture.width,
-				safeHeight / fgSprite.texture.height
-			);
-			const fgCoverScale = Math.max(
-				safeWidth / fgSprite.texture.width,
-				safeHeight / fgSprite.texture.height
+			const fgLayout = computeFgLayout(
+				logicalWidth,
+				logicalHeight,
+				fgSprite.texture.width,
+				fgSprite.texture.height,
+				settings.current,
+				appState.fgActualScale
 			);
 
-			const val = Math.min(2.0, Math.max(0.0, appState.fgActualScale));
-			let fgBaseScale = 0;
-			if (val <= 1.0) {
-				fgBaseScale = val * containScale;
-			} else {
-				fgBaseScale = containScale + (val - 1.0) * (fgCoverScale - containScale);
-			}
-
-			const targetW = fgSprite.texture.width * fgBaseScale;
-			const targetH = fgSprite.texture.height * fgBaseScale;
-
-			const borderEnabled = settings.current.fgBorderEnabled;
-			const borderWidth = borderEnabled ? settings.current.fgBorderWidth * pixelScale : 0;
-			const borderPosition = settings.current.fgBorderPosition || 'outer';
-
-			const shrinkMultiplier = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 1 : 2;
-			const shrinkPixels = borderWidth * shrinkMultiplier;
-
-			const spriteW = Math.max(0, targetW - shrinkPixels);
-			const spriteH = Math.max(0, targetH - shrinkPixels);
-
-			fgSprite.width = spriteW;
-			fgSprite.height = spriteH;
-			fgSprite.position.set(safeCenterX, safeCenterY);
+			fgSprite.width = fgLayout.spriteW;
+			fgSprite.height = fgLayout.spriteH;
+			fgSprite.position.set(fgLayout.safeCenterX, fgLayout.safeCenterY);
 
 			if (fgBorder) {
 				fgBorder.clear();
-				if (borderEnabled && borderWidth > 0) {
-					const [br, bg, bb, ba] = parseRgbaColor(settings.current.fgBorderColor);
-					const hexCol =
-						(Math.round(br * 255) << 16) + (Math.round(bg * 255) << 8) + Math.round(bb * 255);
-					const alignment = borderPosition === 'inner' ? 1 : borderPosition === 'center' ? 0.5 : 0;
+				if (fgLayout.border.visible) {
 					fgBorder
-						.rect(-spriteW / 2, -spriteH / 2, spriteW, spriteH)
-						.stroke({ width: borderWidth, color: hexCol, alpha: ba, alignment });
-					fgBorder.position.set(safeCenterX, safeCenterY);
-					fgBorder.visible = !settings.current.shadowOnly;
+						.rect(-fgLayout.spriteW / 2, -fgLayout.spriteH / 2, fgLayout.spriteW, fgLayout.spriteH)
+						.stroke({
+							width: fgLayout.border.width,
+							color: fgLayout.border.colorNumber,
+							alpha: fgLayout.border.alpha,
+							alignment: fgLayout.border.alignment
+						});
+					fgBorder.position.set(fgLayout.safeCenterX, fgLayout.safeCenterY);
+					fgBorder.visible = true;
 				} else {
 					fgBorder.visible = false;
 				}
 			}
 
 			if (fgShadowMesh) {
-				const shadowEnabled = settings.current.fgDropShadowEnabled;
-				const shadowMode = settings.current.fgDropShadowMode;
-
-				let blur = 0;
-				let spread = 0;
-				let offsetX = 0;
-				let offsetY = 0;
-				let alpha = 0;
-
-				if (shadowEnabled) {
-					alpha = settings.current.fgDropShadowAlpha / 100;
-					if (shadowMode === 'simple') {
-						const simpleSize = settings.current.fgDropShadowSimpleSize * pixelScale;
-						blur = simpleSize;
-						spread = Math.round(simpleSize * 0.5);
-						offsetX = 0;
-						offsetY = 0;
-					} else {
-						blur = settings.current.fgDropShadowStrength * pixelScale;
-						spread = settings.current.fgDropShadowSpread * pixelScale;
-						offsetX = settings.current.fgDropShadowOffsetX * pixelScale;
-						offsetY = settings.current.fgDropShadowOffsetY * pixelScale;
-					}
-				}
-
-				// The footprint is exactly targetW and targetH, regardless of border
-				let shadowBoxW = targetW;
-				let shadowBoxH = targetH;
-
-				const padding = Math.max(
-					blur * 3 + Math.abs(spread) + Math.max(Math.abs(offsetX), Math.abs(offsetY)) + 20,
-					40
-				);
-				const quadW = shadowBoxW + padding * 2;
-				const quadH = shadowBoxH + padding * 2;
-
-				fgShadowMesh.width = quadW;
-				fgShadowMesh.height = quadH;
-				fgShadowMesh.position.set(safeCenterX, safeCenterY);
+				fgShadowMesh.width = fgLayout.shadow.quadW;
+				fgShadowMesh.height = fgLayout.shadow.quadH;
+				fgShadowMesh.position.set(fgLayout.safeCenterX, fgLayout.safeCenterY);
 
 				const uniforms = sdfShader.resources.shadowUniforms.uniforms;
-				uniforms.uQuadSize[0] = quadW;
-				uniforms.uQuadSize[1] = quadH;
-				uniforms.uBoxHalfSize[0] = shadowBoxW / 2;
-				uniforms.uBoxHalfSize[1] = shadowBoxH / 2;
-				uniforms.uBlur = blur;
-				uniforms.uAlpha = alpha;
-				uniforms.uSpread = spread;
-				uniforms.uOffset[0] = offsetX;
-				uniforms.uOffset[1] = offsetY;
+				uniforms.uQuadSize[0] = fgLayout.shadow.quadW;
+				uniforms.uQuadSize[1] = fgLayout.shadow.quadH;
+				uniforms.uBoxHalfSize[0] = fgLayout.shadow.boxHalfW;
+				uniforms.uBoxHalfSize[1] = fgLayout.shadow.boxHalfH;
+				uniforms.uBlur = fgLayout.shadow.blur;
+				uniforms.uAlpha = fgLayout.shadow.alpha;
+				uniforms.uSpread = fgLayout.shadow.spread;
+				uniforms.uOffset[0] = fgLayout.shadow.offsetX;
+				uniforms.uOffset[1] = fgLayout.shadow.offsetY;
 			}
 		}
 	}
@@ -320,14 +180,14 @@
 		}
 
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
-		const scale = Math.min(targetW / logicalWidth, targetH / logicalHeight);
+		const fit = computeFitTransform(targetW, targetH, logicalWidth, logicalHeight);
 
-		scene.scale.set(scale);
-		scene.x = (targetW - logicalWidth * scale) / 2;
-		scene.y = (targetH - logicalHeight * scale) / 2;
+		scene.scale.set(fit.scale);
+		scene.x = fit.x;
+		scene.y = fit.y;
 
-		stageScale = scale;
-		
+		stageScale = fit.scale;
+
 		pixiApp.render();
 
 		updateImageLayout();
@@ -349,69 +209,6 @@
 			console.warn('Unable to set texture scale mode:', err);
 		}
 	}
-
-	function parseRgbaColor(colorStr: string): [number, number, number, number] {
-		if (!colorStr) return [0, 0, 0, 1];
-		const raw = colorStr.trim();
-
-		let r = 0;
-		let g = 0;
-		let b = 0;
-		let a = 1;
-
-		if (raw.startsWith('#')) {
-			const hex = raw.slice(1);
-			const normalized =
-				hex.length <= 4
-					? hex
-							.split('')
-							.map((char) => `${char}${char}`)
-							.join('')
-					: hex;
-
-			r = (parseInt(normalized.slice(0, 2), 16) || 0) / 255;
-			g = (parseInt(normalized.slice(2, 4), 16) || 0) / 255;
-			b = (parseInt(normalized.slice(4, 6), 16) || 0) / 255;
-			if (normalized.length === 8) {
-				a = (parseInt(normalized.slice(6, 8), 16) || 0) / 255;
-			}
-		} else {
-			const rgbaMatch = raw.match(
-				/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/i
-			);
-			if (rgbaMatch) {
-				r = (parseFloat(rgbaMatch[1]) || 0) / 255;
-				g = (parseFloat(rgbaMatch[2]) || 0) / 255;
-				b = (parseFloat(rgbaMatch[3]) || 0) / 255;
-				a = rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1;
-			}
-		}
-		return [r, g, b, a];
-	}
-
-	function parseColorString(colorStr: string): { color: string; alpha: number } {
-		if (!colorStr) return { color: '#000000', alpha: 1 };
-		const [r, g, b, a] = parseRgbaColor(colorStr);
-		const hexR = Math.round(r * 255)
-			.toString(16)
-			.padStart(2, '0');
-		const hexG = Math.round(g * 255)
-			.toString(16)
-			.padStart(2, '0');
-		const hexB = Math.round(b * 255)
-			.toString(16)
-			.padStart(2, '0');
-		return { color: `#${hexR}${hexG}${hexB}`, alpha: a };
-	}
-
-	let hasBackgroundImage = $derived(
-		settings.current.bgEnabled &&
-			(settings.current.bgSource === 'link'
-				? Boolean(media.current.fgName)
-				: settings.current.bgSource === 'custom'
-					? Boolean(media.current.bgName)
-					: false)
-	);
 
 	$effect(() => {
 		if (!containerEl) return;
@@ -744,101 +541,18 @@
 
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 
-		// Create a fixed logicalWidth x logicalHeight render texture
-		const renderTexture = RenderTexture.create({
-			width: logicalWidth,
-			height: logicalHeight
+		await exportRenderedImage({
+			pixiApp,
+			scene,
+			logicalWidth,
+			logicalHeight,
+			stageScale,
+			fgBlurFilter,
+			bgBlurFilter,
+			fgActualBlur: appState.fgActualBlur,
+			bgActualBlur: appState.bgActualBlur,
+			updateLayout: updateImageLayout
 		});
-
-		// Save current scene transform & blur values
-		const oldScaleX = scene.scale.x;
-		const oldScaleY = scene.scale.y;
-		const oldX = scene.x;
-		const oldY = scene.y;
-
-		// Set scene to full 1.0 scale for high-res export
-		scene.scale.set(1);
-		scene.x = 0;
-		scene.y = 0;
-		const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
-		fgBlurFilter.strength = appState.fgActualBlur * pixelScale;
-		bgBlurFilter.strength = appState.bgActualBlur * pixelScale;
-
-		updateImageLayout();
-
-		// Render scene to high-res renderTexture (captures all layers including bgLayer, shadowLayer, fgLayer, borderLayer)
-		pixiApp.renderer.render({
-			container: scene,
-			target: renderTexture
-		});
-
-		// Restore viewport scene transform & preview blur values
-		scene.scale.set(oldScaleX, oldScaleY);
-		scene.x = oldX;
-		scene.y = oldY;
-		fgBlurFilter.strength = appState.fgActualBlur * pixelScale * stageScale;
-		bgBlurFilter.strength = appState.bgActualBlur * pixelScale * stageScale;
-
-		updateImageLayout();
-
-		// Extract canvas directly with true pixel colors and alpha channels
-		const extractedCanvas = pixiApp.renderer.extract.canvas({
-			target: renderTexture
-		});
-
-		renderTexture.destroy(true);
-
-		const imageBlob = await new Promise<Blob | null>((resolve) =>
-			(extractedCanvas as HTMLCanvasElement).toBlob(resolve, 'image/png')
-		);
-
-		if (!imageBlob) return;
-
-		const saveFilePicker = (
-			window as unknown as {
-				showSaveFilePicker?: (options: {
-					suggestedName: string;
-					types: Array<{
-						description: string;
-						accept: Record<string, string[]>;
-					}>;
-				}) => Promise<{
-					createWritable: () => Promise<{
-						write: (data: Blob) => Promise<void>;
-						close: () => Promise<void>;
-					}>;
-				}>;
-			}
-		).showSaveFilePicker;
-
-		try {
-			if (saveFilePicker) {
-				const fileHandle = await saveFilePicker({
-					suggestedName: 'image-fixr-render.png',
-					types: [
-						{
-							description: 'PNG image',
-							accept: { 'image/png': ['.png'] }
-						}
-					]
-				});
-
-				const writable = await fileHandle.createWritable();
-				await writable.write(imageBlob);
-				await writable.close();
-				return;
-			}
-
-			const downloadUrl = URL.createObjectURL(imageBlob);
-			const downloadLink = document.createElement('a');
-			downloadLink.href = downloadUrl;
-			downloadLink.download = 'image-fixr-render.png';
-			downloadLink.click();
-			URL.revokeObjectURL(downloadUrl);
-		} catch (error) {
-			if (error instanceof DOMException && error.name === 'AbortError') return;
-			console.error('Unable to save rendered image:', error);
-		}
 	}
 
 	export function forceResize() {
@@ -864,7 +578,7 @@
 		e.preventDefault();
 		isDragging = false;
 		const file = e.dataTransfer?.files[0];
-		if (file) void handleFileSelect(file);
+		if (file) void selectImage('foreground', file);
 	}}
 >
 	<div

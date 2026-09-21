@@ -1,177 +1,112 @@
 <script lang="ts">
 	import SliderControl from './SliderControl.svelte';
 	import SectionHeader from './SectionHeader.svelte';
+	import PillSwitcher from './PillSwitcher.svelte';
+	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import { settings, media, commitHistory } from '$lib/state.svelte';
-	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
 
 	let hasForeground = $derived(Boolean(media.current.fgName));
+
+	const shadowModeOptions = [
+		{ value: 'simple', label: 'Simple' },
+		{ value: 'advanced', label: 'Advanced' }
+	];
 </script>
 
-<div
-	class={cn(
-		'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-		hasForeground ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
-		className
-	)}
->
-	<div class="overflow-hidden">
-		<div class="flex flex-col">
-			<SectionHeader
-				title="Shadow"
-				hasSwitch={true}
-				bind:enabled={settings.current.fgDropShadowEnabled}
-				bind:isCollapsed={settings.current.fgDropShadowCollapsed}
-				onEnableChange={commitHistory}
-			>
-				<div
-					class="relative inline-grid w-full @[340px]:w-auto grid-cols-2 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
-				>
-					<div
-						class={cn(
-							'absolute inset-y-0.5 left-0.5 w-[calc((100%-4px)/2)] rounded bg-background shadow-xs transition-transform duration-200 ease-out',
-							settings.current.fgDropShadowMode === 'simple' && 'translate-x-0',
-							settings.current.fgDropShadowMode === 'advanced' && 'translate-x-full'
-						)}
-					></div>
+<CollapsibleSection open={hasForeground} class={className}>
+	<div class="flex flex-col">
+		<SectionHeader
+			title="Shadow"
+			hasSwitch={true}
+			bind:enabled={settings.current.fgDropShadowEnabled}
+			bind:isCollapsed={settings.current.fgDropShadowCollapsed}
+			onEnableChange={commitHistory}
+		>
+			<PillSwitcher
+				options={shadowModeOptions}
+				bind:value={settings.current.fgDropShadowMode}
+				onChange={() => commitHistory()}
+				fullWidth={true}
+			/>
+		</SectionHeader>
 
-					<button
-						type="button"
-						class={cn(
-							'relative z-10 cursor-pointer rounded px-2.5 py-0.5 text-center text-[11px] font-medium transition-colors duration-150',
-							settings.current.fgDropShadowMode === 'simple'
-								? 'text-foreground'
-								: 'text-muted-foreground hover:text-foreground'
-						)}
-						onclick={() => {
-							settings.current.fgDropShadowMode = 'simple';
-							commitHistory();
-						}}
-					>
-						Simple
-					</button>
-					<button
-						type="button"
-						class={cn(
-							'relative z-10 cursor-pointer rounded px-2.5 py-0.5 text-center text-[11px] font-medium transition-colors duration-150',
-							settings.current.fgDropShadowMode === 'advanced'
-								? 'text-foreground'
-								: 'text-muted-foreground hover:text-foreground'
-						)}
-						onclick={() => {
-							settings.current.fgDropShadowMode = 'advanced';
-							commitHistory();
-						}}
-					>
-						Advanced
-					</button>
-				</div>
-			</SectionHeader>
+		<CollapsibleSection open={settings.current.fgDropShadowEnabled && !settings.current.fgDropShadowCollapsed}>
+			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+				<!-- Simple Mode Controls -->
+				<CollapsibleSection open={settings.current.fgDropShadowMode === 'simple'}>
+					<SliderControl
+						id="fg-drop-shadow-simple-size"
+						label="Shadow Size"
+						bind:value={settings.current.fgDropShadowSimpleSize}
+						min={0}
+						max={150}
+						step={1}
+						defaultValue={30}
+					/>
+				</CollapsibleSection>
 
-			<div
-				class={cn(
-					'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-					settings.current.fgDropShadowEnabled && !settings.current.fgDropShadowCollapsed
-						? 'grid-rows-[1fr] opacity-100'
-						: 'pointer-events-none grid-rows-[0fr] opacity-0'
-				)}
-			>
-				<div class="overflow-hidden">
-					<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
-						<!-- Simple Mode Controls (Animated h-0 to target) -->
-						<div
-							class={cn(
-								'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-								settings.current.fgDropShadowMode === 'simple'
-									? 'grid-rows-[1fr] opacity-100'
-									: 'pointer-events-none grid-rows-[0fr] opacity-0'
-							)}
-						>
-							<div class="overflow-hidden">
-								<SliderControl
-									id="fg-drop-shadow-simple-size"
-									label="Shadow Size"
-									bind:value={settings.current.fgDropShadowSimpleSize}
-									min={0}
-									max={150}
-									step={1}
-									defaultValue={30}
-								/>
-							</div>
+				<!-- Advanced Mode Controls -->
+				<CollapsibleSection open={settings.current.fgDropShadowMode === 'advanced'}>
+					<div class="flex flex-col gap-3">
+						<div class="grid w-full grid-cols-2 items-center gap-3">
+							<SliderControl
+								id="fg-drop-shadow-strength"
+								label="Blur"
+								bind:value={settings.current.fgDropShadowStrength}
+								min={0}
+								max={200}
+								step={1}
+								defaultValue={30}
+							/>
+
+							<SliderControl
+								id="fg-drop-shadow-spread"
+								label="Spread"
+								bind:value={settings.current.fgDropShadowSpread}
+								min={-50}
+								max={100}
+								step={1}
+								defaultValue={15}
+							/>
 						</div>
 
-						<!-- Advanced Mode Controls (Animated h-0 to target) -->
-						<div
-							class={cn(
-								'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-								settings.current.fgDropShadowMode === 'advanced'
-									? 'grid-rows-[1fr] opacity-100'
-									: 'pointer-events-none grid-rows-[0fr] opacity-0'
-							)}
-						>
-							<div class="overflow-hidden">
-								<div class="flex flex-col gap-3">
-									<div class="grid w-full grid-cols-2 items-center gap-3">
-										<SliderControl
-											id="fg-drop-shadow-strength"
-											label="Blur"
-											bind:value={settings.current.fgDropShadowStrength}
-											min={0}
-											max={200}
-											step={1}
-											defaultValue={30}
-										/>
+						<div class="grid w-full grid-cols-2 items-center gap-3">
+							<SliderControl
+								id="fg-drop-shadow-offset-x"
+								label="X-Offset"
+								bind:value={settings.current.fgDropShadowOffsetX}
+								min={-100}
+								max={100}
+								step={1}
+								defaultValue={0}
+							/>
 
-										<SliderControl
-											id="fg-drop-shadow-spread"
-											label="Spread"
-											bind:value={settings.current.fgDropShadowSpread}
-											min={-50}
-											max={100}
-											step={1}
-											defaultValue={15}
-										/>
-									</div>
-
-									<div class="grid w-full grid-cols-2 items-center gap-3">
-										<SliderControl
-											id="fg-drop-shadow-offset-x"
-											label="X-Offset"
-											bind:value={settings.current.fgDropShadowOffsetX}
-											min={-100}
-											max={100}
-											step={1}
-											defaultValue={0}
-										/>
-
-										<SliderControl
-											id="fg-drop-shadow-offset-y"
-											label="Y-Offset"
-											bind:value={settings.current.fgDropShadowOffsetY}
-											min={-100}
-											max={100}
-											step={1}
-											defaultValue={0}
-										/>
-									</div>
-								</div>
-							</div>
+							<SliderControl
+								id="fg-drop-shadow-offset-y"
+								label="Y-Offset"
+								bind:value={settings.current.fgDropShadowOffsetY}
+								min={-100}
+								max={100}
+								step={1}
+								defaultValue={0}
+							/>
 						</div>
-
-						<!-- Shared Opacity Slider -->
-						<SliderControl
-							id="fg-drop-shadow-alpha"
-							label="Opacity"
-							bind:value={settings.current.fgDropShadowAlpha}
-							min={0}
-							max={100}
-							step={1}
-							defaultValue={100}
-						/>
 					</div>
-				</div>
+				</CollapsibleSection>
+
+				<!-- Shared Opacity Slider -->
+				<SliderControl
+					id="fg-drop-shadow-alpha"
+					label="Opacity"
+					bind:value={settings.current.fgDropShadowAlpha}
+					min={0}
+					max={100}
+					step={1}
+					defaultValue={100}
+				/>
 			</div>
-		</div>
+		</CollapsibleSection>
 	</div>
-</div>
+</CollapsibleSection>

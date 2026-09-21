@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { theme, history, commitHistory } from '$lib/state.svelte';
+	import { theme, history } from '$lib/state.svelte';
 	import ForegroundControls from './components/Sidebar/ForegroundControls.svelte';
 	import MarginControls from './components/Sidebar/MarginControls.svelte';
 	import BorderControls from './components/Sidebar/BorderControls.svelte';
@@ -31,7 +31,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} onpointerup={commitHistory} />
+<svelte:window onkeydown={handleKeydown} />
 
 <aside
 	class={cn(

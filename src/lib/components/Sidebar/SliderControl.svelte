@@ -12,7 +12,8 @@
 		max = 100,
 		step = 1,
 		defaultValue = null,
-		formatValue
+		formatValue,
+		onValueCommit
 	}: {
 		id: string;
 		label: string;
@@ -22,6 +23,7 @@
 		step?: number;
 		defaultValue?: number | null;
 		formatValue?: (val: number) => string;
+		onValueCommit?: (val: number) => void;
 	} = $props();
 
 	const formattedValue = $derived(formatValue ? formatValue(value) : String(value));
@@ -29,6 +31,15 @@
 	const canReset = $derived(
 		defaultValue !== null && defaultValue !== undefined && value !== defaultValue
 	);
+
+	function handleCommit(val: number | number[]) {
+		const num = Array.isArray(val) ? val[0] : val;
+		if (onValueCommit) {
+			onValueCommit(num);
+		} else {
+			commitHistory();
+		}
+	}
 </script>
 
 <div class="control">
@@ -57,5 +68,13 @@
 			<span class="control-value font-mono text-muted-foreground">{formattedValue}</span>
 		{/if}
 	</div>
-	<Slider {id} type="single" bind:value {min} {max} {step} />
+	<Slider
+		{id}
+		type="single"
+		bind:value
+		{min}
+		{max}
+		{step}
+		onValueCommit={handleCommit}
+	/>
 </div>
