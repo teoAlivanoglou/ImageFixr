@@ -67,7 +67,7 @@
 			<!-- Visual indicator -->
 			<div
 				class={cn(
-					'absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 transition-colors',
+					'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
 					isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
 				)}
 			></div>

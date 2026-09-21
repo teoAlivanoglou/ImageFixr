@@ -179,7 +179,7 @@
 								bind:value={settings.current.fgSafeAreaStandard}
 								onValueChange={() => commitHistory()}
 							>
-								<SelectTrigger id="margin-safe-area" class="h-7 w-[180px] text-xs">
+								<SelectTrigger id="margin-safe-area" class="h-7 w-45 text-xs">
 									{SAFE_AREA_PRESETS[settings.current.fgSafeAreaStandard]?.label || 'None'}
 								</SelectTrigger>
 								<SelectContent>
@@ -310,7 +310,7 @@
 															max={settings.current.fgMarginRightUnit === 'percent' ? 40 : 300}
 															step={1}
 															onValueCommit={() => commitHistory()}
-															class="flex-1 py-1 [&_[data-slot=slider-track]]:bg-foreground/12 dark:[&_[data-slot=slider-track]]:bg-white/18"
+															class="flex-1 py-1 **:data-[slot=slider-track]:bg-foreground/12 dark:**:data-[slot=slider-track]:bg-white/18"
 														/>
 														<span
 															class="w-6 shrink-0 text-right font-mono text-xs text-foreground select-none"
