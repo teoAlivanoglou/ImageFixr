@@ -209,8 +209,14 @@
 			const borderWidth = borderEnabled ? settings.current.fgBorderWidth : 0;
 			const borderPosition = settings.current.fgBorderPosition || 'outer';
 
-			fgSprite.width = targetW;
-			fgSprite.height = targetH;
+			const shrinkMultiplier = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 1 : 2;
+			const shrinkPixels = borderWidth * shrinkMultiplier;
+
+			const spriteW = Math.max(0, targetW - shrinkPixels);
+			const spriteH = Math.max(0, targetH - shrinkPixels);
+
+			fgSprite.width = spriteW;
+			fgSprite.height = spriteH;
 			fgSprite.position.set(safeCenterX, safeCenterY);
 
 			if (fgBorder) {
@@ -219,9 +225,9 @@
 					const [br, bg, bb, ba] = parseRgbaColor(settings.current.fgBorderColor);
 					const hexCol =
 						(Math.round(br * 255) << 16) + (Math.round(bg * 255) << 8) + Math.round(bb * 255);
-					const alignment = borderPosition === 'inner' ? 0 : borderPosition === 'center' ? 0.5 : 1;
+					const alignment = borderPosition === 'inner' ? 1 : borderPosition === 'center' ? 0.5 : 0;
 					fgBorder
-						.rect(-targetW / 2, -targetH / 2, targetW, targetH)
+						.rect(-spriteW / 2, -spriteH / 2, spriteW, spriteH)
 						.stroke({ width: borderWidth, color: hexCol, alpha: ba, alignment });
 					fgBorder.position.set(safeCenterX, safeCenterY);
 					fgBorder.visible = !settings.current.shadowOnly;
@@ -256,18 +262,9 @@
 					}
 				}
 
-				// If border is outer or center, the shadow bounds should start from the outer border's edge
+				// The footprint is exactly targetW and targetH, regardless of border
 				let shadowBoxW = targetW;
 				let shadowBoxH = targetH;
-				if (borderEnabled && borderWidth > 0) {
-					if (borderPosition === 'outer') {
-						shadowBoxW += borderWidth * 2;
-						shadowBoxH += borderWidth * 2;
-					} else if (borderPosition === 'center') {
-						shadowBoxW += borderWidth;
-						shadowBoxH += borderWidth;
-					}
-				}
 
 				const padding = Math.max(
 					blur * 3 + Math.abs(spread) + Math.max(Math.abs(offsetX), Math.abs(offsetY)) + 20,
