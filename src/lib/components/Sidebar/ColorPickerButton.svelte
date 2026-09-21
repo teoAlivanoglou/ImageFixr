@@ -32,7 +32,7 @@
 	<Popover.Trigger>
 		<Button
 			variant="outline"
-			class={cn('relative h-8 w-12 shrink-0 overflow-hidden p-0', className)}
+			class={cn('relative h-8 w-14 shrink-0 overflow-hidden p-0', className)}
 			aria-label={ariaLabel}
 		>
 			<span

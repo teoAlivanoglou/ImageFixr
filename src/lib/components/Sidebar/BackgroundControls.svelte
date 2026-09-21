@@ -66,7 +66,6 @@
 					id="background-color"
 					label="Color"
 					bind:value={settings.current.bgColor}
-					buttonClass="w-14"
 					ariaLabel="Background Color"
 				/>
 
