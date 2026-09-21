@@ -64,6 +64,12 @@ export type Settings = {
 	bgSource: 'none' | 'link' | 'custom';
 	shadowOnly: boolean;
 	advancedSettingsEnabled: boolean;
+	fgCollapsed: boolean;
+	bgCollapsed: boolean;
+	fgMarginCollapsed: boolean;
+	fgBorderCollapsed: boolean;
+	fgDropShadowCollapsed: boolean;
+	advancedCollapsed: boolean;
 };
 
 export const DEFAULT_SWATCHES = [
@@ -140,7 +146,13 @@ export const settings = new PersistedState<Settings>(
 		swatches: [...DEFAULT_SWATCHES],
 		bgColor: '#007595',
 		shadowOnly: false,
-		advancedSettingsEnabled: false
+		advancedSettingsEnabled: false,
+		fgCollapsed: false,
+		bgCollapsed: true,
+		fgMarginCollapsed: true,
+		fgBorderCollapsed: true,
+		fgDropShadowCollapsed: true,
+		advancedCollapsed: true
 	},
 	{ storage: 'local', syncTabs: true }
 );
@@ -254,6 +266,24 @@ if (settings.current.fgMarginEnabled === undefined) {
 if (settings.current.advancedSettingsEnabled === undefined) {
 	settings.current.advancedSettingsEnabled = false;
 }
+if (settings.current.fgCollapsed === undefined) {
+	settings.current.fgCollapsed = false;
+}
+if (settings.current.bgCollapsed === undefined) {
+	settings.current.bgCollapsed = true;
+}
+if (settings.current.fgMarginCollapsed === undefined) {
+	settings.current.fgMarginCollapsed = true;
+}
+if (settings.current.fgBorderCollapsed === undefined) {
+	settings.current.fgBorderCollapsed = true;
+}
+if (settings.current.fgDropShadowCollapsed === undefined) {
+	settings.current.fgDropShadowCollapsed = true;
+}
+if (settings.current.advancedCollapsed === undefined) {
+	settings.current.advancedCollapsed = true;
+}
 if (!settings.current.swatches || !Array.isArray(settings.current.swatches)) {
 	settings.current.swatches = [...DEFAULT_SWATCHES];
 }
@@ -276,9 +306,16 @@ $effect.root(() => {
 	history = new StateHistory(
 		() => historyState.value,
 		(val) => {
-			//   console.log("[History Restored (Undo/Redo)]", val);
-			Object.assign(settings.current, val);
-			historyState.value = $state.snapshot(val);
+			const currentCollapsed = {
+				fgCollapsed: settings.current.fgCollapsed,
+				bgCollapsed: settings.current.bgCollapsed,
+				fgMarginCollapsed: settings.current.fgMarginCollapsed,
+				fgBorderCollapsed: settings.current.fgBorderCollapsed,
+				fgDropShadowCollapsed: settings.current.fgDropShadowCollapsed,
+				advancedCollapsed: settings.current.advancedCollapsed
+			};
+			Object.assign(settings.current, val, currentCollapsed);
+			historyState.value = $state.snapshot(settings.current);
 		},
 		{ capacity: 50 }
 	);

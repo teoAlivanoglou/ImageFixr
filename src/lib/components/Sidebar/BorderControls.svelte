@@ -8,8 +8,6 @@
 
 	let { class: className }: { class?: string } = $props();
 
-	let isCollapsed = $state(false);
-
 	let hasForeground = $derived(Boolean(media.current.fgName));
 </script>
 
@@ -26,7 +24,7 @@
 				title="Border"
 				hasSwitch={true}
 				bind:enabled={settings.current.fgBorderEnabled}
-				bind:isCollapsed
+				bind:isCollapsed={settings.current.fgBorderCollapsed}
 				onEnableChange={() => {
 					if (settings.current.fgBorderWidth === 0) settings.current.fgBorderWidth = 10;
 					commitHistory();
@@ -95,7 +93,7 @@
 			<div
 				class={cn(
 					'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-					settings.current.fgBorderEnabled && !isCollapsed
+					settings.current.fgBorderEnabled && !settings.current.fgBorderCollapsed
 						? 'grid-rows-[1fr] opacity-100'
 						: 'pointer-events-none grid-rows-[0fr] opacity-0'
 				)}

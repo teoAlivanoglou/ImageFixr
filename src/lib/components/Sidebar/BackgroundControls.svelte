@@ -9,8 +9,6 @@
 
 	let { class: className }: { class?: string } = $props();
 
-	let isCollapsed = $state(false);
-
 	async function handleFileSelect(file: File) {
 		if (!file.type.startsWith('image/')) return;
 		await saveImageStorage('background', file);
@@ -36,7 +34,7 @@
 		title="Background"
 		hasSwitch={true}
 		bind:enabled={settings.current.bgEnabled}
-		bind:isCollapsed
+		bind:isCollapsed={settings.current.bgCollapsed}
 		onEnableChange={commitHistory}
 	>
 		<div
@@ -102,7 +100,7 @@
 	<div
 		class={cn(
 			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-			settings.current.bgEnabled && !isCollapsed
+			settings.current.bgEnabled && !settings.current.bgCollapsed
 				? 'grid-rows-[1fr] opacity-100'
 				: 'pointer-events-none grid-rows-[0fr] opacity-0'
 		)}

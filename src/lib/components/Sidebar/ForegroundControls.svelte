@@ -8,8 +8,6 @@
 
 	let { class: className }: { class?: string } = $props();
 
-	let isCollapsed = $state(false);
-
 	let hasForeground = $derived(Boolean(media.current.fgName));
 
 	async function handleFileSelect(file: File) {
@@ -34,13 +32,13 @@
 
 <div class={cn('flex flex-col', className)}>
 	<!-- Foreground Section Header -->
-	<SectionHeader title="Foreground" bind:isCollapsed />
+	<SectionHeader title="Foreground" bind:isCollapsed={settings.current.fgCollapsed} />
 
 	<!-- Collapsible Section Body -->
 	<div
 		class={cn(
 			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-			!isCollapsed ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0'
+			!settings.current.fgCollapsed ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0'
 		)}
 	>
 		<div class="-mx-2.5 overflow-hidden px-2.5">

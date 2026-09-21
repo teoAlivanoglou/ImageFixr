@@ -13,24 +13,15 @@
 
 	let { class: className }: { class?: string } = $props();
 
-	let isCollapsed = $state(false);
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<SectionHeader
-		title="Advanced"
-		hasSwitch={true}
-		bind:enabled={settings.current.advancedSettingsEnabled}
-		bind:isCollapsed
-		onEnableChange={commitHistory}
-	/>
+	<SectionHeader title="Advanced" bind:isCollapsed={settings.current.advancedCollapsed} />
 
 	<div
 		class={cn(
 			'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-			settings.current.advancedSettingsEnabled && !isCollapsed
-				? 'grid-rows-[1fr] opacity-100'
-				: 'pointer-events-none grid-rows-[0fr] opacity-0'
+			!settings.current.advancedCollapsed ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0'
 		)}
 	>
 		<div class="overflow-hidden">

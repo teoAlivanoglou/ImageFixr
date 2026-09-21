@@ -14,7 +14,7 @@
 	} from 'pixi.js';
 	import { useResizeObserver } from 'runed';
 	import { settings, appState, media, SAFE_AREA_PRESETS } from './state.svelte';
-	import { loadImageStorage } from './image-db';
+	import { loadImageStorage, saveImageStorage } from './image-db';
 	import { cn } from './utils';
 	import { ClampedBlurFilter } from './filters/clamped-blur-filter';
 	import sdfShadowVert from './shaders/sdf-shadow.vert?raw';
@@ -23,6 +23,17 @@
 	let { class: className }: { class?: string } = $props();
 
 	let containerEl = $state<HTMLElement | null>(null);
+	let isDragging = $state(false);
+
+	async function handleFileSelect(file: File) {
+		if (!file.type.startsWith('image/')) return;
+		await saveImageStorage('foreground', file);
+		media.current = {
+			...media.current,
+			fgName: file.name,
+			fgVersion: Date.now()
+		};
+	}
 
 	const fgBlurFilter = new ClampedBlurFilter({ strength: 0, quality: 4 });
 	const bgBlurFilter = new ClampedBlurFilter({ strength: 0, quality: 4 });
@@ -838,15 +849,40 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class={cn(
 		'@container-size relative flex h-full min-h-0 w-full min-w-0 items-center justify-center overflow-hidden bg-background',
 		className
 	)}
+	ondragover={(e) => {
+		e.preventDefault();
+		isDragging = true;
+	}}
+	ondragleave={() => (isDragging = false)}
+	ondrop={(e) => {
+		e.preventDefault();
+		isDragging = false;
+		const file = e.dataTransfer?.files[0];
+		if (file) void handleFileSelect(file);
+	}}
 >
-	<main
-		bind:this={containerEl}
-		class="checkerboard-bg shrink-0 overflow-hidden rounded-xs"
+	<div
+		class={cn(
+			'relative shrink-0 overflow-hidden rounded-xs transition-[box-shadow,ring] duration-150',
+			isDragging && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+		)}
 		style={`--aspect-width: ${appState.aspectWidth}; --aspect-height: ${appState.aspectHeight}; width: min(100cqw, calc(100cqh * var(--aspect-width) / var(--aspect-height))); max-height: 100cqh; max-width: 100cqw; aspect-ratio: var(--aspect-width) / var(--aspect-height);`}
-	></main>
+	>
+		<main bind:this={containerEl} class="checkerboard-bg h-full w-full overflow-hidden"></main>
+
+		{#if isDragging}
+			<div
+				class="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-1 bg-background/70 backdrop-blur-xs"
+			>
+				<span class="text-sm font-medium text-foreground">Drop image here</span>
+				<span class="text-xs text-muted-foreground">Sets as foreground image</span>
+			</div>
+		{/if}
+	</div>
 </div>

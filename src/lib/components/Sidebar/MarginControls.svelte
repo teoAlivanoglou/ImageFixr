@@ -16,8 +16,6 @@
 
 	let { class: className }: { class?: string } = $props();
 
-	let isCollapsed = $state(false);
-
 	let hasForeground = $derived(Boolean(media.current.fgName));
 
 	type Side = 'top' | 'right' | 'bottom' | 'left';
@@ -115,7 +113,7 @@
 				title="Safe Area"
 				hasSwitch={true}
 				bind:enabled={settings.current.fgMarginEnabled}
-				bind:isCollapsed
+				bind:isCollapsed={settings.current.fgMarginCollapsed}
 				onEnableChange={commitHistory}
 			/>
 
@@ -123,7 +121,7 @@
 			<div
 				class={cn(
 					'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
-					settings.current.fgMarginEnabled && !isCollapsed
+					settings.current.fgMarginEnabled && !settings.current.fgMarginCollapsed
 						? 'grid-rows-[1fr] opacity-100'
 						: 'pointer-events-none grid-rows-[0fr] opacity-0'
 				)}
