@@ -12,7 +12,7 @@
 	let viewportRef = $state<Viewport>();
 
 	let sidebarWidthStore = new PersistedState('image-fixr-sidebar-width', 320);
-	let currentWidth = $state(sidebarWidthStore.current);
+	let currentWidth = $state(Math.max(290, sidebarWidthStore.current));
 	let isResizing = $state(false);
 
 	function startResize(e: MouseEvent) {
@@ -25,7 +25,7 @@
 	function onMouseMove(e: MouseEvent) {
 		if (!isResizing) return;
 		flushSync(() => {
-			currentWidth = Math.max(250, Math.min(e.clientX, 600));
+			currentWidth = Math.max(290, Math.min(e.clientX, 600));
 		});
 		viewportRef?.forceResize();
 	}

@@ -33,7 +33,7 @@
 				}}
 			>
 				<div
-					class="relative inline-grid grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
+					class="relative inline-grid w-full @[340px]:w-auto grid-cols-3 rounded-md border border-input bg-muted/40 p-0.5 text-xs"
 				>
 					<div
 						class={cn(
