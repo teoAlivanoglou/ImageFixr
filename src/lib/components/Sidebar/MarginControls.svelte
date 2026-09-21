@@ -181,12 +181,19 @@
 							</div>
 						</div>
 
-						<!-- Enabled Side Rows: Side   Reset   Control   Px/% -->
-						{#if hasAnySideEnabled}
-							<div class="flex flex-col gap-1.5 pt-0.5">
-								{#each SIDES as side}
-									{#if settings.current[side.enabledProp]}
-										<div class="flex items-center gap-1.5">
+						<!-- Enabled Side Rows: Side   Reset   Control   Px/% (Animated from h-0 to target) -->
+						<div class="flex flex-col pt-0.5">
+							{#each SIDES as side}
+								<div
+									class={cn(
+										'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+										settings.current[side.enabledProp]
+											? 'grid-rows-[1fr] opacity-100'
+											: 'pointer-events-none grid-rows-[0fr] opacity-0'
+									)}
+								>
+									<div class="overflow-hidden">
+										<div class="flex items-center gap-1.5 py-1">
 											<!-- Label -->
 											<span class="w-12 shrink-0 text-xs text-muted-foreground select-none">
 												{side.label}
@@ -258,10 +265,10 @@
 												</button>
 											</div>
 										</div>
-									{/if}
-								{/each}
-							</div>
-						{/if}
+									</div>
+								</div>
+							{/each}
+						</div>
 					</div>
 				</div>
 			</div>

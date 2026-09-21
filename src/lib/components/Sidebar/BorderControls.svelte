@@ -101,19 +101,22 @@
 				)}
 			>
 				<div class="overflow-hidden">
-					<div class="mt-2.5 flex items-end gap-2.5 pl-2.5">
-						<div class="flex-1">
-							<SliderControl
-								id="fg-border-width"
-								label="Width"
-								bind:value={settings.current.fgBorderWidth}
-								min={0}
-								max={50}
-								step={1}
-								defaultValue={10}
-							/>
-						</div>
-						<ColorControl bind:value={settings.current.fgBorderColor} ariaLabel="Border Color" />
+					<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+						<SliderControl
+							id="fg-border-width"
+							label="Width"
+							bind:value={settings.current.fgBorderWidth}
+							min={0}
+							max={50}
+							step={1}
+							defaultValue={10}
+						/>
+						<ColorControl
+							id="fg-border-color"
+							label="Color"
+							bind:value={settings.current.fgBorderColor}
+							ariaLabel="Border Color"
+						/>
 					</div>
 				</div>
 			</div>

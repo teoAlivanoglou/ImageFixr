@@ -9,13 +9,6 @@
 	let isCollapsed = $state(false);
 
 	let hasForeground = $derived(Boolean(media.current.fgName));
-
-	let simpleHeight = $state<number>(44);
-	let advancedHeight = $state<number>(108);
-
-	let modeHeight = $derived(
-		settings.current.fgDropShadowMode === 'simple' ? simpleHeight || 44 : advancedHeight || 108
-	);
 </script>
 
 <div
@@ -88,20 +81,16 @@
 			>
 				<div class="overflow-hidden">
 					<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+						<!-- Simple Mode Controls (Animated h-0 to target) -->
 						<div
-							class="relative grid overflow-hidden transition-[height] duration-200 ease-out"
-							style="height: {modeHeight}px;"
+							class={cn(
+								'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+								settings.current.fgDropShadowMode === 'simple'
+									? 'grid-rows-[1fr] opacity-100'
+									: 'pointer-events-none grid-rows-[0fr] opacity-0'
+							)}
 						>
-							<!-- Simple Mode Controls -->
-							<div
-								bind:clientHeight={simpleHeight}
-								class={cn(
-									'col-start-1 row-start-1 flex w-full flex-col justify-start self-start transition-opacity duration-150',
-									settings.current.fgDropShadowMode === 'simple'
-										? 'opacity-100'
-										: 'pointer-events-none opacity-0'
-								)}
-							>
+							<div class="overflow-hidden">
 								<SliderControl
 									id="fg-drop-shadow-simple-size"
 									label="Shadow Size"
@@ -112,59 +101,62 @@
 									defaultValue={30}
 								/>
 							</div>
+						</div>
 
-							<!-- Advanced Mode Controls -->
-							<div
-								bind:clientHeight={advancedHeight}
-								class={cn(
-									'col-start-1 row-start-1 flex w-full flex-col gap-3 self-start transition-opacity duration-150',
-									settings.current.fgDropShadowMode === 'advanced'
-										? 'opacity-100'
-										: 'pointer-events-none opacity-0'
-								)}
-							>
-								<div class="grid w-full grid-cols-2 items-center gap-3">
-									<SliderControl
-										id="fg-drop-shadow-strength"
-										label="Blur"
-										bind:value={settings.current.fgDropShadowStrength}
-										min={0}
-										max={200}
-										step={1}
-										defaultValue={30}
-									/>
+						<!-- Advanced Mode Controls (Animated h-0 to target) -->
+						<div
+							class={cn(
+								'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+								settings.current.fgDropShadowMode === 'advanced'
+									? 'grid-rows-[1fr] opacity-100'
+									: 'pointer-events-none grid-rows-[0fr] opacity-0'
+							)}
+						>
+							<div class="overflow-hidden">
+								<div class="flex flex-col gap-3">
+									<div class="grid w-full grid-cols-2 items-center gap-3">
+										<SliderControl
+											id="fg-drop-shadow-strength"
+											label="Blur"
+											bind:value={settings.current.fgDropShadowStrength}
+											min={0}
+											max={200}
+											step={1}
+											defaultValue={30}
+										/>
 
-									<SliderControl
-										id="fg-drop-shadow-spread"
-										label="Spread"
-										bind:value={settings.current.fgDropShadowSpread}
-										min={-50}
-										max={100}
-										step={1}
-										defaultValue={15}
-									/>
-								</div>
+										<SliderControl
+											id="fg-drop-shadow-spread"
+											label="Spread"
+											bind:value={settings.current.fgDropShadowSpread}
+											min={-50}
+											max={100}
+											step={1}
+											defaultValue={15}
+										/>
+									</div>
 
-								<div class="grid w-full grid-cols-2 items-center gap-3">
-									<SliderControl
-										id="fg-drop-shadow-offset-x"
-										label="X-Offset"
-										bind:value={settings.current.fgDropShadowOffsetX}
-										min={-100}
-										max={100}
-										step={1}
-										defaultValue={0}
-									/>
+									<div class="grid w-full grid-cols-2 items-center gap-3">
+										<SliderControl
+											id="fg-drop-shadow-offset-x"
+											label="X-Offset"
+											bind:value={settings.current.fgDropShadowOffsetX}
+											min={-100}
+											max={100}
+											step={1}
+											defaultValue={0}
+										/>
 
-									<SliderControl
-										id="fg-drop-shadow-offset-y"
-										label="Y-Offset"
-										bind:value={settings.current.fgDropShadowOffsetY}
-										min={-100}
-										max={100}
-										step={1}
-										defaultValue={0}
-									/>
+										<SliderControl
+											id="fg-drop-shadow-offset-y"
+											label="Y-Offset"
+											bind:value={settings.current.fgDropShadowOffsetY}
+											min={-100}
+											max={100}
+											step={1}
+											defaultValue={0}
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
