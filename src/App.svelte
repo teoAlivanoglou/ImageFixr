@@ -4,7 +4,6 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import { cn } from '$lib/utils';
 	import { PersistedState } from 'runed';
-	import { flushSync } from 'svelte';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -22,6 +21,7 @@
 		)
 	);
 	let isResizing = $state(false);
+	let remSize = 16;
 
 	function getRootFontSize(): number {
 		if (typeof window === 'undefined') return 16;
@@ -31,18 +31,15 @@
 	function startResize(e: MouseEvent) {
 		e.preventDefault();
 		isResizing = true;
+		remSize = getRootFontSize();
 		document.body.style.cursor = 'col-resize';
 		document.body.style.userSelect = 'none';
 	}
 
 	function onMouseMove(e: MouseEvent) {
 		if (!isResizing) return;
-		const remSize = getRootFontSize();
 		const targetRem = e.clientX / remSize;
-		flushSync(() => {
-			currentWidthRem = Math.max(MIN_SIDEBAR_REM, Math.min(targetRem, MAX_SIDEBAR_REM));
-		});
-		viewportRef?.forceResize();
+		currentWidthRem = Math.max(MIN_SIDEBAR_REM, Math.min(targetRem, MAX_SIDEBAR_REM));
 	}
 
 	function onMouseUp() {

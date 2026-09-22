@@ -72,7 +72,7 @@
 	let fgTexture = $state<Texture | undefined>(undefined);
 	let bgTexture = $state<Texture | undefined>(undefined);
 
-	let stageScale = $state(1);
+	let stageScale = 1;
 
 	function getLogicalDimensions() {
 		const presetDims = resolvePresetDimensions(
@@ -198,10 +198,8 @@
 		scene.y = fit.y;
 
 		stageScale = fit.scale;
-
-		pixiApp.render();
-
 		updateImageLayout();
+		pixiApp.render();
 	}
 
 	function applyScaleMode(texture: Texture | undefined) {

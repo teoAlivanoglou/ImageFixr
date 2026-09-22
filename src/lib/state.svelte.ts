@@ -102,10 +102,6 @@ export function resetSwatches() {
 	return settings.current.swatches;
 }
 
-if (typeof window !== 'undefined') {
-	(window as any).resetSwatches = resetSwatches;
-}
-
 export const SETTINGS_DEFAULTS: Settings = {
 	fgBlur: 0,
 	fgScale: 1,

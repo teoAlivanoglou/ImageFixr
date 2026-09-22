@@ -3,7 +3,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { ColorPicker } from '$lib/components/ui/color-picker';
 	import { Palette } from '@lucide/svelte';
-	import { settings, commitHistory } from '$lib/state.svelte';
+	import { settings, commitHistory, resetSwatches } from '$lib/state.svelte';
 	import { parseColorRgb } from '$lib/viewport/color-utils';
 	import { cn } from '$lib/utils';
 
@@ -38,7 +38,11 @@
 	}
 </script>
 
-<Popover.Root onOpenChange={(open) => { if (!open) handleCommit(value); }}>
+<Popover.Root
+	onOpenChange={(open) => {
+		if (!open) handleCommit(value);
+	}}
+>
 	<Popover.Trigger>
 		<Button
 			variant="outline"
@@ -59,6 +63,12 @@
 		</Button>
 	</Popover.Trigger>
 	<Popover.Content side="right" align="end" class="border-none bg-transparent p-0 shadow-none">
-		<ColorPicker bind:value bind:swatches {onChange} onValueCommit={handleCommit} />
+		<ColorPicker
+			bind:value
+			bind:swatches
+			{onChange}
+			onValueCommit={handleCommit}
+			onResetSwatches={resetSwatches}
+		/>
 	</Popover.Content>
 </Popover.Root>

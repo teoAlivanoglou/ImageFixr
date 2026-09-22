@@ -13,6 +13,7 @@
 		value = $bindable('#007595'),
 		onChange,
 		onValueCommit,
+		onResetSwatches,
 		swatches = $bindable([
 			'#000000',
 			'#ffffff',
@@ -31,6 +32,7 @@
 		value?: string;
 		onChange?: (value: string) => void;
 		onValueCommit?: (value: string) => void;
+		onResetSwatches?: () => void;
 		swatches?: string[];
 		class?: string;
 	} = $props();
@@ -504,9 +506,7 @@
 			onclick={addSwatch}
 			oncontextmenu={(e) => {
 				e.preventDefault();
-				if (typeof (window as any).resetSwatches === 'function') {
-					(window as any).resetSwatches();
-				}
+				onResetSwatches?.();
 			}}
 			title="Save current color (Right-click to reset swatches)"
 			class="h-6 w-6 rounded-md"
