@@ -74,3 +74,18 @@ export function resolvePresetDimensions(
 	const fallback = presets.find((p) => p.id === '1080p') || presets[0] || DEFAULT_169_PRESET;
 	return { width: fallback.width, height: fallback.height };
 }
+
+/**
+ * Calculates the preview blur scale factor (pixelScale * fitScale) for a given logical resolution and viewport container size.
+ */
+export function computePreviewBlurScale(
+	logicalWidth: number,
+	logicalHeight: number,
+	containerWidth: number,
+	containerHeight: number
+): number {
+	const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
+	const fitScale = Math.min(containerWidth / logicalWidth, containerHeight / logicalHeight);
+	return pixelScale * fitScale;
+}
+

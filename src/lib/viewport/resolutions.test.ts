@@ -4,6 +4,7 @@ import {
 	getResolutionsForRatio,
 	getValidResolutionPreset,
 	resolvePresetDimensions,
+	computePreviewBlurScale,
 	RESOLUTION_PRESETS_BY_RATIO
 } from './resolutions.ts';
 
@@ -52,3 +53,28 @@ test('resolutions match expected aspect ratios', () => {
 		}
 	}
 });
+
+test('preview blur scale is invariant across resolution presets for any aspect ratio', () => {
+	for (const [ratio, presets] of Object.entries(RESOLUTION_PRESETS_BY_RATIO)) {
+		// In Viewport.svelte, the container element style sets aspect-ratio to appState.aspectWidth / appState.aspectHeight.
+		// For a height-constrained viewport of 540px:
+		const containerH = 540;
+
+		const scales = presets.map((p) => {
+			const dims = resolvePresetDimensions(ratio, p.id);
+			const containerW = containerH * (dims.width / dims.height);
+			return computePreviewBlurScale(dims.width, dims.height, containerW, containerH);
+		});
+
+		// Every preset of the same aspect ratio must produce the exact same preview blur scale
+		const expectedScale = scales[0];
+		for (let i = 1; i < scales.length; i++) {
+			assert.ok(
+				Math.abs(scales[i] - expectedScale) < 1e-4,
+				`Ratio ${ratio} preset ${presets[i].id} scale (${scales[i]}) differs from baseline (${expectedScale})`
+			);
+		}
+	}
+});
+
+

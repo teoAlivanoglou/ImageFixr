@@ -190,6 +190,21 @@
 		queueRender();
 	}
 
+	function updateBlurFilters(currentScale = stageScale) {
+		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
+		const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
+
+		fgBlurFilter.strength = appState.fgActualBlur * pixelScale * currentScale;
+		bgBlurFilter.strength = appState.bgActualBlur * pixelScale * currentScale;
+
+		if (fgSprite) {
+			fgSprite.filters = appState.fgActualBlur > 0 ? [fgBlurFilter] : [];
+		}
+		if (bgSprite) {
+			bgSprite.filters = appState.bgActualBlur > 0 ? [bgBlurFilter] : [];
+		}
+	}
+
 	function resizeScene(w?: number, h?: number, immediateRender = false) {
 		if (!pixiApp?.renderer || !scene) return;
 
@@ -214,6 +229,7 @@
 		scene.y = fit.y;
 
 		stageScale = fit.scale;
+		updateBlurFilters(fit.scale);
 		updateImageLayout();
 
 		if (didResize || immediateRender) {
@@ -362,18 +378,8 @@
 		const _shadowOffsetY = settings.current.fgDropShadowOffsetY;
 		const _shadowOnly = settings.current.shadowOnly;
 
-		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
-		const pixelScale = Math.min(logicalWidth, logicalHeight) / 1080;
-
-		fgBlurFilter.strength = appState.fgActualBlur * pixelScale * stageScale;
-		bgBlurFilter.strength = appState.bgActualBlur * pixelScale * stageScale;
-
 		if (fgSprite) {
 			fgSprite.visible = !settings.current.shadowOnly;
-			fgSprite.filters = appState.fgActualBlur > 0 ? [fgBlurFilter] : [];
-		}
-		if (bgSprite) {
-			bgSprite.filters = appState.bgActualBlur > 0 ? [bgBlurFilter] : [];
 		}
 		if (fgBorder) {
 			fgBorder.visible =
@@ -389,6 +395,7 @@
 		if (pixiApp && scene && containerEl) {
 			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
 		} else {
+			updateBlurFilters(stageScale);
 			updateImageLayout();
 		}
 	});
@@ -555,6 +562,8 @@
 			fgBorder = new Graphics();
 			fgBorder.visible = !settings.current.shadowOnly;
 			borderLayer.addChild(fgBorder);
+
+			updateBlurFilters(stageScale);
 		}
 		updateImageLayout();
 	});
@@ -572,6 +581,7 @@
 			bgSprite.anchor.set(0.5);
 			bgSprite.filters = appState.bgActualBlur > 0 ? [bgBlurFilter] : [];
 			bgLayer.addChild(bgSprite);
+			updateBlurFilters(stageScale);
 		}
 		updateImageLayout();
 	});
