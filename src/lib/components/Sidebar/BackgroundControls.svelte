@@ -51,19 +51,14 @@
 				/>
 
 				<!-- Custom Dropzone -->
-				<CollapsibleSection
-					open={settings.current.bgSource === 'custom'}
-					innerClass="-mx-2.5 px-2.5"
-				>
-					<div class="w-full self-start">
-						<ImageDropzone
-							label="Image"
-							fileName={media.current.bgName}
-							placeholder="Choose image"
-							onSelect={(file, handle) => selectImage('background', file, handle)}
-							onRemove={() => removeImage('background')}
-						/>
-					</div>
+				<CollapsibleSection open={settings.current.bgSource === 'custom'}>
+					<ImageDropzone
+						label="Image"
+						fileName={media.current.bgName}
+						placeholder="Choose image"
+						onSelect={(file, handle) => selectImage('background', file, handle)}
+						onRemove={() => removeImage('background')}
+					/>
 				</CollapsibleSection>
 
 				<!-- Scale & Blur Sliders -->
