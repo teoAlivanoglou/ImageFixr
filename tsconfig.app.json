@@ -6,8 +6,10 @@
     "module": "esnext",
     "types": [
       "svelte",
-      "vite/client"
+      "vite/client",
+      "node"
     ],
+    "allowImportingTsExtensions": true,
     "allowArbitraryExtensions": true,
     "composite": true,
     "emitDeclarationOnly": true,

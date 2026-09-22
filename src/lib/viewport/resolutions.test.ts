@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
 	getResolutionsForRatio,
 	getValidResolutionPreset,
-	resolvePresetDimensions
+	resolvePresetDimensions,
+	RESOLUTION_PRESETS_BY_RATIO
 } from './resolutions.ts';
 
 test('getResolutionsForRatio returns valid presets for standard ratios', () => {
@@ -40,4 +41,14 @@ test('resolvePresetDimensions returns exact dimensions or falls back to 1080p', 
 	assert.deepStrictEqual(resolvePresetDimensions('16:9', '4k'), { width: 3840, height: 2160 });
 	assert.deepStrictEqual(resolvePresetDimensions('9:16', '1080p'), { width: 1080, height: 1920 });
 	assert.deepStrictEqual(resolvePresetDimensions('16:9', 'nonexistent'), { width: 1920, height: 1080 });
+});
+
+test('resolutions match expected aspect ratios', () => {
+	for (const [ratio, presets] of Object.entries(RESOLUTION_PRESETS_BY_RATIO)) {
+		for (const preset of presets) {
+			assert.ok(preset.width > 0 && preset.height > 0);
+			assert.ok(preset.label.length > 0);
+			assert.ok(preset.sublabel.includes('×'));
+		}
+	}
 });

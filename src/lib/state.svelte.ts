@@ -20,10 +20,17 @@ export const SAFE_AREA_PRESETS: Record<SafeAreaStandard, { label: string; margin
 		custom: { label: 'Custom', marginPercent: 0 }
 	};
 
-export type Settings = {
+import { resolvePresetDimensions } from '$lib/viewport/resolutions';
+
+export type BorderPosition = 'inner' | 'center' | 'outer';
+
+export interface Settings {
 	fgBlur: number;
+	bgBlur: number;
 	fgScale: number;
+	bgScale: number;
 	fgSafeAreaStandard: SafeAreaStandard;
+	fgMarginEnabled: boolean;
 	fgMarginTop: number;
 	fgMarginRight: number;
 	fgMarginBottom: number;
@@ -37,13 +44,10 @@ export type Settings = {
 	fgMarginBottomEnabled: boolean;
 	fgMarginLeftEnabled: boolean;
 	fgMarginsLinked: boolean;
-	fgMarginEnabled: boolean;
-	bgBlur: number;
-	bgScale: number;
 	fgBorderEnabled: boolean;
 	fgBorderWidth: number;
 	fgBorderColor: string;
-	fgBorderPosition: 'inner' | 'center' | 'outer';
+	fgBorderPosition: BorderPosition;
 	fgDropShadowStrength: number;
 	fgDropShadowAlpha: number;
 	fgDropShadowSpread: number;
@@ -56,6 +60,7 @@ export type Settings = {
 	fgDropShadowSimpleSize: number;
 	filtering: 'linear' | 'nearest';
 	aspectRatio: string;
+	resolutionPreset: string;
 	autoGenerateMipmaps: boolean;
 	mipmapFilter: 'linear' | 'nearest';
 	swatches: string[];
@@ -139,6 +144,7 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgDropShadowSimpleSize: 16,
 	filtering: 'linear',
 	aspectRatio: '16:9',
+	resolutionPreset: '1080p',
 	autoGenerateMipmaps: true,
 	mipmapFilter: 'nearest',
 	swatches: [...DEFAULT_SWATCHES],
@@ -163,7 +169,7 @@ export const settings = new PersistedState<Settings>(
 // Fill in any keys that are missing from persisted state (e.g. newly added settings).
 // Legacy rename: fgOutline* → fgBorder*
 {
-	const legacy = settings.current as Record<string, unknown>;
+	const legacy = settings.current as unknown as Record<string, unknown>;
 	if (settings.current.fgBorderEnabled === undefined) {
 		settings.current.fgBorderEnabled =
 			typeof legacy.fgOutlineEnabled === 'boolean'
@@ -185,7 +191,7 @@ if ((settings.current.fgSafeAreaStandard as string) === 'action') {
 
 // Legacy: per-side margins from single fgMargin value
 {
-	const legacy = settings.current as Record<string, unknown>;
+	const legacy = settings.current as unknown as Record<string, unknown>;
 	const legacyMargin = (legacy.fgMargin as number) ?? 0;
 	const legacyUnit = (legacy.fgMarginUnit as MarginUnit) ?? 'percent';
 	const sides = ['Top', 'Right', 'Bottom', 'Left'] as const;
@@ -306,10 +312,18 @@ if (media.current.link === undefined) {
 
 export class AppState {
 	get aspectWidth() {
-		return Number(settings.current.aspectRatio.split(':')[0]) || 16;
+		const dims = resolvePresetDimensions(
+			settings.current.aspectRatio,
+			settings.current.resolutionPreset
+		);
+		return dims.width;
 	}
 	get aspectHeight() {
-		return Number(settings.current.aspectRatio.split(':')[1]) || 9;
+		const dims = resolvePresetDimensions(
+			settings.current.aspectRatio,
+			settings.current.resolutionPreset
+		);
+		return dims.height;
 	}
 	get fgActualBlur() {
 		return settings.current.fgBlur / 5;
