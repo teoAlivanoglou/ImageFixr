@@ -73,6 +73,23 @@
 	let bgTexture = $state<Texture | undefined>(undefined);
 
 	let stageScale = 1;
+	let renderQueued = false;
+	let renderRafId: number | null = null;
+
+	function queueRender() {
+		if (!pixiApp) return;
+		if (typeof requestAnimationFrame === 'undefined') {
+			pixiApp.render();
+			return;
+		}
+		if (renderQueued) return;
+		renderQueued = true;
+		renderRafId = requestAnimationFrame(() => {
+			renderQueued = false;
+			renderRafId = null;
+			pixiApp?.render();
+		});
+	}
 
 	function getLogicalDimensions() {
 		const presetDims = resolvePresetDimensions(
@@ -107,7 +124,9 @@
 		}
 
 		if (bgSprite && bgSprite.texture) {
-			if (!hasForeground) {
+			const isBgVisible =
+				hasForeground && settings.current.bgEnabled && settings.current.bgSource !== 'none';
+			if (!isBgVisible) {
 				bgSprite.visible = false;
 			} else {
 				bgSprite.visible = true;
@@ -173,6 +192,8 @@
 				uniforms.uOffset[1] = fgLayout.shadow.offsetY;
 			}
 		}
+
+		queueRender();
 	}
 
 	function resizeScene(w?: number, h?: number) {
@@ -199,7 +220,7 @@
 
 		stageScale = fit.scale;
 		updateImageLayout();
-		pixiApp.render();
+		queueRender();
 	}
 
 	function applyScaleMode(texture: Texture | undefined) {
@@ -214,6 +235,9 @@
 			texture.source.minFilter = mode;
 			texture.source.mipmapFilter = mipmapFilter;
 			texture.source.style.addressMode = 'clamp-to-edge';
+			texture.source.style.update();
+			texture.source.updateMipmaps();
+			queueRender();
 		} catch (err) {
 			console.warn('Unable to set texture scale mode:', err);
 		}
@@ -230,8 +254,10 @@
 				resizeTo: containerEl,
 				backgroundAlpha: 0,
 				resolution: window.devicePixelRatio || 1,
-				autoDensity: true
+				autoDensity: true,
+				autoStart: false
 			});
+			app.ticker.stop();
 			if (destroyed) {
 				app.destroy();
 				return;
@@ -258,6 +284,11 @@
 
 		return () => {
 			destroyed = true;
+			if (renderRafId !== null) {
+				cancelAnimationFrame(renderRafId);
+				renderRafId = null;
+			}
+			renderQueued = false;
 			pixiApp = null;
 			scene = null;
 			bgLayer = null;
@@ -365,18 +396,10 @@
 		}
 	});
 
-	// Narrowed reactive variables to prevent full settings object from triggering recreation
-	const filteringMode = $derived(settings.current.filtering);
-	const mipmapEnabled = $derived(settings.current.autoGenerateMipmaps);
-	const mipmapMode = $derived(settings.current.mipmapFilter);
-
-	// Sync foreground texture from IndexedDB when version or filtering/mipmap settings change
+	// Sync foreground texture from IndexedDB when name or version changes
 	$effect(() => {
 		const name = media.current.fgName;
 		const _version = media.current.fgVersion;
-		const _f = filteringMode;
-		const _m = mipmapEnabled;
-		const _mf = mipmapMode;
 
 		if (!name) {
 			if (fgTexture) {
@@ -425,12 +448,10 @@
 		});
 	});
 
-	const bgEnabledMode = $derived(settings.current.bgEnabled);
 	const bgSourceMode = $derived(settings.current.bgSource);
 
-	// Sync background texture from IndexedDB when version, bgSource, or filtering/mipmap settings change
+	// Sync background texture from IndexedDB when version or bgSource changes
 	$effect(() => {
-		const bgEnabled = bgEnabledMode;
 		const bgSource = bgSourceMode;
 		const isLinked = bgSource === 'link';
 		const isCustom = bgSource === 'custom';
@@ -438,11 +459,7 @@
 		const _version = isLinked ? media.current.fgVersion : isCustom ? media.current.bgVersion : 0;
 		const targetStorage = isLinked ? 'foreground' : 'background';
 
-		const _f = filteringMode;
-		const _m = mipmapEnabled;
-		const _mf = mipmapMode;
-
-		if (!bgEnabled || bgSource === 'none' || !name) {
+		if (bgSource === 'none' || !name) {
 			if (bgTexture) {
 				const old = bgTexture;
 				bgTexture = undefined;
@@ -539,7 +556,7 @@
 			bgLayer.removeChild(bgSprite).destroy();
 			bgSprite = undefined;
 		}
-		if (bgTexture && settings.current.bgEnabled && settings.current.bgSource !== 'none') {
+		if (bgTexture) {
 			bgSprite = new Sprite(bgTexture);
 			bgSprite.anchor.set(0.5);
 			bgSprite.filters = appState.bgActualBlur > 0 ? [bgBlurFilter] : [];
@@ -582,7 +599,7 @@
 	export function forceResize() {
 		if (containerEl && pixiApp) {
 			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
-			pixiApp.render();
+			queueRender();
 		}
 	}
 </script>
