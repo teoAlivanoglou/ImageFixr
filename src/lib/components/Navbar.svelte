@@ -52,9 +52,9 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun size={22} />
+				<Sun class="size-5.5" />
 			{:else}
-				<Moon size={22} />
+				<Moon class="size-5.5" />
 			{/if}
 		</span>
 	</div>
@@ -67,7 +67,7 @@
 			onclick={() => history?.undo()}
 			title="Undo (Ctrl+Z / Cmd+Z)"
 		>
-			<Undo2 size={16} />
+			<Undo2 class="size-4" />
 		</Button>
 		<Button
 			size="icon"
@@ -76,7 +76,7 @@
 			onclick={() => history?.redo()}
 			title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
 		>
-			<Redo2 size={16} />
+			<Redo2 class="size-4" />
 		</Button>
 	</ButtonGroup.Root>
 
