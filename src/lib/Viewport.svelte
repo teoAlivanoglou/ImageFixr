@@ -77,7 +77,7 @@
 	let renderRafId: number | null = null;
 
 	function queueRender() {
-		if (!pixiApp) return;
+		if (!pixiApp?.renderer) return;
 		if (typeof requestAnimationFrame === 'undefined') {
 			pixiApp.render();
 			return;
@@ -331,9 +331,6 @@
 		const _bgScale = settings.current.bgScale;
 		const _fgBlur = settings.current.fgBlur;
 		const _bgBlur = settings.current.bgBlur;
-		const _filtering = settings.current.filtering;
-		const _autoMipmaps = settings.current.autoGenerateMipmaps;
-		const _mipmapFilter = settings.current.mipmapFilter;
 		const _borderEnabled = settings.current.fgBorderEnabled;
 		const _borderWidth = settings.current.fgBorderWidth;
 		const _borderColor = settings.current.fgBorderColor;
@@ -372,17 +369,24 @@
 				settings.current.fgDropShadowEnabled && settings.current.fgDropShadowAlpha > 0;
 		}
 
+		if (pixiApp && scene && containerEl) {
+			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
+		} else {
+			updateImageLayout();
+		}
+	});
+
+	// Dedicated effect for texture filtering & mipmap modes
+	$effect(() => {
+		const _mode = settings.current.filtering;
+		const _autoMipmaps = settings.current.autoGenerateMipmaps;
+		const _mipmapFilter = settings.current.mipmapFilter;
+
 		if (fgTexture) {
 			applyScaleMode(fgTexture);
 		}
 		if (bgTexture) {
 			applyScaleMode(bgTexture);
-		}
-
-		if (pixiApp && scene && containerEl) {
-			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
-		} else {
-			updateImageLayout();
 		}
 	});
 
