@@ -5,7 +5,7 @@
 	import SectionHeader from './SectionHeader.svelte';
 	import PillSwitcher from './PillSwitcher.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
-	import { settings, media, commitHistory, SAFE_AREA_PRESETS } from '$lib/state.svelte';
+	import { settings, media, commitHistory } from '$lib/state.svelte';
 	import type { MarginUnit, SafeAreaStandard } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
 
@@ -21,32 +21,28 @@
 			label: 'Top',
 			short: 'T',
 			valProp: 'fgMarginTop' as const,
-			unitProp: 'fgMarginTopUnit' as const,
-			enabledProp: 'fgMarginTopEnabled' as const
+			unitProp: 'fgMarginTopUnit' as const
 		},
 		{
 			key: 'right' as Side,
 			label: 'Right',
 			short: 'R',
 			valProp: 'fgMarginRight' as const,
-			unitProp: 'fgMarginRightUnit' as const,
-			enabledProp: 'fgMarginRightEnabled' as const
+			unitProp: 'fgMarginRightUnit' as const
 		},
 		{
 			key: 'bottom' as Side,
 			label: 'Bottom',
 			short: 'B',
 			valProp: 'fgMarginBottom' as const,
-			unitProp: 'fgMarginBottomUnit' as const,
-			enabledProp: 'fgMarginBottomEnabled' as const
+			unitProp: 'fgMarginBottomUnit' as const
 		},
 		{
 			key: 'left' as Side,
 			label: 'Left',
 			short: 'L',
 			valProp: 'fgMarginLeft' as const,
-			unitProp: 'fgMarginLeftUnit' as const,
-			enabledProp: 'fgMarginLeftEnabled' as const
+			unitProp: 'fgMarginLeftUnit' as const
 		}
 	] as const;
 
@@ -99,11 +95,6 @@
 		settings.current.fgMarginRight = val;
 		settings.current.fgMarginBottom = val;
 		settings.current.fgMarginLeft = val;
-
-		settings.current.fgMarginTopEnabled = true;
-		settings.current.fgMarginRightEnabled = true;
-		settings.current.fgMarginBottomEnabled = true;
-		settings.current.fgMarginLeftEnabled = true;
 	}
 
 	function toggleLinkedUnit() {
@@ -152,7 +143,6 @@
 
 	function handleSideValueInput(side: Side, rawValue: string) {
 		const sideInfo = SIDES.find((s) => s.key === side)!;
-		settings.current[sideInfo.enabledProp] = true;
 		if (rawValue === '') {
 			settings.current[sideInfo.valProp] = 0;
 			return;
@@ -311,9 +301,6 @@
 											min={0}
 											max={settings.current[side.unitProp] === 'percent' ? 40 : 300}
 											step={1}
-											onValueChange={() => {
-												settings.current[side.enabledProp] = true;
-											}}
 											onValueCommit={() => commitHistory()}
 											class="flex-1 py-1 **:data-[slot=slider-track]:bg-foreground/12 dark:**:data-[slot=slider-track]:bg-white/18"
 										/>

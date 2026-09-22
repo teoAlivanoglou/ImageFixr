@@ -39,10 +39,6 @@ export interface Settings {
 	fgMarginRightUnit: MarginUnit;
 	fgMarginBottomUnit: MarginUnit;
 	fgMarginLeftUnit: MarginUnit;
-	fgMarginTopEnabled: boolean;
-	fgMarginRightEnabled: boolean;
-	fgMarginBottomEnabled: boolean;
-	fgMarginLeftEnabled: boolean;
 	fgMarginsLinked: boolean;
 	fgBorderEnabled: boolean;
 	fgBorderWidth: number;
@@ -53,8 +49,6 @@ export interface Settings {
 	fgDropShadowSpread: number;
 	fgDropShadowOffsetX: number;
 	fgDropShadowOffsetY: number;
-	fgDropShadowQuality: number;
-	fgDropShadowExtra: number;
 	fgDropShadowEnabled: boolean;
 	fgDropShadowMode: 'simple' | 'advanced';
 	fgDropShadowSimpleSize: number;
@@ -68,7 +62,6 @@ export interface Settings {
 	bgEnabled: boolean;
 	bgSource: 'none' | 'link' | 'custom';
 	shadowOnly: boolean;
-	advancedSettingsEnabled: boolean;
 	fgCollapsed: boolean;
 	bgCollapsed: boolean;
 	fgMarginCollapsed: boolean;
@@ -114,10 +107,6 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgMarginRightUnit: 'percent',
 	fgMarginBottomUnit: 'percent',
 	fgMarginLeftUnit: 'percent',
-	fgMarginTopEnabled: false,
-	fgMarginRightEnabled: false,
-	fgMarginBottomEnabled: false,
-	fgMarginLeftEnabled: false,
 	fgMarginsLinked: false,
 	fgMarginEnabled: true,
 	bgBlur: 100,
@@ -133,8 +122,6 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgDropShadowSpread: 15,
 	fgDropShadowOffsetX: 0,
 	fgDropShadowOffsetY: 0,
-	fgDropShadowQuality: 5,
-	fgDropShadowExtra: 0,
 	fgDropShadowEnabled: true,
 	fgDropShadowMode: 'simple',
 	fgDropShadowSimpleSize: 30,
@@ -146,7 +133,6 @@ export const SETTINGS_DEFAULTS: Settings = {
 	swatches: [...DEFAULT_SWATCHES],
 	bgColor: '#007595',
 	shadowOnly: false,
-	advancedSettingsEnabled: false,
 	fgCollapsed: false,
 	bgCollapsed: false,
 	fgMarginCollapsed: true,
@@ -219,10 +205,10 @@ if (settings.current.bgColor === '#000000') {
 if (
 	settings.current.fgMarginEnabled === false &&
 	(settings.current.fgSafeAreaStandard !== 'none' ||
-		settings.current.fgMarginTopEnabled ||
-		settings.current.fgMarginRightEnabled ||
-		settings.current.fgMarginBottomEnabled ||
-		settings.current.fgMarginLeftEnabled)
+		settings.current.fgMarginTop > 0 ||
+		settings.current.fgMarginRight > 0 ||
+		settings.current.fgMarginBottom > 0 ||
+		settings.current.fgMarginLeft > 0)
 ) {
 	settings.current.fgMarginEnabled = true;
 }
@@ -292,7 +278,6 @@ export type MediaState = {
 	fgVersion: number;
 	bgName: string;
 	bgVersion: number;
-	link: boolean;
 };
 
 export const media = new PersistedState<MediaState>(
@@ -301,15 +286,10 @@ export const media = new PersistedState<MediaState>(
 		fgName: '',
 		fgVersion: 0,
 		bgName: '',
-		bgVersion: 0,
-		link: true
+		bgVersion: 0
 	},
 	{ storage: 'local', syncTabs: true }
 );
-
-if (media.current.link === undefined) {
-	media.current.link = true;
-}
 
 export class AppState {
 	get aspectWidth() {

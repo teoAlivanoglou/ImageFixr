@@ -333,10 +333,6 @@
 		const _fgMarginRightUnit = settings.current.fgMarginRightUnit;
 		const _fgMarginBottomUnit = settings.current.fgMarginBottomUnit;
 		const _fgMarginLeftUnit = settings.current.fgMarginLeftUnit;
-		const _fgMarginTopEnabled = settings.current.fgMarginTopEnabled;
-		const _fgMarginRightEnabled = settings.current.fgMarginRightEnabled;
-		const _fgMarginBottomEnabled = settings.current.fgMarginBottomEnabled;
-		const _fgMarginLeftEnabled = settings.current.fgMarginLeftEnabled;
 		const _fgMarginEnabled = settings.current.fgMarginEnabled;
 		const _bgScale = settings.current.bgScale;
 		const _fgBlur = settings.current.fgBlur;

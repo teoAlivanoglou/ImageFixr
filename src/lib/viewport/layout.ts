@@ -148,22 +148,13 @@ export function computeFgLayout(
 	const standardPercent = standardPreset.marginPercent;
 	const baseMarginPx = minDim * (standardPercent / 100);
 
-	const valTop =
-		marginsActive && currentSettings.fgMarginTopEnabled
-			? Math.max(0, currentSettings.fgMarginTop ?? 0)
-			: 0;
+	const valTop = marginsActive && currentSettings.fgMarginTop > 0 ? currentSettings.fgMarginTop : 0;
 	const valRight =
-		marginsActive && currentSettings.fgMarginRightEnabled
-			? Math.max(0, currentSettings.fgMarginRight ?? 0)
-			: 0;
+		marginsActive && currentSettings.fgMarginRight > 0 ? currentSettings.fgMarginRight : 0;
 	const valBottom =
-		marginsActive && currentSettings.fgMarginBottomEnabled
-			? Math.max(0, currentSettings.fgMarginBottom ?? 0)
-			: 0;
+		marginsActive && currentSettings.fgMarginBottom > 0 ? currentSettings.fgMarginBottom : 0;
 	const valLeft =
-		marginsActive && currentSettings.fgMarginLeftEnabled
-			? Math.max(0, currentSettings.fgMarginLeft ?? 0)
-			: 0;
+		marginsActive && currentSettings.fgMarginLeft > 0 ? currentSettings.fgMarginLeft : 0;
 
 	const unitTop = currentSettings.fgMarginTopUnit || 'percent';
 	const unitRight = currentSettings.fgMarginRightUnit || 'percent';
@@ -175,7 +166,8 @@ export function computeFgLayout(
 		unitRight === 'percent' ? minDim * (valRight / 100) : valRight * pixelScale;
 	const customMarginBottomPx =
 		unitBottom === 'percent' ? minDim * (valBottom / 100) : valBottom * pixelScale;
-	const customMarginLeftPx = unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft * pixelScale;
+	const customMarginLeftPx =
+		unitLeft === 'percent' ? minDim * (valLeft / 100) : valLeft * pixelScale;
 
 	const totalMarginTopPx = Math.min(minDim * 0.48, baseMarginPx + customMarginTopPx);
 	const totalMarginRightPx = Math.min(minDim * 0.48, baseMarginPx + customMarginRightPx);
