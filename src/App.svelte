@@ -36,14 +36,24 @@
 		document.body.style.userSelect = 'none';
 	}
 
+	let resizeRafId: number | null = null;
+
 	function onMouseMove(e: MouseEvent) {
 		if (!isResizing) return;
 		const targetRem = e.clientX / remSize;
-		currentWidthRem = Math.max(MIN_SIDEBAR_REM, Math.min(targetRem, MAX_SIDEBAR_REM));
+		if (resizeRafId !== null) return;
+		resizeRafId = requestAnimationFrame(() => {
+			resizeRafId = null;
+			currentWidthRem = Math.max(MIN_SIDEBAR_REM, Math.min(targetRem, MAX_SIDEBAR_REM));
+		});
 	}
 
 	function onMouseUp() {
 		if (isResizing) {
+			if (resizeRafId !== null) {
+				cancelAnimationFrame(resizeRafId);
+				resizeRafId = null;
+			}
 			isResizing = false;
 			document.body.style.cursor = '';
 			document.body.style.userSelect = '';

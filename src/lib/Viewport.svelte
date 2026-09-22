@@ -190,18 +190,19 @@
 		queueRender();
 	}
 
-	function resizeScene(w?: number, h?: number) {
-		if (!pixiApp || !scene) return;
+	function resizeScene(w?: number, h?: number, immediateRender = false) {
+		if (!pixiApp?.renderer || !scene) return;
 
 		const targetW = w ?? containerEl?.clientWidth ?? pixiApp.screen.width;
 		const targetH = h ?? containerEl?.clientHeight ?? pixiApp.screen.height;
 
 		if (targetW <= 0 || targetH <= 0) return;
 
-		if (
+		const didResize =
 			Math.round(pixiApp.screen.width) !== Math.round(targetW) ||
-			Math.round(pixiApp.screen.height) !== Math.round(targetH)
-		) {
+			Math.round(pixiApp.screen.height) !== Math.round(targetH);
+
+		if (didResize) {
 			pixiApp.renderer.resize(targetW, targetH);
 		}
 
@@ -214,7 +215,17 @@
 
 		stageScale = fit.scale;
 		updateImageLayout();
-		queueRender();
+
+		if (didResize || immediateRender) {
+			if (renderRafId !== null && typeof cancelAnimationFrame !== 'undefined') {
+				cancelAnimationFrame(renderRafId);
+				renderRafId = null;
+				renderQueued = false;
+			}
+			pixiApp.render();
+		} else {
+			queueRender();
+		}
 	}
 
 	function applyScaleMode(texture: Texture | undefined) {
@@ -298,12 +309,18 @@
 		};
 	});
 
+	function handleWindowResize() {
+		if (containerEl && pixiApp) {
+			resizeScene(containerEl.clientWidth, containerEl.clientHeight, true);
+		}
+	}
+
 	useResizeObserver(
 		() => containerEl,
 		(entries) => {
 			const entry = entries[0];
 			if (entry && containerEl) {
-				resizeScene(entry.contentRect.width, entry.contentRect.height);
+				resizeScene(entry.contentRect.width, entry.contentRect.height, true);
 			}
 		}
 	);
@@ -592,11 +609,12 @@
 
 	export function forceResize() {
 		if (containerEl && pixiApp) {
-			resizeScene(containerEl.clientWidth, containerEl.clientHeight);
-			queueRender();
+			resizeScene(containerEl.clientWidth, containerEl.clientHeight, true);
 		}
 	}
 </script>
+
+<svelte:window onresize={handleWindowResize} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
