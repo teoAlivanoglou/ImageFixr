@@ -11,9 +11,20 @@
 
 	let viewportRef = $state<Viewport>();
 
-	let sidebarWidthStore = new PersistedState('image-fixr-sidebar-width', 320);
-	let currentWidth = $state(Math.max(290, sidebarWidthStore.current));
+	const MIN_SIDEBAR_REM = 19;
+	const MAX_SIDEBAR_REM = 38;
+	const DEFAULT_SIDEBAR_REM = 21;
+
+	let sidebarWidthStore = new PersistedState('image-fixr-sidebar-width-rem', DEFAULT_SIDEBAR_REM);
+	let currentWidthRem = $state(
+		Math.max(MIN_SIDEBAR_REM, Math.min(sidebarWidthStore.current ?? DEFAULT_SIDEBAR_REM, MAX_SIDEBAR_REM))
+	);
 	let isResizing = $state(false);
+
+	function getRootFontSize(): number {
+		if (typeof window === 'undefined') return 16;
+		return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+	}
 
 	function startResize(e: MouseEvent) {
 		e.preventDefault();
@@ -24,8 +35,10 @@
 
 	function onMouseMove(e: MouseEvent) {
 		if (!isResizing) return;
+		const remSize = getRootFontSize();
+		const targetRem = e.clientX / remSize;
 		flushSync(() => {
-			currentWidth = Math.max(290, Math.min(e.clientX, 600));
+			currentWidthRem = Math.max(MIN_SIDEBAR_REM, Math.min(targetRem, MAX_SIDEBAR_REM));
 		});
 		viewportRef?.forceResize();
 	}
@@ -35,7 +48,7 @@
 			isResizing = false;
 			document.body.style.cursor = '';
 			document.body.style.userSelect = '';
-			sidebarWidthStore.current = currentWidth;
+			sidebarWidthStore.current = Math.round(currentWidthRem * 100) / 100;
 		}
 	}
 </script>
@@ -47,7 +60,7 @@
 
 <div
 	class={cn('grid h-dvh w-screen grid-rows-[auto_1fr]', className)}
-	style="grid-template-columns: {currentWidth}px minmax(0,1fr);"
+	style="grid-template-columns: {currentWidthRem}rem minmax(0,1fr);"
 >
 	<Navbar class="col-span-full" onExport={() => viewportRef?.renderAndSave()} />
 
