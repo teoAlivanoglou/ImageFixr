@@ -477,7 +477,7 @@
 				type="button"
 				variant="outline"
 				size="icon-sm"
-				class="checkerboard-bg relative overflow-hidden cursor-pointer p-0"
+				class="checkerboard-bg relative cursor-pointer overflow-hidden p-0"
 				onclick={() => {
 					const parsedSwatch = parseHex(swatch);
 					if (!parsedSwatch) return;
@@ -493,10 +493,7 @@
 				title={`Select ${swatch} (Right-click to remove)`}
 				aria-label={`Select ${swatch}`}
 			>
-				<span
-					class="absolute inset-0"
-					style={`background-color: ${swatch};`}
-				></span>
+				<span class="absolute inset-0" style={`background-color: ${swatch};`}></span>
 			</Button>
 		{/each}
 
@@ -521,8 +518,7 @@
 
 <style>
 	.checkerboard-bg {
-		background-image: repeating-conic-gradient(var(--border) 0 25%, transparent 0 50%);
-		background-size: 8px 8px;
+		--checker-size: 8px;
 	}
 
 	.color-slider::-webkit-slider-thumb {

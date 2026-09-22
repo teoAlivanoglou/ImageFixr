@@ -17,7 +17,10 @@
 
 	let sidebarWidthStore = new PersistedState('image-fixr-sidebar-width-rem', DEFAULT_SIDEBAR_REM);
 	let currentWidthRem = $state(
-		Math.max(MIN_SIDEBAR_REM, Math.min(sidebarWidthStore.current ?? DEFAULT_SIDEBAR_REM, MAX_SIDEBAR_REM))
+		Math.max(
+			MIN_SIDEBAR_REM,
+			Math.min(sidebarWidthStore.current ?? DEFAULT_SIDEBAR_REM, MAX_SIDEBAR_REM)
+		)
 	);
 	let isResizing = $state(false);
 
@@ -89,14 +92,3 @@
 
 	<Viewport class="col-span-1 col-start-2 row-span-1 row-start-2 p-4" bind:this={viewportRef} />
 </div>
-
-<style>
-	:global(.checkerboard) {
-		background: repeating-conic-gradient(var(--background) 0 25%, var(--muted) 0 50%) 50% / 1.5em
-			1.5em;
-	}
-	:global(.dark .checkerboard) {
-		background: repeating-conic-gradient(var(--background) 0 25%, var(--card) 0 50%) 50% / 1.5em
-			1.5em;
-	}
-</style>

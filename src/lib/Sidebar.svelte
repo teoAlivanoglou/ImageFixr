@@ -35,7 +35,7 @@
 
 <aside
 	class={cn(
-		'@container flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 [&_label]:text-sm! [&_label,span]:font-light!',
+		'@container flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 [&_:is(label,span)]:font-light! [&_label]:text-sm!',
 		className
 	)}
 >

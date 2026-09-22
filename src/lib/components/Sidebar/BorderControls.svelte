@@ -37,8 +37,10 @@
 			/>
 		</SectionHeader>
 
-		<CollapsibleSection open={settings.current.fgBorderEnabled && !settings.current.fgBorderCollapsed}>
-			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+		<CollapsibleSection
+			open={settings.current.fgBorderEnabled && !settings.current.fgBorderCollapsed}
+		>
+			<div class="control-section">
 				<SliderControl
 					id="fg-border-width"
 					label="Width"

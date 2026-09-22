@@ -43,7 +43,7 @@
 </script>
 
 <div class="control">
-	<div class="control-header mb-1.5 flex items-center justify-between">
+	<div class="control-header mb-1.5">
 		<Label for={id}>{label}</Label>
 		{#if canReset}
 			<button
@@ -60,21 +60,13 @@
 					size={14}
 					class="text-muted-foreground transition-colors group-hover:text-foreground"
 				/>
-				<span class="control-value font-mono text-muted-foreground">
+				<span class="control-value font-mono">
 					{formattedValue}
 				</span>
 			</button>
 		{:else}
-			<span class="control-value font-mono text-muted-foreground">{formattedValue}</span>
+			<span class="control-value font-mono">{formattedValue}</span>
 		{/if}
 	</div>
-	<Slider
-		{id}
-		type="single"
-		bind:value
-		{min}
-		{max}
-		{step}
-		onValueCommit={handleCommit}
-	/>
+	<Slider {id} type="single" bind:value {min} {max} {step} onValueCommit={handleCommit} />
 </div>

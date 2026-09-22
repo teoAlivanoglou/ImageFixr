@@ -32,8 +32,10 @@
 			/>
 		</SectionHeader>
 
-		<CollapsibleSection open={settings.current.fgDropShadowEnabled && !settings.current.fgDropShadowCollapsed}>
-			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+		<CollapsibleSection
+			open={settings.current.fgDropShadowEnabled && !settings.current.fgDropShadowCollapsed}
+		>
+			<div class="control-section">
 				<!-- Simple Mode Controls -->
 				<CollapsibleSection open={settings.current.fgDropShadowMode === 'simple'}>
 					<SliderControl

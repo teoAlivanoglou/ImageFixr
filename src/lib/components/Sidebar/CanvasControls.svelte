@@ -13,14 +13,13 @@
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 
 	let { class: className }: { class?: string } = $props();
-
 </script>
 
 <div class={cn('flex flex-col', className)}>
 	<SectionHeader title="Advanced" bind:isCollapsed={settings.current.advancedCollapsed} />
 
 	<CollapsibleSection open={!settings.current.advancedCollapsed}>
-		<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+		<div class="control-section">
 			<div class="flex items-center justify-between gap-2 py-1">
 				<Label for="shadow-only">Shadow Only (Debug)</Label>
 				<Switch
@@ -30,7 +29,7 @@
 				/>
 			</div>
 
-			<div class="control flex flex-col gap-2">
+			<div class="control">
 				<Label for="filtering">Texture Filtering</Label>
 				<Select
 					type="single"
@@ -47,7 +46,7 @@
 				</Select>
 			</div>
 
-			<div class="control flex flex-col gap-2">
+			<div class="control">
 				<Label for="auto-mipmaps">Auto Mipmaps</Label>
 				<Select
 					type="single"
@@ -68,7 +67,7 @@
 			</div>
 
 			<CollapsibleSection open={settings.current.autoGenerateMipmaps}>
-				<div class="control flex flex-col gap-2">
+				<div class="control">
 					<Label for="mipmap-filter">Mipmap Filter</Label>
 					<Select
 						type="single"

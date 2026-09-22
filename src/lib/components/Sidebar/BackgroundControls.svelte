@@ -38,7 +38,7 @@
 		open={settings.current.bgEnabled && !settings.current.bgCollapsed}
 		innerClass="-mx-2.5 px-2.5"
 	>
-		<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+		<div class="control-section">
 			<!-- Color Row -->
 			<ColorControl
 				id="background-color"
@@ -48,10 +48,7 @@
 			/>
 
 			<!-- Custom Dropzone -->
-			<CollapsibleSection
-				open={settings.current.bgSource === 'custom'}
-				innerClass="-mx-2.5 px-2.5"
-			>
+			<CollapsibleSection open={settings.current.bgSource === 'custom'} innerClass="-mx-2.5 px-2.5">
 				<div class="w-full self-start">
 					<ImageDropzone
 						label="Image"
@@ -64,10 +61,7 @@
 			</CollapsibleSection>
 
 			<!-- Scale & Blur Sliders -->
-			<CollapsibleSection
-				open={settings.current.bgSource !== 'none'}
-				innerClass="-mx-2.5 px-2.5"
-			>
+			<CollapsibleSection open={settings.current.bgSource !== 'none'} innerClass="-mx-2.5 px-2.5">
 				<div class="grid w-full grid-cols-2 items-center gap-3">
 					<SliderControl
 						id="bg-scale"

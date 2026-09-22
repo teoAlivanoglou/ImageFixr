@@ -16,7 +16,7 @@
 	<SectionHeader title="Foreground" bind:isCollapsed={settings.current.fgCollapsed} />
 
 	<CollapsibleSection open={!settings.current.fgCollapsed} innerClass="-mx-2.5 px-2.5">
-		<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+		<div class="control-section">
 			<ImageDropzone
 				label="Image"
 				fileName={media.current.fgName}

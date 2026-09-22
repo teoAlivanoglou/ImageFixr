@@ -192,7 +192,7 @@
 			open={settings.current.fgMarginEnabled && !settings.current.fgMarginCollapsed}
 			innerClass="-mx-2.5 px-2.5"
 		>
-			<div class="mt-2.5 flex flex-col gap-3 pl-2.5">
+			<div class="control-section">
 				<!-- Additional Margins Section Header with Pill Switcher -->
 				<div class="flex items-center justify-between pt-1">
 					<Label class="text-xs text-muted-foreground">
@@ -230,9 +230,7 @@
 								<div class="w-5 shrink-0"></div>
 							{/if}
 
-							<div
-								class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 pl-2 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
-							>
+							<div class="slider-composite-input">
 								<div class="flex min-w-0 flex-1 items-center gap-1.5">
 									<Slider
 										type="single"
@@ -264,7 +262,7 @@
 												(e.target as HTMLInputElement).blur();
 											}
 										}}
-										class="h-7 w-8 shrink-0 [appearance:textfield] bg-transparent text-right font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+										class="no-spinners h-7 w-8 shrink-0 bg-transparent text-right font-mono text-xs text-foreground outline-none"
 									/>
 								</div>
 								<div class="mx-1 h-4 w-px shrink-0 bg-border/60"></div>
@@ -305,9 +303,7 @@
 									<div class="w-5 shrink-0"></div>
 								{/if}
 
-								<div
-									class="flex min-w-0 flex-1 items-center rounded-md border border-input bg-input/20 pl-2 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30 dark:bg-input/30"
-								>
+								<div class="slider-composite-input">
 									<div class="flex min-w-0 flex-1 items-center gap-1.5">
 										<Slider
 											type="single"
@@ -341,7 +337,7 @@
 													(e.target as HTMLInputElement).blur();
 												}
 											}}
-											class="h-7 w-8 shrink-0 [appearance:textfield] bg-transparent text-right font-mono text-xs text-foreground outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+											class="no-spinners h-7 w-8 shrink-0 bg-transparent text-right font-mono text-xs text-foreground outline-none"
 										/>
 									</div>
 									<div class="mx-1 h-4 w-px shrink-0 bg-border/60"></div>
