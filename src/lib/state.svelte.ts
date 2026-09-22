@@ -75,7 +75,7 @@ export interface Settings {
 	fgBorderCollapsed: boolean;
 	fgDropShadowCollapsed: boolean;
 	advancedCollapsed: boolean;
-};
+}
 
 export const DEFAULT_SWATCHES = [
 	'#000000',
@@ -109,7 +109,7 @@ if (typeof window !== 'undefined') {
 export const SETTINGS_DEFAULTS: Settings = {
 	fgBlur: 0,
 	fgScale: 1,
-	fgSafeAreaStandard: 'smpte-action',
+	fgSafeAreaStandard: 'smpte-title',
 	fgMarginTop: 0,
 	fgMarginRight: 0,
 	fgMarginBottom: 0,
@@ -132,16 +132,16 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgBorderWidth: 10,
 	fgBorderColor: '#DED7D0',
 	fgBorderPosition: 'outer',
-	fgDropShadowStrength: 16,
-	fgDropShadowAlpha: 100,
-	fgDropShadowSpread: 8,
+	fgDropShadowStrength: 30,
+	fgDropShadowAlpha: 80,
+	fgDropShadowSpread: 15,
 	fgDropShadowOffsetX: 0,
 	fgDropShadowOffsetY: 0,
 	fgDropShadowQuality: 5,
 	fgDropShadowExtra: 0,
 	fgDropShadowEnabled: true,
 	fgDropShadowMode: 'simple',
-	fgDropShadowSimpleSize: 16,
+	fgDropShadowSimpleSize: 30,
 	filtering: 'linear',
 	aspectRatio: '16:9',
 	resolutionPreset: '1080p',
@@ -222,9 +222,11 @@ if (settings.current.bgColor === '#000000') {
 // Derive fgMarginEnabled if it was missing
 if (
 	settings.current.fgMarginEnabled === false &&
-	((settings.current.fgSafeAreaStandard !== 'none') ||
-		settings.current.fgMarginTopEnabled || settings.current.fgMarginRightEnabled ||
-		settings.current.fgMarginBottomEnabled || settings.current.fgMarginLeftEnabled)
+	(settings.current.fgSafeAreaStandard !== 'none' ||
+		settings.current.fgMarginTopEnabled ||
+		settings.current.fgMarginRightEnabled ||
+		settings.current.fgMarginBottomEnabled ||
+		settings.current.fgMarginLeftEnabled)
 ) {
 	settings.current.fgMarginEnabled = true;
 }
@@ -260,7 +262,10 @@ export let history: StateHistory<Settings>;
 
 export function commitHistory() {
 	const next = $state.snapshot(settings.current);
-	if (JSON.stringify(getVisualSnapshot(next)) !== JSON.stringify(getVisualSnapshot(historyState.value))) {
+	if (
+		JSON.stringify(getVisualSnapshot(next)) !==
+		JSON.stringify(getVisualSnapshot(historyState.value))
+	) {
 		// console.log("[History Recorded]", next);
 		historyState.value = next;
 	}

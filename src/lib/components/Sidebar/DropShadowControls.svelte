@@ -106,7 +106,7 @@
 					min={0}
 					max={100}
 					step={1}
-					defaultValue={100}
+					defaultValue={80}
 				/>
 			</div>
 		</CollapsibleSection>

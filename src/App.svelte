@@ -1,5 +1,4 @@
 <script lang="ts">
-	import './app.css';
 	import Sidebar from '$lib/Sidebar.svelte';
 	import Viewport from '$lib/Viewport.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';

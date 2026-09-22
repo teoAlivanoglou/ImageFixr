@@ -92,9 +92,11 @@
 		if (!scene) return;
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 
+		const hasForeground = Boolean(media.current.fgName);
+
 		if (bgColorGraphic) {
 			bgColorGraphic.clear();
-			if (settings.current.bgEnabled) {
+			if (hasForeground && settings.current.bgEnabled) {
 				const [r, g, b, a] = parseRgbaColor(settings.current.bgColor);
 				const hexCol = rgbToHexNumber(r, g, b);
 				bgColorGraphic.rect(0, 0, logicalWidth, logicalHeight).fill({ color: hexCol, alpha: a });
@@ -105,16 +107,21 @@
 		}
 
 		if (bgSprite && bgSprite.texture) {
-			const bgLayout = computeBgSpriteLayout(
-				logicalWidth,
-				logicalHeight,
-				bgSprite.texture.width,
-				bgSprite.texture.height,
-				appState.bgActualScale
-			);
-			bgSprite.width = bgLayout.width;
-			bgSprite.height = bgLayout.height;
-			bgSprite.position.set(bgLayout.x, bgLayout.y);
+			if (!hasForeground) {
+				bgSprite.visible = false;
+			} else {
+				bgSprite.visible = true;
+				const bgLayout = computeBgSpriteLayout(
+					logicalWidth,
+					logicalHeight,
+					bgSprite.texture.width,
+					bgSprite.texture.height,
+					appState.bgActualScale
+				);
+				bgSprite.width = bgLayout.width;
+				bgSprite.height = bgLayout.height;
+				bgSprite.position.set(bgLayout.x, bgLayout.y);
+			}
 		}
 
 		if (fgSprite && fgSprite.texture) {
@@ -281,6 +288,7 @@
 	// Reload and recreate textures from scratch when settings change
 	$effect(() => {
 		// Track reactive settings properties
+		const _hasForeground = Boolean(media.current.fgName);
 		const _aspectRatio = settings.current.aspectRatio;
 		const _resolutionPreset = settings.current.resolutionPreset;
 		const _bgEnabled = settings.current.bgEnabled;
@@ -378,6 +386,7 @@
 				fgTexture = undefined;
 				tick().then(() => old.destroy(true));
 			}
+			updateImageLayout();
 			return;
 		}
 
@@ -396,7 +405,7 @@
 			void image.decode().then(() => {
 				const isRecreate = Boolean(fgTexture);
 				const old = fgTexture;
-				
+
 				console.log(
 					isRecreate
 						? '[Texture] Recreating foreground texture'
@@ -409,7 +418,7 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				fgTexture = tex;
-				
+
 				if (old) {
 					tick().then(() => old.destroy(true));
 				}
@@ -459,7 +468,7 @@
 			void image.decode().then(() => {
 				const isRecreate = Boolean(bgTexture);
 				const old = bgTexture;
-				
+
 				console.log(
 					isRecreate
 						? '[Texture] Recreating background texture'
@@ -473,7 +482,7 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				bgTexture = tex;
-				
+
 				if (old) {
 					tick().then(() => old.destroy(true));
 				}

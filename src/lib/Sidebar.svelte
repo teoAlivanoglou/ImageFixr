@@ -45,5 +45,7 @@
 
 	<BorderControls />
 	<DropShadowControls />
-	<CanvasControls />
+	{#if import.meta.env.DEV}
+		<CanvasControls />
+	{/if}
 </aside>
