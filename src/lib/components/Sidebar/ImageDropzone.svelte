@@ -2,7 +2,6 @@
 	import { Trash } from '@lucide/svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
-	import { ellipsizeMiddle } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
 
 	let {
@@ -39,10 +38,23 @@
 		return ctx.measureText(text).width;
 	}
 
-	function fitMiddleElided(name: string, maxWidth: number): string {
+	function snapDelimiter(str: string, index: number, direction: 'left' | 'right', maxSnap = 7): number {
+		const delimiters = ['-', '_', ' ', '.'];
+		if (direction === 'left') {
+			for (let i = index - 1; i >= Math.max(1, index - maxSnap); i--) {
+				if (delimiters.includes(str[i])) return i;
+			}
+		} else {
+			for (let i = index; i <= Math.min(str.length - 1, index + maxSnap); i++) {
+				if (delimiters.includes(str[i])) return i + 1;
+			}
+		}
+		return index;
+	}
+
+	function fitSmartMiddleElided(name: string, maxWidth: number): string {
 		if (!name) return '';
-		if (maxWidth <= 0) return name;
-		if (getTextWidth(name) <= maxWidth) return name;
+		if (maxWidth <= 0 || getTextWidth(name) <= maxWidth) return name;
 
 		const lastDot = name.lastIndexOf('.');
 		const hasExt = lastDot > 0 && lastDot > name.length - 8;
@@ -55,9 +67,16 @@
 
 		while (low <= high) {
 			const mid = Math.floor((low + high) / 2);
-			const startLen = Math.ceil(mid / 2);
-			const endLen = Math.floor(mid / 2);
-			const candidate = `${base.slice(0, startLen)}...${base.slice(-endLen)}${ext}`;
+			const rawStart = Math.ceil(mid * 0.6);
+			const rawEnd = mid - rawStart;
+
+			const startLen = snapDelimiter(base, rawStart, 'left', 7);
+			const endLen = base.length - snapDelimiter(base, base.length - rawEnd, 'right', 7);
+
+			const prefix = base.slice(0, Math.max(1, startLen)).replace(/[-_.\s]+$/, '');
+			const suffix = base.slice(-Math.max(1, endLen)).replace(/^[-_.\s]+/, '');
+			const candidate = `${prefix}…${suffix}${ext}`;
+
 			if (getTextWidth(candidate) <= maxWidth) {
 				best = candidate;
 				low = mid + 1;
@@ -73,7 +92,7 @@
 		if (!fileName) return '';
 		if (pillWidth <= 0) return fileName;
 		const availableWidth = Math.max(20, pillWidth - 54);
-		return fitMiddleElided(fileName, availableWidth);
+		return fitSmartMiddleElided(fileName, availableWidth);
 	});
 
 	function handleDragOver(e: DragEvent) {
