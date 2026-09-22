@@ -1,13 +1,28 @@
 import tailwindcss from '@tailwindcss/vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
-import path from "path";
+import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [tailwindcss(), svelte()], resolve: {
-        alias: {
-            $lib: path.resolve("./src/lib"),
-        },
-    },
+	plugins: [tailwindcss(), svelte()],
+	resolve: {
+		alias: {
+			$lib: path.resolve('./src/lib')
+		}
+	},
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules/pixi.js') || id.includes('node_modules/pixi-filters')) {
+						return 'pixi';
+					}
+					if (id.includes('node_modules/bits-ui') || id.includes('node_modules/@lucide')) {
+						return 'vendor-ui';
+					}
+				}
+			}
+		}
+	}
 });
