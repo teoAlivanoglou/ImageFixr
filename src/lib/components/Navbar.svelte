@@ -11,7 +11,26 @@
 	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
 
+	import {
+		getResolutionsForRatio,
+		getValidResolutionPreset
+	} from '$lib/viewport/resolutions';
+
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
+
+	let availableResolutions = $derived(getResolutionsForRatio(settings.current.aspectRatio));
+	let currentRes = $derived(
+		availableResolutions.find((r) => r.id === settings.current.resolutionPreset) ||
+			availableResolutions[0]
+	);
+
+	function handleRatioChange(newRatio: string) {
+		settings.current.resolutionPreset = getValidResolutionPreset(
+			newRatio,
+			settings.current.resolutionPreset
+		);
+		commitHistory();
+	}
 
 	const ASPECT_RATIOS = [
 		{ value: '16:9', label: '16:9 Landscape' },
@@ -84,7 +103,7 @@
 		<Select
 			type="single"
 			bind:value={settings.current.aspectRatio}
-			onValueChange={() => commitHistory()}
+			onValueChange={handleRatioChange}
 		>
 			<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
 				<span class="text-muted-foreground">Ratio:</span>
@@ -93,6 +112,31 @@
 			<SelectContent>
 				{#each ASPECT_RATIOS as ratio (ratio.value)}
 					<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
+				{/each}
+			</SelectContent>
+		</Select>
+
+		<Select
+			type="single"
+			bind:value={settings.current.resolutionPreset}
+			onValueChange={() => commitHistory()}
+		>
+			<SelectTrigger
+				id="navbar-resolution"
+				class="h-9 min-w-32 text-xs"
+				title={`${currentRes.label} (${currentRes.sublabel})`}
+			>
+				<span class="text-muted-foreground">Res:</span>
+				{currentRes.id.toUpperCase()}
+			</SelectTrigger>
+			<SelectContent>
+				{#each availableResolutions as res (res.id)}
+					<SelectItem value={res.id}>
+						<div class="flex items-center justify-between gap-4">
+							<span class="font-medium">{res.label}</span>
+							<span class="text-xs text-muted-foreground">{res.sublabel}</span>
+						</div>
+					</SelectItem>
 				{/each}
 			</SelectContent>
 		</Select>

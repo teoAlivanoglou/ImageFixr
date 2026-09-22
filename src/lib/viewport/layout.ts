@@ -56,8 +56,13 @@ export function computeLogicalDimensions(
 	aspectWidth: number,
 	aspectHeight: number,
 	refTextureWidth?: number,
-	refTextureHeight?: number
+	refTextureHeight?: number,
+	presetDimensions?: { width: number; height: number }
 ): LogicalDimensions {
+	if (presetDimensions && presetDimensions.width > 0 && presetDimensions.height > 0) {
+		return { width: presetDimensions.width, height: presetDimensions.height };
+	}
+
 	const targetAspect = aspectWidth / aspectHeight;
 
 	if (refTextureWidth && refTextureHeight && refTextureWidth > 0 && refTextureHeight > 0) {
