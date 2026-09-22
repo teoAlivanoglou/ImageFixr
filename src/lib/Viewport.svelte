@@ -96,13 +96,7 @@
 			settings.current.aspectRatio,
 			settings.current.resolutionPreset
 		);
-		return computeLogicalDimensions(
-			appState.aspectWidth,
-			appState.aspectHeight,
-			undefined,
-			undefined,
-			presetDims
-		);
+		return computeLogicalDimensions(presetDims);
 	}
 
 	function updateImageLayout() {

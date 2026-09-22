@@ -50,44 +50,16 @@ export interface FgLayoutResult {
 }
 
 /**
- * Computes logical canvas dimensions based on aspect ratio and reference texture size.
+ * Computes logical canvas dimensions based on resolved preset dimensions.
  */
-export function computeLogicalDimensions(
-	aspectWidth: number,
-	aspectHeight: number,
-	refTextureWidth?: number,
-	refTextureHeight?: number,
-	presetDimensions?: { width: number; height: number }
-): LogicalDimensions {
-	if (presetDimensions && presetDimensions.width > 0 && presetDimensions.height > 0) {
-		return { width: presetDimensions.width, height: presetDimensions.height };
-	}
-
-	const targetAspect = aspectWidth / aspectHeight;
-
-	if (refTextureWidth && refTextureHeight && refTextureWidth > 0 && refTextureHeight > 0) {
-		const imgAspect = refTextureWidth / refTextureHeight;
-
-		if (targetAspect >= imgAspect) {
-			// Canvas is wider than image: height matches image, width expands to target aspect ratio
-			const height = refTextureHeight;
-			const width = Math.round(height * targetAspect);
-			return { width, height };
-		} else {
-			// Canvas is taller than image: width matches image, height expands to target aspect ratio
-			const width = refTextureWidth;
-			const height = Math.round(width / targetAspect);
-			return { width, height };
-		}
-	}
-
-	// Fallback when no image is loaded yet: base on 1920
-	const baseSize = 1920;
-	if (targetAspect >= 1) {
-		return { width: baseSize, height: Math.round(baseSize / targetAspect) };
-	} else {
-		return { width: Math.round(baseSize * targetAspect), height: baseSize };
-	}
+export function computeLogicalDimensions(presetDimensions: {
+	width: number;
+	height: number;
+}): LogicalDimensions {
+	return {
+		width: presetDimensions.width,
+		height: presetDimensions.height
+	};
 }
 
 /**

@@ -5,8 +5,7 @@ export const theme = new PersistedState('image-fixr-theme', false, {
 	syncTabs: true
 });
 
-export type SafeAreaStandard =
-	'none' | 'smpte-title' | 'smpte-action' | 'legacy-action' | 'legacy-title' | 'custom';
+export type SafeAreaStandard = 'none' | 'smpte-title' | 'smpte-action' | 'custom';
 
 export type MarginUnit = 'percent' | 'pixel';
 
@@ -15,8 +14,6 @@ export const SAFE_AREA_PRESETS: Record<SafeAreaStandard, { label: string; margin
 		none: { label: 'None', marginPercent: 0 },
 		'smpte-title': { label: 'Title Safe', marginPercent: 5 },
 		'smpte-action': { label: 'Action Safe', marginPercent: 3.5 },
-		'legacy-action': { label: 'Legacy Action Safe (90%)', marginPercent: 5 },
-		'legacy-title': { label: 'Legacy Title Safe (80%)', marginPercent: 10 },
 		custom: { label: 'Custom', marginPercent: 0 }
 	};
 
@@ -147,76 +144,6 @@ export const settings = new PersistedState<Settings>(
 	{ storage: 'local', syncTabs: true }
 );
 
-// --- Settings migration ---
-// Fill in any keys that are missing from persisted state (e.g. newly added settings).
-// Legacy rename: fgOutline* → fgBorder*
-{
-	const legacy = settings.current as unknown as Record<string, unknown>;
-	if (settings.current.fgBorderEnabled === undefined) {
-		settings.current.fgBorderEnabled =
-			typeof legacy.fgOutlineEnabled === 'boolean'
-				? legacy.fgOutlineEnabled
-				: typeof legacy.fgOutlineWidth === 'number' && legacy.fgOutlineWidth > 0;
-	}
-	if (settings.current.fgBorderWidth === undefined) {
-		settings.current.fgBorderWidth = (legacy.fgOutlineWidth as number) ?? 10;
-	}
-	if (!settings.current.fgBorderColor) {
-		settings.current.fgBorderColor = (legacy.fgOutlineColor as string) ?? '#DED7D0';
-	}
-}
-
-// Migrate 'action' alias to 'smpte-action'
-if ((settings.current.fgSafeAreaStandard as string) === 'action') {
-	settings.current.fgSafeAreaStandard = 'smpte-action';
-}
-
-// Legacy: per-side margins from single fgMargin value
-{
-	const legacy = settings.current as unknown as Record<string, unknown>;
-	const legacyMargin = (legacy.fgMargin as number) ?? 0;
-	const legacyUnit = (legacy.fgMarginUnit as MarginUnit) ?? 'percent';
-	const sides = ['Top', 'Right', 'Bottom', 'Left'] as const;
-	for (const side of sides) {
-		const valKey = `fgMargin${side}` as keyof Settings;
-		const unitKey = `fgMargin${side}Unit` as keyof Settings;
-		if ((settings.current as any)[valKey] === undefined) {
-			(settings.current as any)[valKey] = legacyMargin;
-		}
-		if ((settings.current as any)[unitKey] === undefined) {
-			(settings.current as any)[unitKey] = legacyUnit;
-		}
-	}
-}
-
-// Fill all remaining undefined keys from defaults
-for (const key of Object.keys(SETTINGS_DEFAULTS) as Array<keyof Settings>) {
-	if ((settings.current as any)[key] === undefined) {
-		(settings.current as any)[key] = SETTINGS_DEFAULTS[key];
-	}
-}
-
-// Special sentinel: override stale bgColor
-if (settings.current.bgColor === '#000000') {
-	settings.current.bgColor = '#007595';
-}
-
-// Derive fgMarginEnabled if it was missing
-if (
-	settings.current.fgMarginEnabled === false &&
-	(settings.current.fgSafeAreaStandard !== 'none' ||
-		settings.current.fgMarginTop > 0 ||
-		settings.current.fgMarginRight > 0 ||
-		settings.current.fgMarginBottom > 0 ||
-		settings.current.fgMarginLeft > 0)
-) {
-	settings.current.fgMarginEnabled = true;
-}
-
-// Ensure swatches array is valid
-if (!Array.isArray(settings.current.swatches)) {
-	settings.current.swatches = [...DEFAULT_SWATCHES];
-}
 
 const UI_ONLY_KEYS: (keyof Settings)[] = [
 	'fgCollapsed',
