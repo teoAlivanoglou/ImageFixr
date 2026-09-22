@@ -9,8 +9,6 @@ export type SafeAreaStandard = 'none' | 'smpte-title' | 'smpte-action' | 'custom
 
 export type MarginUnit = 'percent' | 'pixel';
 
-export type DropzoneStyle = 'row' | 'stacked';
-
 export const SAFE_AREA_PRESETS: Record<SafeAreaStandard, { label: string; marginPercent: number }> =
 	{
 		none: { label: 'None', marginPercent: 0 },
@@ -67,7 +65,6 @@ export interface Settings {
 	fgBorderCollapsed: boolean;
 	fgDropShadowCollapsed: boolean;
 	advancedCollapsed: boolean;
-	dropzoneStyle: DropzoneStyle;
 }
 
 export const DEFAULT_SWATCHES = [
@@ -138,8 +135,7 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgMarginCollapsed: true,
 	fgBorderCollapsed: true,
 	fgDropShadowCollapsed: true,
-	advancedCollapsed: true,
-	dropzoneStyle: 'row'
+	advancedCollapsed: true
 };
 
 export const settings = new PersistedState<Settings>(
