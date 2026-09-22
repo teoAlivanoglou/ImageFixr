@@ -16,7 +16,7 @@
 		label?: string;
 		fileName?: string;
 		placeholder?: string;
-		onSelect: (file: File) => void;
+		onSelect: (file: File, handle?: FileSystemFileHandle) => void;
 		onRemove: () => void;
 		class?: string;
 	} = $props();
@@ -30,21 +30,76 @@
 		isDragging = true;
 	}
 
-	function handleDrop(e: DragEvent) {
+	async function handleDrop(e: DragEvent) {
 		e.preventDefault();
 		isDragging = false;
-		const file = e.dataTransfer?.files[0];
-		if (file) void onSelect(file);
+		let handle: FileSystemFileHandle | undefined;
+		const item = e.dataTransfer?.items?.[0];
+		if (item && 'getAsFileSystemHandle' in item) {
+			try {
+				const droppedHandle = await (
+					item as unknown as { getAsFileSystemHandle: () => Promise<FileSystemHandle | null> }
+				).getAsFileSystemHandle();
+				if (droppedHandle && droppedHandle.kind === 'file') {
+					handle = droppedHandle as FileSystemFileHandle;
+				}
+			} catch {
+				// Fallback to standard File
+			}
+		}
+
+		const file = handle ? await handle.getFile() : e.dataTransfer?.files?.[0];
+		if (file) void onSelect(file, handle);
+	}
+
+	async function openFilePicker() {
+		const showOpenFilePicker = (
+			window as unknown as {
+				showOpenFilePicker?: (options: {
+					types: Array<{
+						description: string;
+						accept: Record<string, string[]>;
+					}>;
+					multiple?: boolean;
+				}) => Promise<FileSystemFileHandle[]>;
+			}
+		).showOpenFilePicker;
+
+		if (showOpenFilePicker) {
+			try {
+				const handles = await showOpenFilePicker({
+					types: [
+						{
+							description: 'Images',
+							accept: {
+								'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.avif', '.bmp']
+							}
+						}
+					],
+					multiple: false
+				});
+				const handle = handles?.[0];
+				if (!handle) return;
+				const file = await handle.getFile();
+				void onSelect(file, handle);
+				return;
+			} catch (error) {
+				if (error instanceof DOMException && error.name === 'AbortError') return;
+				// Fall through to native input click if open file picker fails
+			}
+		}
+
+		fileInputRef?.click();
 	}
 
 	function handleClick() {
-		fileInputRef?.click();
+		void openFilePicker();
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
-			fileInputRef?.click();
+			void openFilePicker();
 		}
 	}
 

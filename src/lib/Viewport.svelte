@@ -13,7 +13,7 @@
 	import { useResizeObserver } from 'runed';
 	import { settings, appState, media } from './state.svelte';
 	import { loadImageStorage } from './image-db';
-	import { selectImage } from './media-actions';
+	import { selectImage, getExportStartInHandle, recordSessionSaveHandle } from './media-actions';
 	import { cn } from './utils';
 	import { ClampedBlurFilter } from './filters/clamped-blur-filter';
 	import { parseRgbaColor, rgbToHexNumber } from './viewport/color-utils';
@@ -541,7 +541,13 @@
 
 		const { width: logicalWidth, height: logicalHeight } = getLogicalDimensions();
 
-		await exportRenderedImage({
+		const filename = media.current.fgName
+			? `${media.current.fgName.replace(/\.[^/.]+$/, '')}-fixed.png`
+			: 'image-fixr-render.png';
+
+		const startIn = getExportStartInHandle();
+
+		const savedHandle = await exportRenderedImage({
 			pixiApp,
 			scene,
 			logicalWidth,
@@ -551,8 +557,14 @@
 			bgBlurFilter,
 			fgActualBlur: appState.fgActualBlur,
 			bgActualBlur: appState.bgActualBlur,
-			updateLayout: updateImageLayout
+			updateLayout: updateImageLayout,
+			filename,
+			startIn
 		});
+
+		if (savedHandle) {
+			recordSessionSaveHandle(savedHandle);
+		}
 	}
 
 	export function forceResize() {
@@ -574,11 +586,26 @@
 		isDragging = true;
 	}}
 	ondragleave={() => (isDragging = false)}
-	ondrop={(e) => {
+	ondrop={async (e) => {
 		e.preventDefault();
 		isDragging = false;
-		const file = e.dataTransfer?.files[0];
-		if (file) void selectImage('foreground', file);
+		let handle: FileSystemFileHandle | undefined;
+		const item = e.dataTransfer?.items?.[0];
+		if (item && 'getAsFileSystemHandle' in item) {
+			try {
+				const droppedHandle = await (
+					item as unknown as { getAsFileSystemHandle: () => Promise<FileSystemHandle | null> }
+				).getAsFileSystemHandle();
+				if (droppedHandle && droppedHandle.kind === 'file') {
+					handle = droppedHandle as FileSystemFileHandle;
+				}
+			} catch {
+				// Fallback to standard File
+			}
+		}
+
+		const file = handle ? await handle.getFile() : e.dataTransfer?.files?.[0];
+		if (file) void selectImage('foreground', file, handle);
 	}}
 >
 	<div

@@ -14,16 +14,18 @@ export interface RenderAndSaveOptions {
 	bgActualBlur: number;
 	updateLayout: () => void;
 	filename?: string;
+	startIn?: FileSystemHandle | null;
 }
 
 /**
  * Saves a Blob to the user's filesystem using the File System Access API if available,
- * falling back to an anchor download.
+ * falling back to an anchor download. Returns the saved FileSystemFileHandle if available.
  */
 export async function saveBlobAsFile(
 	blob: Blob,
-	suggestedName = 'image-fixr-render.png'
-): Promise<void> {
+	suggestedName = 'image-fixr-render.png',
+	startIn?: FileSystemHandle | null
+): Promise<FileSystemFileHandle | null> {
 	const saveFilePicker = (
 		window as unknown as {
 			showSaveFilePicker?: (options: {
@@ -32,7 +34,8 @@ export async function saveBlobAsFile(
 					description: string;
 					accept: Record<string, string[]>;
 				}>;
-			}) => Promise<{
+				startIn?: FileSystemHandle;
+			}) => Promise<FileSystemFileHandle & {
 				createWritable: () => Promise<{
 					write: (data: Blob) => Promise<void>;
 					close: () => Promise<void>;
@@ -43,7 +46,14 @@ export async function saveBlobAsFile(
 
 	try {
 		if (saveFilePicker) {
-			const fileHandle = await saveFilePicker({
+			const options: {
+				suggestedName: string;
+				types: Array<{
+					description: string;
+					accept: Record<string, string[]>;
+				}>;
+				startIn?: FileSystemHandle;
+			} = {
 				suggestedName,
 				types: [
 					{
@@ -51,12 +61,40 @@ export async function saveBlobAsFile(
 						accept: { 'image/png': ['.png'] }
 					}
 				]
-			});
+			};
+
+			if (startIn) {
+				options.startIn = startIn;
+			}
+
+			let fileHandle: (FileSystemFileHandle & {
+				createWritable: () => Promise<{
+					write: (data: Blob) => Promise<void>;
+					close: () => Promise<void>;
+				}>;
+			}) | undefined;
+
+			try {
+				fileHandle = await saveFilePicker(options);
+			} catch (pickerError) {
+				if (pickerError instanceof DOMException && pickerError.name === 'AbortError') {
+					return null;
+				}
+				// If startIn failed due to permission or invalid handle, retry once without startIn
+				if (options.startIn) {
+					delete options.startIn;
+					fileHandle = await saveFilePicker(options);
+				} else {
+					throw pickerError;
+				}
+			}
+
+			if (!fileHandle) return null;
 
 			const writable = await fileHandle.createWritable();
 			await writable.write(blob);
 			await writable.close();
-			return;
+			return fileHandle;
 		}
 
 		const downloadUrl = URL.createObjectURL(blob);
@@ -65,16 +103,20 @@ export async function saveBlobAsFile(
 		downloadLink.download = suggestedName;
 		downloadLink.click();
 		URL.revokeObjectURL(downloadUrl);
+		return null;
 	} catch (error) {
-		if (error instanceof DOMException && error.name === 'AbortError') return;
+		if (error instanceof DOMException && error.name === 'AbortError') return null;
 		console.error('Unable to save rendered image:', error);
+		return null;
 	}
 }
 
 /**
  * Renders the PixiJS scene at 1:1 logical resolution and exports it as a PNG file.
  */
-export async function renderAndSave(options: RenderAndSaveOptions): Promise<void> {
+export async function renderAndSave(
+	options: RenderAndSaveOptions
+): Promise<FileSystemFileHandle | null> {
 	const {
 		pixiApp,
 		scene,
@@ -86,10 +128,11 @@ export async function renderAndSave(options: RenderAndSaveOptions): Promise<void
 		fgActualBlur,
 		bgActualBlur,
 		updateLayout,
-		filename = 'image-fixr-render.png'
+		filename = 'image-fixr-render.png',
+		startIn
 	} = options;
 
-	if (!pixiApp.renderer || !scene) return;
+	if (!pixiApp.renderer || !scene) return null;
 
 	// Create a fixed logicalWidth x logicalHeight render texture
 	const renderTexture = RenderTexture.create({
@@ -139,7 +182,7 @@ export async function renderAndSave(options: RenderAndSaveOptions): Promise<void
 		(extractedCanvas as HTMLCanvasElement).toBlob(resolve, 'image/png')
 	);
 
-	if (!imageBlob) return;
+	if (!imageBlob) return null;
 
-	await saveBlobAsFile(imageBlob, filename);
+	return await saveBlobAsFile(imageBlob, filename, startIn);
 }

@@ -21,7 +21,7 @@
 				label="Image"
 				fileName={media.current.fgName}
 				placeholder="Drop or choose an image"
-				onSelect={(file) => selectImage('foreground', file)}
+				onSelect={(file, handle) => selectImage('foreground', file, handle)}
 				onRemove={() => removeImage('foreground')}
 			/>
 

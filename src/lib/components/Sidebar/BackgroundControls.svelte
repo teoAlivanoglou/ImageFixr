@@ -57,7 +57,7 @@
 						label="Image"
 						fileName={media.current.bgName}
 						placeholder="Choose image"
-						onSelect={(file) => selectImage('background', file)}
+						onSelect={(file, handle) => selectImage('background', file, handle)}
 						onRemove={() => removeImage('background')}
 					/>
 				</div>
