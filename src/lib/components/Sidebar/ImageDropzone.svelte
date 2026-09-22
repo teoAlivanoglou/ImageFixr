@@ -23,7 +23,58 @@
 
 	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let isDragging = $state(false);
+	let pillWidth = $state(0);
 	const hasImage = $derived(Boolean(fileName));
+
+	let measureCanvas: HTMLCanvasElement | null = null;
+
+	function getTextWidth(text: string): number {
+		if (typeof document === 'undefined') return text.length * 7;
+		if (!measureCanvas) {
+			measureCanvas = document.createElement('canvas');
+		}
+		const ctx = measureCanvas.getContext('2d');
+		if (!ctx) return text.length * 7;
+		ctx.font = '12px "Inter Variable", Inter, sans-serif';
+		return ctx.measureText(text).width;
+	}
+
+	function fitMiddleElided(name: string, maxWidth: number): string {
+		if (!name) return '';
+		if (maxWidth <= 0) return name;
+		if (getTextWidth(name) <= maxWidth) return name;
+
+		const lastDot = name.lastIndexOf('.');
+		const hasExt = lastDot > 0 && lastDot > name.length - 8;
+		const ext = hasExt ? name.slice(lastDot) : '';
+		const base = hasExt ? name.slice(0, lastDot) : name;
+
+		let low = 2;
+		let high = base.length;
+		let best = name;
+
+		while (low <= high) {
+			const mid = Math.floor((low + high) / 2);
+			const startLen = Math.ceil(mid / 2);
+			const endLen = Math.floor(mid / 2);
+			const candidate = `${base.slice(0, startLen)}...${base.slice(-endLen)}${ext}`;
+			if (getTextWidth(candidate) <= maxWidth) {
+				best = candidate;
+				low = mid + 1;
+			} else {
+				high = mid - 1;
+			}
+		}
+
+		return best;
+	}
+
+	const displayFileName = $derived.by(() => {
+		if (!fileName) return '';
+		if (pillWidth <= 0) return fileName;
+		const availableWidth = Math.max(20, pillWidth - 54);
+		return fitMiddleElided(fileName, availableWidth);
+	});
 
 	function handleDragOver(e: DragEvent) {
 		e.preventDefault();
@@ -112,13 +163,14 @@
 </script>
 
 {#if hasImage}
-	<div class={cn('flex items-center gap-2', className)}>
+	<div class={cn('flex items-center gap-4', className)}>
 		{#if label}
 			<Label class="shrink-0 font-light text-foreground">{label}</Label>
 		{/if}
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
+			bind:clientWidth={pillWidth}
 			role="button"
 			tabindex="0"
 			class={cn(
@@ -135,7 +187,7 @@
 				class="truncate text-xs text-muted-foreground transition-colors group-hover:text-foreground"
 				title={fileName}
 			>
-				{ellipsizeMiddle(fileName, 24)}
+				{displayFileName}
 			</span>
 
 			<button
