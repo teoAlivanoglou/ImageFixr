@@ -30,7 +30,7 @@ export const RESOLUTION_PRESETS_BY_RATIO: Record<string, ResolutionPreset[]> = {
 	],
 	'4:3': [
 		{ id: '4k', label: '4K Standard', sublabel: '2880 × 2160', width: 2880, height: 2160 },
-		{ id: '1440p', label: 'QXGA / iPad', sublabel: '2048 × 1536', width: 2048, height: 1536 },
+		{ id: '1440p', label: '1440p iPad', sublabel: '2048 × 1536', width: 2048, height: 1536 },
 		{ id: '1080p', label: '1080p eq', sublabel: '1440 × 1080', width: 1440, height: 1080 },
 		{ id: '720p', label: '720p eq', sublabel: '960 × 720', width: 960, height: 720 }
 	],
@@ -42,8 +42,8 @@ export const RESOLUTION_PRESETS_BY_RATIO: Record<string, ResolutionPreset[]> = {
 	],
 	'21:9': [
 		{ id: '5k', label: '5K Ultrawide', sublabel: '5120 × 2160', width: 5120, height: 2160 },
-		{ id: '1440p', label: 'UWQHD', sublabel: '3440 × 1440', width: 3440, height: 1440 },
-		{ id: '1080p', label: 'UWFHD', sublabel: '2560 × 1080', width: 2560, height: 1080 }
+		{ id: '1440p', label: '1440p UWQHD', sublabel: '3440 × 1440', width: 3440, height: 1440 },
+		{ id: '1080p', label: '1080p UWFHD', sublabel: '2560 × 1080', width: 2560, height: 1080 }
 	]
 };
 

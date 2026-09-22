@@ -123,11 +123,11 @@
 		>
 			<SelectTrigger
 				id="navbar-resolution"
-				class="h-9 min-w-32 text-xs"
+				class="h-9 min-w-38 text-xs"
 				title={`${currentRes.label} (${currentRes.sublabel})`}
 			>
 				<span class="text-muted-foreground">Res:</span>
-				{currentRes.id.toUpperCase()}
+				<span class="font-medium text-foreground">{currentRes.label}</span>
 			</SelectTrigger>
 			<SelectContent class="w-max min-w-max">
 				{#each availableResolutions as res (res.id)}
