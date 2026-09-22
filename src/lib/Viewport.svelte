@@ -23,6 +23,7 @@
 		computeBgSpriteLayout,
 		computeFgLayout
 	} from './viewport/layout';
+	import { resolvePresetDimensions } from './viewport/resolutions';
 	import { renderAndSave as exportRenderedImage } from './viewport/export';
 	import sdfShadowVert from './shaders/sdf-shadow.vert?raw';
 	import sdfShadowFrag from './shaders/sdf-shadow.frag?raw';
@@ -74,13 +75,16 @@
 	let stageScale = $state(1);
 
 	function getLogicalDimensions() {
-		const refTexture =
-			fgTexture || (settings.current.bgSource === 'custom' ? bgTexture : undefined);
+		const presetDims = resolvePresetDimensions(
+			settings.current.aspectRatio,
+			settings.current.resolutionPreset
+		);
 		return computeLogicalDimensions(
 			appState.aspectWidth,
 			appState.aspectHeight,
-			refTexture?.width,
-			refTexture?.height
+			undefined,
+			undefined,
+			presetDims
 		);
 	}
 
@@ -278,6 +282,7 @@
 	$effect(() => {
 		// Track reactive settings properties
 		const _aspectRatio = settings.current.aspectRatio;
+		const _resolutionPreset = settings.current.resolutionPreset;
 		const _bgEnabled = settings.current.bgEnabled;
 		const _bgSource = settings.current.bgSource;
 		const _bgColor = settings.current.bgColor;
