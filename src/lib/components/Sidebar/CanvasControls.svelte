@@ -30,6 +30,23 @@
 			</div>
 
 			<div class="control">
+				<Label for="dropzone-style">Dropzone Layout</Label>
+				<Select
+					type="single"
+					bind:value={settings.current.dropzoneStyle}
+					onValueChange={() => commitHistory()}
+				>
+					<SelectTrigger id="dropzone-style" class="w-full">
+						{settings.current.dropzoneStyle === 'row' ? 'Row (Option 1)' : 'Stacked (Option 2)'}
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="row">Row (Option 1)</SelectItem>
+						<SelectItem value="stacked">Stacked (Option 2)</SelectItem>
+					</SelectContent>
+				</Select>
+			</div>
+
+			<div class="control">
 				<Label for="filtering">Texture Filtering</Label>
 				<Select
 					type="single"
