@@ -129,12 +129,12 @@
 				<span class="text-muted-foreground">Res:</span>
 				{currentRes.id.toUpperCase()}
 			</SelectTrigger>
-			<SelectContent>
+			<SelectContent class="w-max min-w-max">
 				{#each availableResolutions as res (res.id)}
 					<SelectItem value={res.id}>
-						<div class="flex items-center justify-between gap-4">
+						<div class="flex w-full items-center justify-between gap-4">
 							<span class="font-medium">{res.label}</span>
-							<span class="text-xs text-muted-foreground">{res.sublabel}</span>
+							<span class="text-xs text-muted-foreground tabular-nums">{res.sublabel}</span>
 						</div>
 					</SelectItem>
 				{/each}
