@@ -138,14 +138,14 @@
 
 <div
 	class={cn(
-		'flex h-dvh w-screen flex-col overflow-hidden md:grid md:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] md:grid-rows-[auto_1fr]',
+		'flex h-full w-full flex-col overflow-hidden desktop:grid desktop:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] desktop:grid-rows-[auto_1fr]',
 		className
 	)}
 	style="--desktop-sidebar-width: {currentWidthRem}rem; --mobile-canvas-height: {currentMobileCanvasDvh}dvh;"
 >
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
-	<div class="relative col-span-1 row-span-1 row-start-2 hidden h-full min-h-0 min-w-0 md:block">
+	<div class="relative col-span-1 row-span-1 row-start-2 hidden h-full min-h-0 min-w-0 desktop:block">
 		<Sidebar class="h-full w-full" />
 
 		<!-- Desktop Resizer handle -->
@@ -170,7 +170,7 @@
 
 	<!-- Canvas Viewport (Continuous arbitrary sizing on mobile, full grid cell on desktop) -->
 	<Viewport
-		class="h-[var(--mobile-canvas-height)] w-full flex-none p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
+		class="h-[var(--mobile-canvas-height)] w-full flex-none p-2 desktop:col-span-1 desktop:col-start-2 desktop:row-span-1 desktop:row-start-2 desktop:h-full desktop:p-4"
 		bind:this={viewportRef}
 	/>
 
@@ -179,7 +179,7 @@
 	<!-- svelte-ignore a11y_interactive_supports_focus -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="group relative z-30 flex h-3.5 w-full shrink-0 cursor-row-resize items-center justify-center bg-background select-none md:hidden"
+		class="group relative z-30 flex h-3.5 w-full shrink-0 cursor-row-resize items-center justify-center bg-background select-none desktop:hidden"
 		role="separator"
 		tabindex="0"
 		onmousedown={startMobileResize}
@@ -195,5 +195,5 @@
 		></div>
 	</div>
 
-	<MobileDock class="flex min-h-0 flex-1 md:hidden" />
+	<MobileDock class="flex min-h-0 flex-1 desktop:hidden" />
 </div>

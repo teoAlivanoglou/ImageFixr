@@ -283,6 +283,9 @@
 				app.destroy();
 				return;
 			}
+			app.canvas.style.display = 'block';
+			app.canvas.style.width = '100%';
+			app.canvas.style.height = '100%';
 			containerEl.appendChild(app.canvas);
 
 			scene = new Container();
@@ -629,7 +632,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class={cn(
-		'@container-size relative flex h-full min-h-0 w-full min-w-0 items-center justify-center overflow-hidden bg-background',
+		'relative flex h-full min-h-0 w-full min-w-0 items-center justify-center overflow-hidden bg-background [container-type:size]',
 		className
 	)}
 	ondragover={(e) => {

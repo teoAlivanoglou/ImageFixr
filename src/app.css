@@ -5,6 +5,7 @@
 @import '@fontsource-variable/inter';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant desktop (@media (width >= 1024px) or ((width >= 768px) and (orientation: landscape)));
 
 :root {
 	--border: oklch(0.92 0.004 286.32);
@@ -122,14 +123,20 @@
 		@apply border-border outline-ring/50;
 	}
 	html,
-	body {
-		min-height: 100%;
+	body,
+	#app {
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
 		overflow: hidden;
 		overscroll-behavior: none;
 		-webkit-text-size-adjust: 100%;
 	}
 	body {
 		@apply bg-background text-foreground;
+		position: fixed;
+		inset: 0;
 	}
 	html {
 		@apply font-sans;

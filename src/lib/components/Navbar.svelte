@@ -59,21 +59,21 @@
 
 <div
 	class={cn(
-		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] md:px-6',
+		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] desktop:px-6',
 		className
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
-	<div class="flex shrink items-center gap-2 md:gap-3">
+	<div class="flex shrink items-center gap-2 desktop:gap-3">
 		<div
-			class="pointer-events-none flex items-baseline text-lg font-extralight tracking-tight text-muted-foreground select-none md:text-2xl"
+			class="pointer-events-none flex items-baseline text-lg font-extralight tracking-tight text-muted-foreground select-none desktop:text-2xl"
 		>
 			<strong class="font-semibold text-foreground">Image</strong>
 			<span>&nbsp;Fixr</span>
 		</div>
 
 		<span
-			class="inline-flex cursor-pointer text-xl text-muted-foreground transition-colors hover:text-foreground md:text-2xl"
+			class="inline-flex cursor-pointer text-xl text-muted-foreground transition-colors hover:text-foreground desktop:text-2xl"
 			role="button"
 			tabindex="0"
 			aria-label={theme.current ? 'Use light mode' : 'Use dark mode'}
@@ -86,9 +86,9 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun class="size-4.5 md:size-5.5" />
+				<Sun class="size-4.5 desktop:size-5.5" />
 			{:else}
-				<Moon class="size-4.5 md:size-5.5" />
+				<Moon class="size-4.5 desktop:size-5.5" />
 			{/if}
 		</span>
 	</div>
@@ -99,7 +99,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8.5 md:size-9"
+				class="size-8.5 desktop:size-9"
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo (Ctrl+Z / Cmd+Z)"
@@ -109,7 +109,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8.5 md:size-9"
+				class="size-8.5 desktop:size-9"
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
@@ -120,7 +120,7 @@
 	</div>
 
 	<!-- Desktop Right: Aspect Ratio, Resolution & Export -->
-	<div class="hidden items-center gap-3 md:flex">
+	<div class="hidden items-center gap-3 desktop:flex">
 		<Select
 			type="single"
 			bind:value={settings.current.aspectRatio}
@@ -166,7 +166,7 @@
 	</div>
 
 	<!-- Mobile Right: Fullscreen Toggle and Save -->
-	<div class="flex items-center gap-1 md:hidden">
+	<div class="flex items-center gap-1 desktop:hidden">
 		{#if canFullscreen}
 			<Button
 				size="icon"
