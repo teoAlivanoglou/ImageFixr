@@ -5,11 +5,8 @@ export function computeLayoutMode(width: number, height: number): LayoutMode {
 		return 'mobile';
 	}
 	const isPortrait = height > width;
-	if (width >= 1024) {
+	if (width >= 768) {
 		return isPortrait ? 'desktop-portrait' : 'desktop';
-	}
-	if (width >= 768 && !isPortrait) {
-		return 'desktop';
 	}
 	return 'mobile';
 }
