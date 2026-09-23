@@ -11,10 +11,7 @@
 	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
 
-	import {
-		getResolutionsForRatio,
-		getValidResolutionPreset
-	} from '$lib/viewport/resolutions';
+	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
 	import { ASPECT_RATIOS } from './Sidebar/format-constants';
 
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
@@ -62,14 +59,14 @@
 
 <div
 	class={cn(
-		'col-span-full flex h-12 md:h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 md:px-6 pt-[env(safe-area-inset-top)]',
+		'col-span-full flex h-12 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] md:h-14 md:px-6',
 		className
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
 	<div class="flex shrink items-center gap-2 md:gap-3">
 		<div
-			class="pointer-events-none flex items-baseline text-lg md:text-2xl font-extralight tracking-tight text-muted-foreground select-none"
+			class="pointer-events-none flex items-baseline text-lg font-extralight tracking-tight text-muted-foreground select-none md:text-2xl"
 		>
 			<strong class="font-semibold text-foreground"> Image </strong>
 			<span class="hidden sm:inline">&nbsp;Fixr</span>
@@ -77,7 +74,7 @@
 		</div>
 
 		<span
-			class="inline-flex cursor-pointer text-xl md:text-2xl text-muted-foreground transition-colors hover:text-foreground"
+			class="inline-flex cursor-pointer text-xl text-muted-foreground transition-colors hover:text-foreground md:text-2xl"
 			role="button"
 			tabindex="0"
 			aria-label={theme.current ? 'Use light mode' : 'Use dark mode'}
@@ -122,7 +119,7 @@
 	</div>
 
 	<!-- Desktop Right: Aspect Ratio, Resolution & Export -->
-	<div class="hidden md:flex items-center gap-3">
+	<div class="hidden items-center gap-3 md:flex">
 		<Select
 			type="single"
 			bind:value={settings.current.aspectRatio}
@@ -168,7 +165,7 @@
 	</div>
 
 	<!-- Mobile Right: Undo/Redo, Fullscreen Toggle, and Compact Export -->
-	<div class="flex md:hidden items-center gap-1.5">
+	<div class="flex items-center gap-1.5 md:hidden">
 		<ButtonGroup.Root>
 			<Button
 				size="icon"
@@ -208,8 +205,6 @@
 			</Button>
 		{/if}
 
-		<Button size="sm" class="h-8 px-2.5 text-xs font-semibold" onclick={onExport}>
-			Save
-		</Button>
+		<Button size="sm" class="h-8 px-2.5 text-xs font-semibold" onclick={onExport}>Save</Button>
 	</div>
 </div>

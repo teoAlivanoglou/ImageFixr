@@ -125,6 +125,8 @@
 	body {
 		min-height: 100%;
 		overflow: hidden;
+		overscroll-behavior: none;
+		-webkit-text-size-adjust: 100%;
 	}
 	body {
 		@apply bg-background text-foreground;

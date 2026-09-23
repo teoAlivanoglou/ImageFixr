@@ -34,7 +34,7 @@
 
 	<div class="flex flex-col gap-3">
 		<div class="flex flex-col gap-1.5">
-			<label for="format-aspect-ratio" class="text-xs text-muted-foreground font-medium">
+			<label for="format-aspect-ratio" class="text-xs font-medium text-muted-foreground">
 				Aspect Ratio
 			</label>
 			<Select
@@ -55,7 +55,7 @@
 		</div>
 
 		<div class="flex flex-col gap-1.5">
-			<label for="format-resolution" class="text-xs text-muted-foreground font-medium">
+			<label for="format-resolution" class="text-xs font-medium text-muted-foreground">
 				Export Resolution
 			</label>
 			<Select
@@ -70,7 +70,9 @@
 				>
 					<span class="mr-1 text-muted-foreground">Preset:</span>
 					<span class="font-medium text-foreground">{currentRes.label}</span>
-					<span class="ml-auto text-xs text-muted-foreground tabular-nums">{currentRes.sublabel}</span>
+					<span class="ml-auto text-xs text-muted-foreground tabular-nums"
+						>{currentRes.sublabel}</span
+					>
 				</SelectTrigger>
 				<SelectContent>
 					{#each availableResolutions as res (res.id)}

@@ -70,14 +70,14 @@
 
 <div
 	class={cn(
-		'flex flex-col h-dvh w-screen overflow-hidden md:grid md:grid-rows-[auto_1fr] md:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)]',
+		'flex h-dvh w-screen flex-col overflow-hidden md:grid md:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] md:grid-rows-[auto_1fr]',
 		className
 	)}
 	style="--desktop-sidebar-width: {currentWidthRem}rem;"
 >
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
-	<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0 hidden md:block">
+	<div class="relative col-span-1 row-span-1 row-start-2 hidden h-full min-h-0 min-w-0 md:block">
 		<Sidebar class="h-full w-full" />
 
 		<!-- Resizer handle -->
@@ -101,9 +101,9 @@
 	</div>
 
 	<Viewport
-		class="flex-none h-[42dvh] max-h-[45dvh] w-full p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
+		class="h-[42dvh] max-h-[45dvh] w-full flex-none p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
 		bind:this={viewportRef}
 	/>
 
-	<MobileDock class="flex md:hidden flex-1 min-h-0" />
+	<MobileDock class="flex min-h-0 flex-1 md:hidden" />
 </div>

@@ -40,7 +40,7 @@
 >
 	<!-- Sticky Category Tab Bar -->
 	<div
-		class="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border bg-sidebar px-3 py-2 scrollbar-none"
+		class="flex shrink-0 scrollbar-none items-center gap-1.5 overflow-x-auto border-b border-border bg-sidebar px-3 py-2"
 		role="tablist"
 		aria-label="Mobile controls tabs"
 	>
@@ -65,7 +65,7 @@
 	</div>
 
 	<!-- Scrollable Active Panel -->
-	<div class="touch-pan-y flex-1 min-h-0 overflow-y-auto px-4 py-3">
+	<div class="min-h-0 flex-1 touch-pan-y overflow-y-auto px-4 py-3">
 		{#if activeTab === 'image'}
 			<ForegroundControls />
 		{:else if activeTab === 'backdrop'}
