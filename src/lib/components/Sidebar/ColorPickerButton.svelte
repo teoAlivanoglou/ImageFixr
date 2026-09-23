@@ -5,6 +5,7 @@
 	import { Palette } from '@lucide/svelte';
 	import { settings, commitHistory, resetSwatches } from '$lib/state.svelte';
 	import { parseColorRgb } from '$lib/viewport/color-utils';
+	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { cn } from '$lib/utils';
 
 	let {
@@ -62,7 +63,13 @@
 			</span>
 		</Button>
 	</Popover.Trigger>
-	<Popover.Content side="right" align="end" class="border-none bg-transparent p-0 shadow-none">
+	<Popover.Content
+		side={layoutMode.current === 'mobile-portrait' ? 'bottom' : 'right'}
+		align={layoutMode.current === 'mobile-portrait' ? 'center' : 'end'}
+		avoidCollisions={true}
+		collisionPadding={8}
+		class="border-none bg-transparent p-0 shadow-none z-50 max-h-[calc(100dvh-1rem)] overflow-y-auto"
+	>
 		<ColorPicker
 			bind:value
 			bind:swatches

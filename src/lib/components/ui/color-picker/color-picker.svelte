@@ -360,12 +360,14 @@
 
 <div
 	class={cn(
-		'w-74 space-y-3.5 rounded-xl border border-border bg-card p-3.5 text-card-foreground shadow-lg',
+		'w-74 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] space-y-3.5 rounded-xl border border-border bg-card p-3.5 text-card-foreground shadow-lg overflow-y-auto',
 		className
 	)}
 >
 	<!-- 2D Color Plane -->
-	<div class="relative h-48 w-full overflow-hidden rounded-lg border border-border/80 shadow-inner">
+	<div
+		class="relative h-48 max-h-[35dvh] min-h-24 w-full overflow-hidden rounded-lg border border-border/80 shadow-inner"
+	>
 		<div class="absolute inset-0" style={`background-color: hsl(${hsv.h} 100% 50%);`}></div>
 		<div class="absolute inset-0 bg-linear-to-r from-white to-transparent"></div>
 		<div class="absolute inset-0 bg-linear-to-t from-black to-transparent"></div>
@@ -412,9 +414,7 @@
 		</div>
 
 		<!-- Alpha Slider -->
-		<div
-			class="checkerboard-bg relative h-3.5 overflow-hidden rounded-full border border-border/60"
-		>
+		<div class="checkerboard-bg relative h-3.5 overflow-hidden rounded-full border border-border/60">
 			<input
 				type="range"
 				min={0}
@@ -479,7 +479,7 @@
 				type="button"
 				variant="outline"
 				size="icon-sm"
-				class="checkerboard-bg relative cursor-pointer overflow-hidden p-0"
+				class="checkerboard-bg relative cursor-pointer overflow-hidden p-0 h-6 w-6"
 				onclick={() => {
 					const parsedSwatch = parseHex(swatch);
 					if (!parsedSwatch) return;
