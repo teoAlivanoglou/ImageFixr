@@ -33,8 +33,8 @@
 	<SectionHeader title="Canvas Format" />
 
 	<div class="flex flex-col gap-3">
-		<div class="flex flex-col gap-1.5">
-			<label for="format-aspect-ratio" class="text-xs font-medium text-muted-foreground">
+		<div class="flex items-center justify-between gap-3">
+			<label for="format-aspect-ratio" class="shrink-0 text-xs font-medium text-muted-foreground">
 				Aspect Ratio
 			</label>
 			<Select
@@ -42,7 +42,7 @@
 				bind:value={settings.current.aspectRatio}
 				onValueChange={handleRatioChange}
 			>
-				<SelectTrigger id="format-aspect-ratio" class="h-10 w-full text-sm">
+				<SelectTrigger id="format-aspect-ratio" class="h-9 w-44 text-xs">
 					<span class="mr-1 text-muted-foreground">Ratio:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
@@ -54,9 +54,9 @@
 			</Select>
 		</div>
 
-		<div class="flex flex-col gap-1.5">
-			<label for="format-resolution" class="text-xs font-medium text-muted-foreground">
-				Export Resolution
+		<div class="flex items-center justify-between gap-3">
+			<label for="format-resolution" class="shrink-0 text-xs font-medium text-muted-foreground">
+				Resolution
 			</label>
 			<Select
 				type="single"
@@ -65,10 +65,10 @@
 			>
 				<SelectTrigger
 					id="format-resolution"
-					class="h-10 w-full text-sm"
+					class="h-9 w-44 text-xs"
 					title={`${currentRes.label} (${currentRes.sublabel})`}
 				>
-					<span class="mr-1 text-muted-foreground">Preset:</span>
+					<span class="mr-1 text-muted-foreground">Res:</span>
 					<span class="font-medium text-foreground">{currentRes.label}</span>
 					<span class="ml-auto text-xs text-muted-foreground tabular-nums"
 						>{currentRes.sublabel}</span

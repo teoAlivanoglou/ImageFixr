@@ -93,12 +93,13 @@
 		</span>
 	</div>
 
-	<!-- Desktop Center: Undo/Redo -->
-	<div class="hidden md:flex">
+	<!-- Center: Undo/Redo (Centered across mobile and desktop) -->
+	<div class="flex items-center justify-center">
 		<ButtonGroup.Root>
 			<Button
 				size="icon"
 				variant="outline"
+				class="size-8.5 md:size-9"
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo (Ctrl+Z / Cmd+Z)"
@@ -108,6 +109,7 @@
 			<Button
 				size="icon"
 				variant="outline"
+				class="size-8.5 md:size-9"
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
@@ -163,36 +165,13 @@
 		<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
 	</div>
 
-	<!-- Mobile Right: Undo/Redo, Fullscreen Toggle, and Compact Export -->
-	<div class="flex items-center gap-1.5 md:hidden">
-		<ButtonGroup.Root>
-			<Button
-				size="icon"
-				variant="outline"
-				class="size-11 min-h-[44px] min-w-[44px]"
-				disabled={!history?.canUndo}
-				onclick={() => history?.undo()}
-				title="Undo"
-			>
-				<Undo2 class="size-4" />
-			</Button>
-			<Button
-				size="icon"
-				variant="outline"
-				class="size-11 min-h-[44px] min-w-[44px]"
-				disabled={!history?.canRedo}
-				onclick={() => history?.redo()}
-				title="Redo"
-			>
-				<Redo2 class="size-4" />
-			</Button>
-		</ButtonGroup.Root>
-
+	<!-- Mobile Right: Fullscreen Toggle and Save -->
+	<div class="flex items-center gap-1 md:hidden">
 		{#if canFullscreen}
 			<Button
 				size="icon"
-				variant="outline"
-				class="size-11 min-h-[44px] min-w-[44px]"
+				variant="ghost"
+				class="size-8.5 text-muted-foreground hover:text-foreground"
 				onclick={toggleFullscreen}
 				title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 			>
@@ -204,8 +183,6 @@
 			</Button>
 		{/if}
 
-		<Button size="sm" class="h-11 min-h-[44px] px-3 text-xs font-semibold" onclick={onExport}>
-			Save
-		</Button>
+		<Button class="h-8.5 px-3 text-xs" onclick={onExport}>Save</Button>
 	</div>
 </div>

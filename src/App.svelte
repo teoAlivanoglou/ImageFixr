@@ -61,11 +61,79 @@
 			sidebarWidthStore.current = Math.round(currentWidthRem * 100) / 100;
 		}
 	}
+
+	// Mobile continuous arbitrary height resizing
+	const MIN_MOBILE_CANVAS_DVH = 15;
+	const MAX_MOBILE_CANVAS_DVH = 80;
+	const DEFAULT_MOBILE_CANVAS_DVH = 42;
+
+	let mobileCanvasDvhStore = new PersistedState(
+		'image-fixr-mobile-canvas-dvh',
+		DEFAULT_MOBILE_CANVAS_DVH
+	);
+	let currentMobileCanvasDvh = $state(
+		Math.max(
+			MIN_MOBILE_CANVAS_DVH,
+			Math.min(mobileCanvasDvhStore.current ?? DEFAULT_MOBILE_CANVAS_DVH, MAX_MOBILE_CANVAS_DVH)
+		)
+	);
+	let isMobileResizing = $state(false);
+	let mobileStartTouchY = 0;
+	let mobileStartDvh = 0;
+	let mobileResizeRafId: number | null = null;
+
+	function startMobileResize(e: MouseEvent | TouchEvent) {
+		isMobileResizing = true;
+		const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+		mobileStartTouchY = clientY;
+		mobileStartDvh = currentMobileCanvasDvh;
+		document.body.style.userSelect = 'none';
+	}
+
+	function onMobilePointerMove(e: MouseEvent | TouchEvent) {
+		if (!isMobileResizing) return;
+		const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+		if (mobileResizeRafId !== null) return;
+		mobileResizeRafId = requestAnimationFrame(() => {
+			mobileResizeRafId = null;
+			const deltaPx = clientY - mobileStartTouchY;
+			const totalHeight = window.innerHeight;
+			const deltaDvh = (deltaPx / totalHeight) * 100;
+			currentMobileCanvasDvh = Math.max(
+				MIN_MOBILE_CANVAS_DVH,
+				Math.min(MAX_MOBILE_CANVAS_DVH, mobileStartDvh + deltaDvh)
+			);
+		});
+	}
+
+	function onMobilePointerUp() {
+		if (isMobileResizing) {
+			if (mobileResizeRafId !== null) {
+				cancelAnimationFrame(mobileResizeRafId);
+				mobileResizeRafId = null;
+			}
+			isMobileResizing = false;
+			document.body.style.userSelect = '';
+			mobileCanvasDvhStore.current = Math.round(currentMobileCanvasDvh * 10) / 10;
+		}
+	}
 </script>
 
 <svelte:window
-	onmousemove={isResizing ? onMouseMove : undefined}
-	onmouseup={isResizing ? onMouseUp : undefined}
+	onmousemove={(e) => {
+		if (isResizing) onMouseMove(e);
+		if (isMobileResizing) onMobilePointerMove(e);
+	}}
+	ontouchmove={(e) => {
+		if (isMobileResizing) onMobilePointerMove(e);
+	}}
+	onmouseup={() => {
+		if (isResizing) onMouseUp();
+		if (isMobileResizing) onMobilePointerUp();
+	}}
+	ontouchend={() => {
+		if (isMobileResizing) onMobilePointerUp();
+	}}
 />
 
 <div
@@ -73,14 +141,14 @@
 		'flex h-dvh w-screen flex-col overflow-hidden md:grid md:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] md:grid-rows-[auto_1fr]',
 		className
 	)}
-	style="--desktop-sidebar-width: {currentWidthRem}rem;"
+	style="--desktop-sidebar-width: {currentWidthRem}rem; --mobile-canvas-height: {currentMobileCanvasDvh}dvh;"
 >
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
 	<div class="relative col-span-1 row-span-1 row-start-2 hidden h-full min-h-0 min-w-0 md:block">
 		<Sidebar class="h-full w-full" />
 
-		<!-- Resizer handle -->
+		<!-- Desktop Resizer handle -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -100,10 +168,32 @@
 		</div>
 	</div>
 
+	<!-- Canvas Viewport (Continuous arbitrary sizing on mobile, full grid cell on desktop) -->
 	<Viewport
-		class="h-[42dvh] max-h-[45dvh] w-full flex-none p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
+		class="h-[var(--mobile-canvas-height)] w-full flex-none p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
 		bind:this={viewportRef}
 	/>
+
+	<!-- Mobile Horizontal Resizer Handle -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_interactive_supports_focus -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div
+		class="group relative z-30 flex h-3.5 w-full shrink-0 cursor-row-resize items-center justify-center bg-background select-none md:hidden"
+		role="separator"
+		tabindex="0"
+		onmousedown={startMobileResize}
+		ontouchstart={startMobileResize}
+		ondblclick={() => (currentMobileCanvasDvh = DEFAULT_MOBILE_CANVAS_DVH)}
+		title="Drag to resize canvas / double-click to reset"
+	>
+		<div
+			class={cn(
+				'h-1 w-10 rounded-full transition-colors',
+				isMobileResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
+			)}
+		></div>
+	</div>
 
 	<MobileDock class="flex min-h-0 flex-1 md:hidden" />
 </div>

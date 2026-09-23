@@ -29,14 +29,14 @@
 				/>
 			</div>
 
-			<div class="control">
-				<Label for="filtering">Texture Filtering</Label>
+			<div class="flex items-center justify-between gap-3">
+				<Label for="filtering" class="shrink-0 text-xs">Texture Filtering</Label>
 				<Select
 					type="single"
 					bind:value={settings.current.filtering}
 					onValueChange={() => commitHistory()}
 				>
-					<SelectTrigger id="filtering" class="w-full">
+					<SelectTrigger id="filtering" class="h-9 w-44 text-xs">
 						{settings.current.filtering === 'linear' ? 'Linear' : 'Nearest'}
 					</SelectTrigger>
 					<SelectContent>
@@ -46,8 +46,8 @@
 				</Select>
 			</div>
 
-			<div class="control">
-				<Label for="auto-mipmaps">Auto Mipmaps</Label>
+			<div class="flex items-center justify-between gap-3">
+				<Label for="auto-mipmaps" class="shrink-0 text-xs">Auto Mipmaps</Label>
 				<Select
 					type="single"
 					value={settings.current.autoGenerateMipmaps ? 'on' : 'off'}
@@ -56,7 +56,7 @@
 						commitHistory();
 					}}
 				>
-					<SelectTrigger id="auto-mipmaps" class="w-full">
+					<SelectTrigger id="auto-mipmaps" class="h-9 w-44 text-xs">
 						{settings.current.autoGenerateMipmaps ? 'Enabled' : 'Disabled'}
 					</SelectTrigger>
 					<SelectContent>
@@ -67,14 +67,14 @@
 			</div>
 
 			<CollapsibleSection open={settings.current.autoGenerateMipmaps}>
-				<div class="control">
-					<Label for="mipmap-filter">Mipmap Filter</Label>
+				<div class="flex items-center justify-between gap-3">
+					<Label for="mipmap-filter" class="shrink-0 text-xs">Mipmap Filter</Label>
 					<Select
 						type="single"
 						bind:value={settings.current.mipmapFilter}
 						onValueChange={() => commitHistory()}
 					>
-						<SelectTrigger id="mipmap-filter" class="w-full">
+						<SelectTrigger id="mipmap-filter" class="h-9 w-44 text-xs">
 							{settings.current.mipmapFilter === 'linear'
 								? 'Linear (Trilinear)'
 								: 'Nearest (Bilinear)'}

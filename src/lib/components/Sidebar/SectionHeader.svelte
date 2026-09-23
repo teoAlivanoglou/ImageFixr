@@ -2,13 +2,16 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { ChevronDown } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
-	import type { Snippet } from 'svelte';
+	import { getContext, type Snippet } from 'svelte';
+
+	const contextCollapsible = getContext<boolean | undefined>('collapsible');
 
 	let {
 		title,
 		hasSwitch = false,
 		enabled = $bindable(false),
 		isCollapsed = $bindable(false),
+		collapsible = contextCollapsible ?? true,
 		onEnableChange = () => {},
 		children
 	}: {
@@ -16,11 +19,26 @@
 		hasSwitch?: boolean;
 		enabled?: boolean;
 		isCollapsed?: boolean;
+		collapsible?: boolean;
 		onEnableChange?: () => void;
 		children?: Snippet;
 	} = $props();
 
+	$effect(() => {
+		if (!collapsible && isCollapsed) {
+			isCollapsed = false;
+		}
+	});
+
 	function handleLabelClick() {
+		if (!collapsible) {
+			if (hasSwitch) {
+				enabled = !enabled;
+				onEnableChange();
+			}
+			return;
+		}
+
 		if (hasSwitch && !enabled) {
 			enabled = true;
 			isCollapsed = false;
@@ -85,24 +103,26 @@
 		></div>
 
 		<!-- Pill Buttons (Desktop/Wide: inline) -->
-		{#if (!hasSwitch || enabled) && !isCollapsed && children}
+		{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
 			<div class="pointer-events-auto relative z-10 hidden items-center @[350px]:flex">
 				{@render children()}
 			</div>
 		{/if}
 
 		<!-- Chevron -->
-		<div
-			class="pointer-events-none relative z-10 ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground/60 transition-colors peer-hover:text-foreground"
-		>
-			<ChevronDown
-				class={cn('h-3.5 w-3.5 transition-transform duration-200', isCollapsed && '-rotate-90')}
-			/>
-		</div>
+		{#if collapsible}
+			<div
+				class="pointer-events-none relative z-10 ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground/60 transition-colors peer-hover:text-foreground"
+			>
+				<ChevronDown
+					class={cn('h-3.5 w-3.5 transition-transform duration-200', isCollapsed && '-rotate-90')}
+				/>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Pill Buttons (Narrow: dedicated full-width row) -->
-	{#if (!hasSwitch || enabled) && !isCollapsed && children}
+	{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
 		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[350px]:hidden">
 			{@render children()}
 		</div>
