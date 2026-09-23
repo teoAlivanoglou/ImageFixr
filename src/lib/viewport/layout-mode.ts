@@ -1,12 +1,23 @@
-export type LayoutMode = 'desktop' | 'desktop-portrait' | 'mobile';
+export type LayoutMode = 'desktop' | 'desktop-portrait' | 'mobile-portrait' | 'mobile-landscape';
 
 export function computeLayoutMode(width: number, height: number): LayoutMode {
-	if (height < 600) {
-		return 'mobile';
-	}
 	const isPortrait = height > width;
-	if (width >= 768) {
-		return isPortrait ? 'desktop-portrait' : 'desktop';
+
+	if (isPortrait) {
+		// Portrait screens:
+		// >= 768px width & >= 600px height -> vertically mounted monitors & portrait tablets (iPad)
+		if (width >= 768 && height >= 600) {
+			return 'desktop-portrait';
+		}
+		// Otherwise phone portrait
+		return 'mobile-portrait';
+	} else {
+		// Landscape screens:
+		// If height < 600px or width < 768px -> mobile phone in landscape
+		if (height < 600 || width < 768) {
+			return 'mobile-landscape';
+		}
+		// Otherwise desktop landscape & large landscape tablets
+		return 'desktop';
 	}
-	return 'mobile';
 }

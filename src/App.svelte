@@ -11,7 +11,7 @@
 
 	let viewportRef = $state<Viewport>();
 
-	const MIN_SIDEBAR_REM = 19;
+	const MIN_SIDEBAR_REM = 17;
 	const MAX_SIDEBAR_REM = 38;
 	const DEFAULT_SIDEBAR_REM = 21;
 
@@ -25,12 +25,16 @@
 	let isResizing = $state(false);
 	let remSize = 16;
 
+	let isDesktopLayout = $derived(
+		layoutMode.current === 'desktop' || layoutMode.current === 'mobile-landscape'
+	);
+
 	function getRootFontSize(): number {
 		if (typeof window === 'undefined') return 16;
 		return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 	}
 
-	function startResize(e: MouseEvent) {
+	function startResize(e: MouseEvent | TouchEvent) {
 		e.preventDefault();
 		isResizing = true;
 		remSize = getRootFontSize();
@@ -40,9 +44,10 @@
 
 	let resizeRafId: number | null = null;
 
-	function onMouseMove(e: MouseEvent) {
+	function onMouseMove(e: MouseEvent | TouchEvent) {
 		if (!isResizing) return;
-		const targetRem = e.clientX / remSize;
+		const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+		const targetRem = clientX / remSize;
 		if (resizeRafId !== null) return;
 		resizeRafId = requestAnimationFrame(() => {
 			resizeRafId = null;
@@ -126,6 +131,7 @@
 		if (isMobileResizing) onMobilePointerMove(e);
 	}}
 	ontouchmove={(e) => {
+		if (isResizing) onMouseMove(e);
 		if (isMobileResizing) onMobilePointerMove(e);
 	}}
 	onmouseup={() => {
@@ -133,6 +139,7 @@
 		if (isMobileResizing) onMobilePointerUp();
 	}}
 	ontouchend={() => {
+		if (isResizing) onMouseUp();
 		if (isMobileResizing) onMobilePointerUp();
 	}}
 />
@@ -140,7 +147,7 @@
 <div
 	class={cn(
 		'flex h-full w-full flex-col overflow-hidden',
-		layoutMode.current === 'desktop' &&
+		isDesktopLayout &&
 			'grid [grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] grid-rows-[auto_1fr]',
 		className
 	)}
@@ -148,33 +155,51 @@
 >
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
-	{#if layoutMode.current === 'desktop'}
+	{#if isDesktopLayout}
 		<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
 			<Sidebar class="h-full w-full" />
 
-			<!-- Desktop Resizer handle -->
+			<!-- Desktop & Mobile-Landscape Resizer handle -->
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<!-- svelte-ignore a11y_interactive_supports_focus -->
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div
-				class="group absolute top-0 right-0 z-50 h-full w-3 translate-x-1/2 cursor-col-resize select-none"
+				class={cn(
+					'group absolute top-0 right-0 z-50 flex h-full items-center justify-center translate-x-1/2 cursor-col-resize select-none',
+					layoutMode.current === 'mobile-landscape' ? 'w-5' : 'w-3'
+				)}
 				role="separator"
 				tabindex="0"
 				onmousedown={startResize}
+				ontouchstart={startResize}
+				ondblclick={() => (currentWidthRem = DEFAULT_SIDEBAR_REM)}
+				title="Drag to resize sidebar / double-click to reset"
 			>
 				<!-- Visual indicator -->
-				<div
-					class={cn(
-						'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
-						isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
-					)}
-				></div>
+				{#if layoutMode.current === 'mobile-landscape'}
+					<div
+						class={cn(
+							'h-10 w-1 rounded-full transition-colors',
+							isResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
+						)}
+					></div>
+				{:else}
+					<div
+						class={cn(
+							'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
+							isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
+						)}
+					></div>
+				{/if}
 			</div>
 		</div>
 
-		<!-- Canvas Viewport (Desktop) -->
+		<!-- Canvas Viewport (Desktop & Mobile-Landscape) -->
 		<Viewport
-			class="col-span-1 col-start-2 row-span-1 row-start-2 h-full w-full p-4"
+			class={cn(
+				'col-span-1 col-start-2 row-span-1 row-start-2 h-full w-full',
+				layoutMode.current === 'mobile-landscape' ? 'p-2' : 'p-4'
+			)}
 			bind:this={viewportRef}
 		/>
 	{:else}

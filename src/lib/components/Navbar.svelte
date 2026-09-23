@@ -61,16 +61,18 @@
 <div
 	class={cn(
 		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
-		layoutMode.current !== 'mobile' ? 'px-6' : 'px-3',
+		layoutMode.current !== 'mobile-portrait'
+			? 'px-4 sm:px-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]'
+			: 'px-3',
 		className
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
-	<div class="flex shrink items-center gap-2" class:gap-3={layoutMode.current !== 'mobile'}>
+	<div class="flex shrink items-center gap-2" class:gap-3={layoutMode.current !== 'mobile-portrait'}>
 		<div
 			class={cn(
 				'pointer-events-none flex items-baseline font-extralight tracking-tight text-muted-foreground select-none',
-				layoutMode.current !== 'mobile' ? 'text-2xl' : 'text-lg'
+				layoutMode.current !== 'mobile-portrait' ? 'text-2xl' : 'text-lg'
 			)}
 		>
 			<strong class="font-semibold text-foreground">Image</strong>
@@ -80,7 +82,7 @@
 		<span
 			class={cn(
 				'inline-flex cursor-pointer text-muted-foreground transition-colors hover:text-foreground',
-				layoutMode.current !== 'mobile' ? 'text-2xl' : 'text-xl'
+				layoutMode.current !== 'mobile-portrait' ? 'text-2xl' : 'text-xl'
 			)}
 			role="button"
 			tabindex="0"
@@ -94,9 +96,9 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun class={layoutMode.current !== 'mobile' ? 'size-5.5' : 'size-4.5'} />
+				<Sun class={layoutMode.current !== 'mobile-portrait' ? 'size-5.5' : 'size-4.5'} />
 			{:else}
-				<Moon class={layoutMode.current !== 'mobile' ? 'size-5.5' : 'size-4.5'} />
+				<Moon class={layoutMode.current !== 'mobile-portrait' ? 'size-5.5' : 'size-4.5'} />
 			{/if}
 		</span>
 	</div>
@@ -107,7 +109,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class={layoutMode.current !== 'mobile' ? 'size-9' : 'size-8.5'}
+				class={layoutMode.current !== 'mobile-portrait' ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo (Ctrl+Z / Cmd+Z)"
@@ -117,7 +119,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class={layoutMode.current !== 'mobile' ? 'size-9' : 'size-8.5'}
+				class={layoutMode.current !== 'mobile-portrait' ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
@@ -127,8 +129,8 @@
 		</ButtonGroup.Root>
 	</div>
 
-	<!-- Desktop & Desktop-Portrait Right: Aspect Ratio, Resolution & Export -->
-	{#if layoutMode.current !== 'mobile'}
+	<!-- Desktop, Desktop-Portrait & Mobile-Landscape Right: Aspect Ratio, Resolution & Export -->
+	{#if layoutMode.current !== 'mobile-portrait'}
 		<div class="flex items-center gap-3">
 			<Select
 				type="single"

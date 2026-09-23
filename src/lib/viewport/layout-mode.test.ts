@@ -19,11 +19,20 @@ test('computeLayoutMode correctly identifies desktop-portrait (vertically mounte
 	assert.strictEqual(computeLayoutMode(834, 1194), 'desktop-portrait');
 });
 
-test('computeLayoutMode correctly identifies mobile for phones and narrow screens', () => {
+test('computeLayoutMode correctly identifies mobile-portrait for phones in portrait', () => {
 	// iPhone 14/15
-	assert.strictEqual(computeLayoutMode(390, 844), 'mobile');
-	// Screen width < 768
-	assert.strictEqual(computeLayoutMode(767, 1024), 'mobile');
-	// Phone in landscape (height < 600)
-	assert.strictEqual(computeLayoutMode(844, 390), 'mobile');
+	assert.strictEqual(computeLayoutMode(390, 844), 'mobile-portrait');
+	assert.strictEqual(computeLayoutMode(430, 932), 'mobile-portrait');
+	// Screen width < 768 in portrait
+	assert.strictEqual(computeLayoutMode(767, 1024), 'mobile-portrait');
+});
+
+test('computeLayoutMode correctly identifies mobile-landscape for phones in landscape', () => {
+	// iPhone 14/15 landscape (height < 600)
+	assert.strictEqual(computeLayoutMode(844, 390), 'mobile-landscape');
+	assert.strictEqual(computeLayoutMode(932, 430), 'mobile-landscape');
+	// iPhone SE landscape
+	assert.strictEqual(computeLayoutMode(667, 375), 'mobile-landscape');
+	// Small landscape window
+	assert.strictEqual(computeLayoutMode(767, 500), 'mobile-landscape');
 });
