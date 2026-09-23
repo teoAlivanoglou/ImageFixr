@@ -73,9 +73,6 @@
 					title={`${currentRes.label} (${currentRes.sublabel})`}
 				>
 					<span class="font-medium text-foreground">{currentRes.label}</span>
-					<span class="ml-auto text-xs text-muted-foreground tabular-nums"
-						>{currentRes.sublabel}</span
-					>
 				</SelectTrigger>
 				<SelectContent>
 					{#each availableResolutions as res (res.id)}
