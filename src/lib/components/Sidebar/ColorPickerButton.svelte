@@ -65,10 +65,11 @@
 	</Popover.Trigger>
 	<Popover.Content
 		side={layoutMode.current === 'mobile-portrait' ? 'bottom' : 'right'}
-		align={layoutMode.current === 'mobile-portrait' ? 'center' : 'end'}
+		align={layoutMode.current === 'mobile-portrait' ? 'center' : 'start'}
+		sideOffset={8}
 		avoidCollisions={true}
-		collisionPadding={8}
-		class="border-none bg-transparent p-0 shadow-none z-50 max-h-[calc(100dvh-1rem)] overflow-y-auto"
+		collisionPadding={12}
+		class="border-none bg-transparent p-0 shadow-none z-50"
 	>
 		<ColorPicker
 			bind:value
