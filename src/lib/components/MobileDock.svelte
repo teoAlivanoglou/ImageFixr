@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext, tick } from 'svelte';
+	import { setContext } from 'svelte';
 	import ForegroundControls from './Sidebar/ForegroundControls.svelte';
 	import BackgroundControls from './Sidebar/BackgroundControls.svelte';
 	import MarginControls from './Sidebar/MarginControls.svelte';
@@ -27,8 +27,12 @@
 	];
 
 	let tabBarEl = $state<HTMLElement | null>(null);
+	let carouselEl = $state<HTMLElement | null>(null);
 	let canScrollLeft = $state(false);
 	let canScrollRight = $state(false);
+
+	let isProgrammaticScroll = false;
+	let scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	function updateScrollIndicators() {
 		if (!tabBarEl) return;
@@ -36,55 +40,60 @@
 		canScrollRight = tabBarEl.scrollLeft + tabBarEl.clientWidth < tabBarEl.scrollWidth - 2;
 	}
 
+	function scrollTabIntoView(id: TabId) {
+		if (!tabBarEl) return;
+		const btn = tabBarEl.querySelector(`[data-tab-id="${id}"]`) as HTMLElement | null;
+		if (!btn) return;
+		const containerWidth = tabBarEl.clientWidth;
+		const btnLeft = btn.offsetLeft;
+		const btnWidth = btn.offsetWidth;
+		const targetScrollLeft = btnLeft - (containerWidth - btnWidth) / 2;
+		tabBarEl.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+		updateScrollIndicators();
+	}
+
+	function handleCarouselScroll() {
+		if (isProgrammaticScroll || !carouselEl) return;
+		const width = carouselEl.clientWidth;
+		if (width === 0) return;
+		const index = Math.round(carouselEl.scrollLeft / width);
+		if (index >= 0 && index < TABS.length && TABS[index].id !== activeTab) {
+			activeTab = TABS[index].id;
+			scrollTabIntoView(activeTab);
+		}
+	}
+
 	function selectTab(id: TabId) {
 		activeTab = id;
-		void tick().then(() => {
-			const activeBtn = tabBarEl?.querySelector(`[data-tab-id="${id}"]`);
-			activeBtn?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-			updateScrollIndicators();
-		});
+		scrollTabIntoView(id);
+		const index = TABS.findIndex((t) => t.id === id);
+		if (index !== -1 && carouselEl) {
+			isProgrammaticScroll = true;
+			if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+			carouselEl.scrollTo({ left: index * carouselEl.clientWidth, behavior: 'smooth' });
+			scrollTimeoutId = setTimeout(() => {
+				isProgrammaticScroll = false;
+			}, 400);
+		}
 	}
 
 	$effect(() => {
 		updateScrollIndicators();
-		const handleResize = () => updateScrollIndicators();
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	});
-
-	let touchStartX = 0;
-	let touchStartY = 0;
-	let touchStartTime = 0;
-	let touchStartedOnInteractive = false;
-
-	function handleTouchStart(e: TouchEvent) {
-		if (e.touches.length !== 1) return;
-		const target = e.target as HTMLElement | null;
-		touchStartedOnInteractive = Boolean(
-			target?.closest(
-				'input, button, select, [role="slider"], [role="tab"], .slider-composite-input'
-			)
-		);
-		touchStartX = e.touches[0].clientX;
-		touchStartY = e.touches[0].clientY;
-		touchStartTime = Date.now();
-	}
-
-	function handleTouchEnd(e: TouchEvent) {
-		if (touchStartedOnInteractive || e.changedTouches.length !== 1) return;
-		const deltaX = e.changedTouches[0].clientX - touchStartX;
-		const deltaY = e.changedTouches[0].clientY - touchStartY;
-		const duration = Date.now() - touchStartTime;
-
-		if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && duration < 500) {
-			const currentIndex = TABS.findIndex((t) => t.id === activeTab);
-			if (deltaX < 0 && currentIndex < TABS.length - 1) {
-				selectTab(TABS[currentIndex + 1].id);
-			} else if (deltaX > 0 && currentIndex > 0) {
-				selectTab(TABS[currentIndex - 1].id);
+		const handleResize = () => {
+			updateScrollIndicators();
+			if (carouselEl) {
+				const index = TABS.findIndex((t) => t.id === activeTab);
+				if (index !== -1) {
+					carouselEl.scrollLeft = index * carouselEl.clientWidth;
+				}
 			}
-		}
-	}
+		};
+		window.addEventListener('resize', handleResize);
+		return () => {
+			window.removeEventListener('resize', handleResize);
+			if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+		};
+	});
 </script>
 
 <div
@@ -94,19 +103,19 @@
 	)}
 >
 	<!-- Sticky Category Tab Bar with Scroll Indicators -->
-	<div class="relative flex shrink-0 items-center border-b border-border bg-sidebar">
+	<div class="relative flex w-full min-w-0 shrink-0 items-center overflow-hidden border-b border-border bg-sidebar">
 		{#if canScrollLeft}
 			<div
-				class="pointer-events-none absolute left-0 z-10 flex h-full items-center bg-gradient-to-r from-sidebar via-sidebar/80 to-transparent pr-3 pl-1 text-muted-foreground"
+				class="pointer-events-none absolute left-0 z-10 flex h-full items-center bg-gradient-to-r from-sidebar via-sidebar/90 to-transparent pr-3 pl-1 text-muted-foreground"
 			>
-				<ChevronLeft class="size-3.5" />
+				<ChevronLeft class="size-4" />
 			</div>
 		{/if}
 
 		<div
 			bind:this={tabBarEl}
 			onscroll={updateScrollIndicators}
-			class="flex shrink-0 scrollbar-none items-center gap-1.5 overflow-x-auto px-3 py-2"
+			class="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto px-3 py-2 scrollbar-none"
 			role="tablist"
 			aria-label="Mobile controls tabs"
 		>
@@ -131,32 +140,38 @@
 
 		{#if canScrollRight}
 			<div
-				class="pointer-events-none absolute right-0 z-10 flex h-full items-center bg-gradient-to-l from-sidebar via-sidebar/80 to-transparent pr-1 pl-3 text-muted-foreground"
+				class="pointer-events-none absolute right-0 z-10 flex h-full items-center bg-gradient-to-l from-sidebar via-sidebar/90 to-transparent pr-1 pl-3 text-muted-foreground"
 			>
-				<ChevronRight class="size-3.5" />
+				<ChevronRight class="size-4" />
 			</div>
 		{/if}
 	</div>
 
-	<!-- Scrollable Active Panel with Empty Space Swipe Navigation -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- Native CSS Scroll-Snap Carousel Container -->
 	<div
-		class="min-h-0 flex-1 touch-pan-y overflow-y-auto px-4 py-3"
-		ontouchstart={handleTouchStart}
-		ontouchend={handleTouchEnd}
+		bind:this={carouselEl}
+		onscroll={handleCarouselScroll}
+		class="flex h-full w-full min-w-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth scrollbar-none"
 	>
-		{#if activeTab === 'foreground'}
-			<ForegroundControls />
-		{:else if activeTab === 'background'}
-			<BackgroundControls />
-		{:else if activeTab === 'margins'}
-			<MarginControls />
-		{:else if activeTab === 'border'}
-			<BorderControls />
-		{:else if activeTab === 'shadow'}
-			<DropShadowControls />
-		{:else if activeTab === 'format'}
-			<FormatControls />
-		{/if}
+		{#each TABS as tab, index (tab.id)}
+			<div
+				class="h-full w-full shrink-0 snap-start snap-always overflow-y-auto px-4 py-3"
+				data-slide-index={index}
+			>
+				{#if tab.id === 'foreground'}
+					<ForegroundControls />
+				{:else if tab.id === 'background'}
+					<BackgroundControls />
+				{:else if tab.id === 'margins'}
+					<MarginControls />
+				{:else if tab.id === 'border'}
+					<BorderControls />
+				{:else if tab.id === 'shadow'}
+					<DropShadowControls />
+				{:else if tab.id === 'format'}
+					<FormatControls />
+				{/if}
+			</div>
+		{/each}
 	</div>
 </div>
