@@ -79,6 +79,9 @@
 
 	$effect(() => {
 		updateScrollIndicators();
+		const rafId = requestAnimationFrame(() => {
+			updateScrollIndicators();
+		});
 		const handleResize = () => {
 			updateScrollIndicators();
 			if (carouselEl) {
@@ -90,6 +93,7 @@
 		};
 		window.addEventListener('resize', handleResize);
 		return () => {
+			cancelAnimationFrame(rafId);
 			window.removeEventListener('resize', handleResize);
 			if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
 		};
