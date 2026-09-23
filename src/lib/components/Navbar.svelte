@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { theme, history, commitHistory, settings } from '$lib/state.svelte';
-	import { Sun, Moon, Undo2, Redo2 } from '@lucide/svelte';
+	import { Sun, Moon, Undo2, Redo2, Maximize, Minimize } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
 	import {
@@ -15,6 +15,7 @@
 		getResolutionsForRatio,
 		getValidResolutionPreset
 	} from '$lib/viewport/resolutions';
+	import { ASPECT_RATIOS } from './Sidebar/format-constants';
 
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
 
@@ -32,25 +33,51 @@
 		commitHistory();
 	}
 
-	import { ASPECT_RATIOS } from './Sidebar/format-constants';
+	let isFullscreen = $state(false);
+	let canFullscreen = $state(false);
+
+	$effect(() => {
+		if (typeof document !== 'undefined') {
+			canFullscreen = Boolean(document.fullscreenEnabled);
+			const updateFs = () => {
+				isFullscreen = Boolean(document.fullscreenElement);
+			};
+			document.addEventListener('fullscreenchange', updateFs);
+			return () => document.removeEventListener('fullscreenchange', updateFs);
+		}
+	});
+
+	async function toggleFullscreen() {
+		try {
+			if (!document.fullscreenElement) {
+				await document.documentElement.requestFullscreen();
+			} else {
+				await document.exitFullscreen();
+			}
+		} catch {
+			// Graceful fallback for unsupported or rejected fullscreen requests
+		}
+	}
 </script>
 
 <div
 	class={cn(
-		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-6',
+		'col-span-full flex h-12 md:h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 md:px-6 pt-[env(safe-area-inset-top)]',
 		className
 	)}
 >
-	<div class="flex shrink items-center gap-3">
+	<!-- Left: Brand & Theme Toggle -->
+	<div class="flex shrink items-center gap-2 md:gap-3">
 		<div
-			class="pointer-events-none flex items-baseline text-2xl font-extralight tracking-tight text-muted-foreground select-none"
+			class="pointer-events-none flex items-baseline text-lg md:text-2xl font-extralight tracking-tight text-muted-foreground select-none"
 		>
 			<strong class="font-semibold text-foreground"> Image </strong>
-			Fixr
+			<span class="hidden sm:inline">&nbsp;Fixr</span>
+			<span class="inline sm:hidden">Fixr</span>
 		</div>
 
 		<span
-			class="inline-flex cursor-pointer text-2xl text-muted-foreground transition-colors hover:text-foreground"
+			class="inline-flex cursor-pointer text-xl md:text-2xl text-muted-foreground transition-colors hover:text-foreground"
 			role="button"
 			tabindex="0"
 			aria-label={theme.current ? 'Use light mode' : 'Use dark mode'}
@@ -63,35 +90,39 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun class="size-5.5" />
+				<Sun class="size-4.5 md:size-5.5" />
 			{:else}
-				<Moon class="size-5.5" />
+				<Moon class="size-4.5 md:size-5.5" />
 			{/if}
 		</span>
 	</div>
 
-	<ButtonGroup.Root>
-		<Button
-			size="icon"
-			variant="outline"
-			disabled={!history?.canUndo}
-			onclick={() => history?.undo()}
-			title="Undo (Ctrl+Z / Cmd+Z)"
-		>
-			<Undo2 class="size-4" />
-		</Button>
-		<Button
-			size="icon"
-			variant="outline"
-			disabled={!history?.canRedo}
-			onclick={() => history?.redo()}
-			title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
-		>
-			<Redo2 class="size-4" />
-		</Button>
-	</ButtonGroup.Root>
+	<!-- Desktop Center: Undo/Redo -->
+	<div class="hidden md:flex">
+		<ButtonGroup.Root>
+			<Button
+				size="icon"
+				variant="outline"
+				disabled={!history?.canUndo}
+				onclick={() => history?.undo()}
+				title="Undo (Ctrl+Z / Cmd+Z)"
+			>
+				<Undo2 class="size-4" />
+			</Button>
+			<Button
+				size="icon"
+				variant="outline"
+				disabled={!history?.canRedo}
+				onclick={() => history?.redo()}
+				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
+			>
+				<Redo2 class="size-4" />
+			</Button>
+		</ButtonGroup.Root>
+	</div>
 
-	<div class="flex items-center gap-3">
+	<!-- Desktop Right: Aspect Ratio, Resolution & Export -->
+	<div class="hidden md:flex items-center gap-3">
 		<Select
 			type="single"
 			bind:value={settings.current.aspectRatio}
@@ -134,5 +165,51 @@
 		</Select>
 
 		<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
+	</div>
+
+	<!-- Mobile Right: Undo/Redo, Fullscreen Toggle, and Compact Export -->
+	<div class="flex md:hidden items-center gap-1.5">
+		<ButtonGroup.Root>
+			<Button
+				size="icon"
+				variant="outline"
+				class="size-8"
+				disabled={!history?.canUndo}
+				onclick={() => history?.undo()}
+				title="Undo"
+			>
+				<Undo2 class="size-3.5" />
+			</Button>
+			<Button
+				size="icon"
+				variant="outline"
+				class="size-8"
+				disabled={!history?.canRedo}
+				onclick={() => history?.redo()}
+				title="Redo"
+			>
+				<Redo2 class="size-3.5" />
+			</Button>
+		</ButtonGroup.Root>
+
+		{#if canFullscreen}
+			<Button
+				size="icon"
+				variant="outline"
+				class="size-8"
+				onclick={toggleFullscreen}
+				title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+			>
+				{#if isFullscreen}
+					<Minimize class="size-3.5" />
+				{:else}
+					<Maximize class="size-3.5" />
+				{/if}
+			</Button>
+		{/if}
+
+		<Button size="sm" class="h-8 px-2.5 text-xs font-semibold" onclick={onExport}>
+			Save
+		</Button>
 	</div>
 </div>
