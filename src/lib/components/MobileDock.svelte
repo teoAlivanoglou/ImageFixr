@@ -13,11 +13,13 @@
 
 	let { class: className }: { class?: string } = $props();
 
+	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
+
 	type TabId = 'foreground' | 'background' | 'margins' | 'border' | 'shadow' | 'format';
 
 	let activeTab = $state<TabId>('foreground');
 
-	const TABS: Array<{ id: TabId; label: string }> = [
+	const ALL_TABS: Array<{ id: TabId; label: string }> = [
 		{ id: 'foreground', label: 'Foreground' },
 		{ id: 'background', label: 'Background' },
 		{ id: 'margins', label: 'Margins' },
@@ -25,6 +27,18 @@
 		{ id: 'shadow', label: 'Drop Shadow' },
 		{ id: 'format', label: 'Format' }
 	];
+
+	let TABS = $derived(
+		layoutMode.current === 'desktop-portrait'
+			? ALL_TABS.filter((t) => t.id !== 'format')
+			: ALL_TABS
+	);
+
+	$effect(() => {
+		if (layoutMode.current === 'desktop-portrait' && activeTab === 'format') {
+			activeTab = 'foreground';
+		}
+	});
 
 	let tabBarEl = $state<HTMLElement | null>(null);
 	let carouselEl = $state<HTMLElement | null>(null);

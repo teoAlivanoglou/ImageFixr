@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import SliderControl from './SliderControl.svelte';
 	import ImageDropzone from './ImageDropzone.svelte';
 	import SectionHeader from './SectionHeader.svelte';
@@ -9,13 +10,15 @@
 
 	let { class: className }: { class?: string } = $props();
 
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
 	let hasForeground = $derived(Boolean(media.current.fgName));
+	let isSectionOpen = $derived(!collapsible || !settings.current.fgCollapsed);
 </script>
 
 <div class={cn('flex flex-col', className)}>
 	<SectionHeader title="Foreground" bind:isCollapsed={settings.current.fgCollapsed} />
 
-	<CollapsibleSection open={!settings.current.fgCollapsed} innerClass="-mx-2.5 px-2.5">
+	<CollapsibleSection open={isSectionOpen} innerClass="-mx-2.5 px-2.5">
 		<div class="control-section">
 			<ImageDropzone
 				label="Image"

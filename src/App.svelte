@@ -5,6 +5,7 @@
 	import MobileDock from '$lib/components/MobileDock.svelte';
 	import { cn } from '$lib/utils';
 	import { PersistedState } from 'runed';
+	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -138,62 +139,72 @@
 
 <div
 	class={cn(
-		'flex h-full w-full flex-col overflow-hidden desktop:grid desktop:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] desktop:grid-rows-[auto_1fr]',
+		'flex h-full w-full flex-col overflow-hidden',
+		layoutMode.current === 'desktop' &&
+			'grid [grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] grid-rows-[auto_1fr]',
 		className
 	)}
 	style="--desktop-sidebar-width: {currentWidthRem}rem; --mobile-canvas-height: {currentMobileCanvasDvh}dvh;"
 >
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
-	<div class="relative col-span-1 row-span-1 row-start-2 hidden h-full min-h-0 min-w-0 desktop:block">
-		<Sidebar class="h-full w-full" />
+	{#if layoutMode.current === 'desktop'}
+		<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
+			<Sidebar class="h-full w-full" />
 
-		<!-- Desktop Resizer handle -->
+			<!-- Desktop Resizer handle -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			<!-- svelte-ignore a11y_interactive_supports_focus -->
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				class="group absolute top-0 right-0 z-50 h-full w-3 translate-x-1/2 cursor-col-resize select-none"
+				role="separator"
+				tabindex="0"
+				onmousedown={startResize}
+			>
+				<!-- Visual indicator -->
+				<div
+					class={cn(
+						'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
+						isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
+					)}
+				></div>
+			</div>
+		</div>
+
+		<!-- Canvas Viewport (Desktop) -->
+		<Viewport
+			class="col-span-1 col-start-2 row-span-1 row-start-2 h-full w-full p-4"
+			bind:this={viewportRef}
+		/>
+	{:else}
+		<!-- Canvas Viewport (Mobile & Desktop-Portrait) -->
+		<Viewport
+			class="h-[var(--mobile-canvas-height)] w-full flex-none p-2"
+			bind:this={viewportRef}
+		/>
+
+		<!-- Mobile Horizontal Resizer Handle -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<!-- svelte-ignore a11y_interactive_supports_focus -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
-			class="group absolute top-0 right-0 z-50 h-full w-3 translate-x-1/2 cursor-col-resize select-none"
+			class="group relative z-30 flex h-3.5 w-full shrink-0 cursor-row-resize items-center justify-center bg-background select-none"
 			role="separator"
 			tabindex="0"
-			onmousedown={startResize}
+			onmousedown={startMobileResize}
+			ontouchstart={startMobileResize}
+			ondblclick={() => (currentMobileCanvasDvh = DEFAULT_MOBILE_CANVAS_DVH)}
+			title="Drag to resize canvas / double-click to reset"
 		>
-			<!-- Visual indicator -->
 			<div
 				class={cn(
-					'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
-					isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
+					'h-1 w-10 rounded-full transition-colors',
+					isMobileResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
 				)}
 			></div>
 		</div>
-	</div>
 
-	<!-- Canvas Viewport (Continuous arbitrary sizing on mobile, full grid cell on desktop) -->
-	<Viewport
-		class="h-[var(--mobile-canvas-height)] w-full flex-none p-2 desktop:col-span-1 desktop:col-start-2 desktop:row-span-1 desktop:row-start-2 desktop:h-full desktop:p-4"
-		bind:this={viewportRef}
-	/>
-
-	<!-- Mobile Horizontal Resizer Handle -->
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<!-- svelte-ignore a11y_interactive_supports_focus -->
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<div
-		class="group relative z-30 flex h-3.5 w-full shrink-0 cursor-row-resize items-center justify-center bg-background select-none desktop:hidden"
-		role="separator"
-		tabindex="0"
-		onmousedown={startMobileResize}
-		ontouchstart={startMobileResize}
-		ondblclick={() => (currentMobileCanvasDvh = DEFAULT_MOBILE_CANVAS_DVH)}
-		title="Drag to resize canvas / double-click to reset"
-	>
-		<div
-			class={cn(
-				'h-1 w-10 rounded-full transition-colors',
-				isMobileResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
-			)}
-		></div>
-	</div>
-
-	<MobileDock class="flex min-h-0 flex-1 desktop:hidden" />
+		<MobileDock class="flex min-h-0 flex-1" />
+	{/if}
 </div>

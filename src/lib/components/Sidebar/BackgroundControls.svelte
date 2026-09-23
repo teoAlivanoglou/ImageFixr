@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import SliderControl from './SliderControl.svelte';
 	import ColorControl from './ColorControl.svelte';
 	import ImageDropzone from './ImageDropzone.svelte';
@@ -11,7 +12,11 @@
 
 	let { class: className }: { class?: string } = $props();
 
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
 	let hasForeground = $derived(Boolean(media.current.fgName));
+	let isSectionOpen = $derived(
+		settings.current.bgEnabled && (!collapsible || !settings.current.bgCollapsed)
+	);
 
 	const bgSourceOptions = [
 		{ value: 'none', label: 'None' },
@@ -20,7 +25,7 @@
 	];
 </script>
 
-<CollapsibleSection open={hasForeground} class={className}>
+<CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
 			title="Background"
@@ -38,7 +43,7 @@
 		</SectionHeader>
 
 		<CollapsibleSection
-			open={settings.current.bgEnabled && !settings.current.bgCollapsed}
+			open={isSectionOpen}
 			innerClass="-mx-2.5 px-2.5"
 		>
 			<div class="control-section">

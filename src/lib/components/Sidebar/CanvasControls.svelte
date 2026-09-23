@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import {
 		Select,
@@ -17,12 +18,15 @@
 	let { class: className }: { class?: string } = $props();
 
 	createLabelGroup();
+
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
+	let isSectionOpen = $derived(!collapsible || !settings.current.advancedCollapsed);
 </script>
 
 <div class={cn('flex flex-col', className)}>
 	<SectionHeader title="Advanced" bind:isCollapsed={settings.current.advancedCollapsed} />
 
-	<CollapsibleSection open={!settings.current.advancedCollapsed}>
+	<CollapsibleSection open={isSectionOpen}>
 		<div class="control-section">
 			<div class="flex items-center justify-between gap-2 py-1">
 				<Label for="shadow-only">Shadow Only (Debug)</Label>

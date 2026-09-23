@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import SliderControl from './SliderControl.svelte';
 	import SectionHeader from './SectionHeader.svelte';
 	import PillSwitcher from './PillSwitcher.svelte';
@@ -7,7 +8,12 @@
 
 	let { class: className }: { class?: string } = $props();
 
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
 	let hasForeground = $derived(Boolean(media.current.fgName));
+	let isSectionOpen = $derived(
+		settings.current.fgDropShadowEnabled &&
+			(!collapsible || !settings.current.fgDropShadowCollapsed)
+	);
 
 	const shadowModeOptions = [
 		{ value: 'simple', label: 'Simple' },
@@ -15,7 +21,7 @@
 	];
 </script>
 
-<CollapsibleSection open={hasForeground} class={className}>
+<CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
 			title="Shadow"
@@ -33,7 +39,7 @@
 		</SectionHeader>
 
 		<CollapsibleSection
-			open={settings.current.fgDropShadowEnabled && !settings.current.fgDropShadowCollapsed}
+			open={isSectionOpen}
 		>
 			<div class="control-section">
 				<!-- Simple Mode Controls -->

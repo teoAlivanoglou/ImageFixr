@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Slider } from '$lib/components/ui/slider/index.js';
 	import { Undo, Link, Unlink } from '@lucide/svelte';
@@ -158,9 +159,14 @@
 		settings.current[sideInfo.valProp] = 0;
 		commitHistory();
 	}
+
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
+	let isSectionOpen = $derived(
+		settings.current.fgMarginEnabled && (!collapsible || !settings.current.fgMarginCollapsed)
+	);
 </script>
 
-<CollapsibleSection open={hasForeground} class={className}>
+<CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
 			title="Safe Area"
@@ -179,7 +185,7 @@
 
 		<!-- Collapsible Margin Controls -->
 		<CollapsibleSection
-			open={settings.current.fgMarginEnabled && !settings.current.fgMarginCollapsed}
+			open={isSectionOpen}
 			innerClass="-mx-2.5 px-2.5"
 		>
 			<div class="control-section">

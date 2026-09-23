@@ -10,6 +10,7 @@
 		SelectTrigger
 	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
+	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 
 	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
 	import { ASPECT_RATIOS } from './Sidebar/format-constants';
@@ -59,21 +60,28 @@
 
 <div
 	class={cn(
-		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] desktop:px-6',
+		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
+		layoutMode.current !== 'mobile' ? 'px-6' : 'px-3',
 		className
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
-	<div class="flex shrink items-center gap-2 desktop:gap-3">
+	<div class="flex shrink items-center gap-2" class:gap-3={layoutMode.current !== 'mobile'}>
 		<div
-			class="pointer-events-none flex items-baseline text-lg font-extralight tracking-tight text-muted-foreground select-none desktop:text-2xl"
+			class={cn(
+				'pointer-events-none flex items-baseline font-extralight tracking-tight text-muted-foreground select-none',
+				layoutMode.current !== 'mobile' ? 'text-2xl' : 'text-lg'
+			)}
 		>
 			<strong class="font-semibold text-foreground">Image</strong>
 			<span>&nbsp;Fixr</span>
 		</div>
 
 		<span
-			class="inline-flex cursor-pointer text-xl text-muted-foreground transition-colors hover:text-foreground desktop:text-2xl"
+			class={cn(
+				'inline-flex cursor-pointer text-muted-foreground transition-colors hover:text-foreground',
+				layoutMode.current !== 'mobile' ? 'text-2xl' : 'text-xl'
+			)}
 			role="button"
 			tabindex="0"
 			aria-label={theme.current ? 'Use light mode' : 'Use dark mode'}
@@ -86,9 +94,9 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun class="size-4.5 desktop:size-5.5" />
+				<Sun class={layoutMode.current !== 'mobile' ? 'size-5.5' : 'size-4.5'} />
 			{:else}
-				<Moon class="size-4.5 desktop:size-5.5" />
+				<Moon class={layoutMode.current !== 'mobile' ? 'size-5.5' : 'size-4.5'} />
 			{/if}
 		</span>
 	</div>
@@ -99,7 +107,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8.5 desktop:size-9"
+				class={layoutMode.current !== 'mobile' ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo (Ctrl+Z / Cmd+Z)"
@@ -109,7 +117,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8.5 desktop:size-9"
+				class={layoutMode.current !== 'mobile' ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
@@ -119,70 +127,72 @@
 		</ButtonGroup.Root>
 	</div>
 
-	<!-- Desktop Right: Aspect Ratio, Resolution & Export -->
-	<div class="hidden items-center gap-3 desktop:flex">
-		<Select
-			type="single"
-			bind:value={settings.current.aspectRatio}
-			onValueChange={handleRatioChange}
-		>
-			<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
-				<span class="text-muted-foreground">Ratio:</span>
-				{settings.current.aspectRatio}
-			</SelectTrigger>
-			<SelectContent>
-				{#each ASPECT_RATIOS as ratio (ratio.value)}
-					<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
-				{/each}
-			</SelectContent>
-		</Select>
-
-		<Select
-			type="single"
-			bind:value={settings.current.resolutionPreset}
-			onValueChange={() => commitHistory()}
-		>
-			<SelectTrigger
-				id="navbar-resolution"
-				class="h-9 min-w-38 text-xs"
-				title={`${currentRes.label} (${currentRes.sublabel})`}
+	<!-- Desktop & Desktop-Portrait Right: Aspect Ratio, Resolution & Export -->
+	{#if layoutMode.current !== 'mobile'}
+		<div class="flex items-center gap-3">
+			<Select
+				type="single"
+				bind:value={settings.current.aspectRatio}
+				onValueChange={handleRatioChange}
 			>
-				<span class="text-muted-foreground">Res:</span>
-				<span class="font-medium text-foreground">{currentRes.label}</span>
-			</SelectTrigger>
-			<SelectContent class="w-max min-w-max">
-				{#each availableResolutions as res (res.id)}
-					<SelectItem value={res.id}>
-						<div class="flex w-full items-center justify-between gap-4">
-							<span class="font-medium">{res.label}</span>
-							<span class="text-xs text-muted-foreground tabular-nums">{res.sublabel}</span>
-						</div>
-					</SelectItem>
-				{/each}
-			</SelectContent>
-		</Select>
+				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
+					<span class="text-muted-foreground">Ratio:</span>
+					{settings.current.aspectRatio}
+				</SelectTrigger>
+				<SelectContent>
+					{#each ASPECT_RATIOS as ratio (ratio.value)}
+						<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
+					{/each}
+				</SelectContent>
+			</Select>
 
-		<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
-	</div>
-
-	<!-- Mobile Right: Fullscreen Toggle and Save -->
-	<div class="flex items-center gap-1 desktop:hidden">
-		{#if canFullscreen}
-			<Button
-				size="icon"
-				variant="ghost"
-				class="size-8.5 text-muted-foreground hover:text-foreground"
-				onclick={toggleFullscreen}
-				title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+			<Select
+				type="single"
+				bind:value={settings.current.resolutionPreset}
+				onValueChange={() => commitHistory()}
 			>
-				{#if isFullscreen}
-					<Minimize class="size-4" />
-				{:else}
-					<Maximize class="size-4" />
-				{/if}
-			</Button>
-		{/if}
+				<SelectTrigger
+					id="navbar-resolution"
+					class="h-9 min-w-38 text-xs"
+					title={`${currentRes.label} (${currentRes.sublabel})`}
+				>
+					<span class="text-muted-foreground">Res:</span>
+					<span class="font-medium text-foreground">{currentRes.label}</span>
+				</SelectTrigger>
+				<SelectContent class="w-max min-w-max">
+					{#each availableResolutions as res (res.id)}
+						<SelectItem value={res.id}>
+							<div class="flex w-full items-center justify-between gap-4">
+								<span class="font-medium">{res.label}</span>
+								<span class="text-xs text-muted-foreground tabular-nums">{res.sublabel}</span>
+							</div>
+						</SelectItem>
+					{/each}
+				</SelectContent>
+			</Select>
 
-		<Button class="h-8.5 px-3 text-xs" onclick={onExport}>Save</Button>
-	</div>
+			<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
+		</div>
+	{:else}
+		<!-- Mobile Right: Fullscreen Toggle and Save -->
+		<div class="flex items-center gap-1">
+			{#if canFullscreen}
+				<Button
+					size="icon"
+					variant="ghost"
+					class="size-8.5 text-muted-foreground hover:text-foreground"
+					onclick={toggleFullscreen}
+					title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+				>
+					{#if isFullscreen}
+						<Minimize class="size-4" />
+					{:else}
+						<Maximize class="size-4" />
+					{/if}
+				</Button>
+			{/if}
+
+			<Button class="h-8.5 px-3 text-xs" onclick={onExport}>Save</Button>
+		</div>
+	{/if}
 </div>

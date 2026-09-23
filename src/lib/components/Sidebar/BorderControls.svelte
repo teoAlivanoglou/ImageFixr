@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import SliderControl from './SliderControl.svelte';
 	import ColorControl from './ColorControl.svelte';
 	import SectionHeader from './SectionHeader.svelte';
@@ -8,7 +9,11 @@
 
 	let { class: className }: { class?: string } = $props();
 
+	const collapsible = getContext<boolean | undefined>('collapsible') ?? true;
 	let hasForeground = $derived(Boolean(media.current.fgName));
+	let isSectionOpen = $derived(
+		settings.current.fgBorderEnabled && (!collapsible || !settings.current.fgBorderCollapsed)
+	);
 
 	const borderPositionOptions = [
 		{ value: 'inner', label: 'Inner' },
@@ -17,7 +22,7 @@
 	];
 </script>
 
-<CollapsibleSection open={hasForeground} class={className}>
+<CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
 			title="Border"
@@ -38,7 +43,7 @@
 		</SectionHeader>
 
 		<CollapsibleSection
-			open={settings.current.fgBorderEnabled && !settings.current.fgBorderCollapsed}
+			open={isSectionOpen}
 		>
 			<div class="control-section">
 				<SliderControl
