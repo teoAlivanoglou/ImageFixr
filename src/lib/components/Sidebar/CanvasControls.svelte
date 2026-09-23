@@ -11,8 +11,12 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import SectionHeader from './SectionHeader.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
+	import { createLabelGroup } from './label-group.svelte';
+	import LabeledControlRow from './LabeledControlRow.svelte';
 
 	let { class: className }: { class?: string } = $props();
+
+	createLabelGroup();
 </script>
 
 <div class={cn('flex flex-col', className)}>
@@ -29,14 +33,13 @@
 				/>
 			</div>
 
-			<div class="flex items-center justify-between gap-3">
-				<Label for="filtering" class="shrink-0 text-xs">Texture Filtering</Label>
+			<LabeledControlRow label="Texture Filtering" forId="filtering">
 				<Select
 					type="single"
 					bind:value={settings.current.filtering}
 					onValueChange={() => commitHistory()}
 				>
-					<SelectTrigger id="filtering" class="h-9 w-44 text-xs">
+					<SelectTrigger id="filtering" class="h-9 w-full text-xs">
 						{settings.current.filtering === 'linear' ? 'Linear' : 'Nearest'}
 					</SelectTrigger>
 					<SelectContent>
@@ -44,10 +47,9 @@
 						<SelectItem value="nearest">Nearest</SelectItem>
 					</SelectContent>
 				</Select>
-			</div>
+			</LabeledControlRow>
 
-			<div class="flex items-center justify-between gap-3">
-				<Label for="auto-mipmaps" class="shrink-0 text-xs">Auto Mipmaps</Label>
+			<LabeledControlRow label="Auto Mipmaps" forId="auto-mipmaps">
 				<Select
 					type="single"
 					value={settings.current.autoGenerateMipmaps ? 'on' : 'off'}
@@ -56,7 +58,7 @@
 						commitHistory();
 					}}
 				>
-					<SelectTrigger id="auto-mipmaps" class="h-9 w-44 text-xs">
+					<SelectTrigger id="auto-mipmaps" class="h-9 w-full text-xs">
 						{settings.current.autoGenerateMipmaps ? 'Enabled' : 'Disabled'}
 					</SelectTrigger>
 					<SelectContent>
@@ -64,17 +66,16 @@
 						<SelectItem value="off">Disabled</SelectItem>
 					</SelectContent>
 				</Select>
-			</div>
+			</LabeledControlRow>
 
 			<CollapsibleSection open={settings.current.autoGenerateMipmaps}>
-				<div class="flex items-center justify-between gap-3">
-					<Label for="mipmap-filter" class="shrink-0 text-xs">Mipmap Filter</Label>
+				<LabeledControlRow label="Mipmap Filter" forId="mipmap-filter">
 					<Select
 						type="single"
 						bind:value={settings.current.mipmapFilter}
 						onValueChange={() => commitHistory()}
 					>
-						<SelectTrigger id="mipmap-filter" class="h-9 w-44 text-xs">
+						<SelectTrigger id="mipmap-filter" class="h-9 w-full text-xs">
 							{settings.current.mipmapFilter === 'linear'
 								? 'Linear (Trilinear)'
 								: 'Nearest (Bilinear)'}
@@ -84,7 +85,7 @@
 							<SelectItem value="nearest">Nearest (Bilinear)</SelectItem>
 						</SelectContent>
 					</Select>
-				</div>
+				</LabeledControlRow>
 			</CollapsibleSection>
 		</div>
 	</CollapsibleSection>

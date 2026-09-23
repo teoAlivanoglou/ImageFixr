@@ -11,8 +11,12 @@
 	} from '$lib/components/ui/select/index.js';
 	import CanvasControls from './CanvasControls.svelte';
 	import { cn } from '$lib/utils';
+	import { createLabelGroup } from './label-group.svelte';
+	import LabeledControlRow from './LabeledControlRow.svelte';
 
 	let { class: className }: { class?: string } = $props();
+
+	createLabelGroup();
 
 	let availableResolutions = $derived(getResolutionsForRatio(settings.current.aspectRatio));
 	let currentRes = $derived(
@@ -33,16 +37,13 @@
 	<SectionHeader title="Canvas Format" />
 
 	<div class="flex flex-col gap-3">
-		<div class="flex items-center justify-between gap-3">
-			<label for="format-aspect-ratio" class="shrink-0 text-xs font-medium text-muted-foreground">
-				Aspect Ratio
-			</label>
+		<LabeledControlRow label="Aspect Ratio" forId="format-aspect-ratio">
 			<Select
 				type="single"
 				bind:value={settings.current.aspectRatio}
 				onValueChange={handleRatioChange}
 			>
-				<SelectTrigger id="format-aspect-ratio" class="h-9 w-44 text-xs">
+				<SelectTrigger id="format-aspect-ratio" class="h-9 w-full text-xs">
 					<span class="mr-1 text-muted-foreground">Ratio:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
@@ -52,12 +53,9 @@
 					{/each}
 				</SelectContent>
 			</Select>
-		</div>
+		</LabeledControlRow>
 
-		<div class="flex items-center justify-between gap-3">
-			<label for="format-resolution" class="shrink-0 text-xs font-medium text-muted-foreground">
-				Resolution
-			</label>
+		<LabeledControlRow label="Resolution" forId="format-resolution">
 			<Select
 				type="single"
 				bind:value={settings.current.resolutionPreset}
@@ -65,7 +63,7 @@
 			>
 				<SelectTrigger
 					id="format-resolution"
-					class="h-9 w-44 text-xs"
+					class="h-9 w-full text-xs"
 					title={`${currentRes.label} (${currentRes.sublabel})`}
 				>
 					<span class="mr-1 text-muted-foreground">Res:</span>
@@ -85,7 +83,7 @@
 					{/each}
 				</SelectContent>
 			</Select>
-		</div>
+		</LabeledControlRow>
 
 		{#if import.meta.env.DEV}
 			<div class="border-t border-border pt-3">
