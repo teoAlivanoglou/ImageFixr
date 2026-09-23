@@ -2,6 +2,7 @@
 	import Sidebar from '$lib/Sidebar.svelte';
 	import Viewport from '$lib/Viewport.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import MobileDock from '$lib/components/MobileDock.svelte';
 	import { cn } from '$lib/utils';
 	import { PersistedState } from 'runed';
 
@@ -68,12 +69,15 @@
 />
 
 <div
-	class={cn('grid h-dvh w-screen grid-rows-[auto_1fr]', className)}
-	style="grid-template-columns: {currentWidthRem}rem minmax(0,1fr);"
+	class={cn(
+		'flex flex-col h-dvh w-screen overflow-hidden md:grid md:grid-rows-[auto_1fr] md:[grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)]',
+		className
+	)}
+	style="--desktop-sidebar-width: {currentWidthRem}rem;"
 >
-	<Navbar class="col-span-full" onExport={() => viewportRef?.renderAndSave()} />
+	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
-	<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
+	<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0 hidden md:block">
 		<Sidebar class="h-full w-full" />
 
 		<!-- Resizer handle -->
@@ -96,5 +100,10 @@
 		</div>
 	</div>
 
-	<Viewport class="col-span-1 col-start-2 row-span-1 row-start-2 p-4" bind:this={viewportRef} />
+	<Viewport
+		class="flex-none h-[42dvh] max-h-[45dvh] w-full p-2 md:col-span-1 md:col-start-2 md:row-span-1 md:row-start-2 md:h-full md:p-4"
+		bind:this={viewportRef}
+	/>
+
+	<MobileDock class="flex md:hidden flex-1 min-h-0" />
 </div>
