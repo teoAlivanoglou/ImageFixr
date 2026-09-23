@@ -5,6 +5,8 @@
 	import DropShadowControls from './components/Sidebar/DropShadowControls.svelte';
 	import BackgroundControls from './components/Sidebar/BackgroundControls.svelte';
 	import CanvasControls from './components/Sidebar/CanvasControls.svelte';
+	import FormatControls from './components/Sidebar/FormatControls.svelte';
+	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
@@ -22,7 +24,12 @@
 
 	<BorderControls />
 	<DropShadowControls />
-	{#if import.meta.env.DEV}
+
+	{#if layoutMode.current === 'mobile-landscape'}
+		<FormatControls />
+	{/if}
+
+	{#if import.meta.env.DEV && layoutMode.current !== 'mobile-landscape'}
 		<CanvasControls />
 	{/if}
 </aside>

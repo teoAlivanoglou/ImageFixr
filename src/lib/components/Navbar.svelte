@@ -31,6 +31,10 @@
 		commitHistory();
 	}
 
+	let isDesktopNavbar = $derived(
+		layoutMode.current === 'desktop' || layoutMode.current === 'desktop-portrait'
+	);
+
 	let isFullscreen = $state(false);
 	let canFullscreen = $state(false);
 
@@ -60,19 +64,19 @@
 
 <div
 	class={cn(
-		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
-		layoutMode.current !== 'mobile-portrait'
-			? 'px-4 sm:px-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))]'
-			: 'px-3',
+		'col-span-full flex w-full items-center justify-between border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
+		isDesktopNavbar
+			? 'h-14 px-4 sm:px-6'
+			: 'h-12 px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]',
 		className
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
-	<div class="flex shrink items-center gap-2" class:gap-3={layoutMode.current !== 'mobile-portrait'}>
+	<div class="flex shrink items-center gap-2" class:gap-3={isDesktopNavbar}>
 		<div
 			class={cn(
 				'pointer-events-none flex items-baseline font-extralight tracking-tight text-muted-foreground select-none',
-				layoutMode.current !== 'mobile-portrait' ? 'text-2xl' : 'text-lg'
+				isDesktopNavbar ? 'text-2xl' : 'text-lg'
 			)}
 		>
 			<strong class="font-semibold text-foreground">Image</strong>
@@ -82,7 +86,7 @@
 		<span
 			class={cn(
 				'inline-flex cursor-pointer text-muted-foreground transition-colors hover:text-foreground',
-				layoutMode.current !== 'mobile-portrait' ? 'text-2xl' : 'text-xl'
+				isDesktopNavbar ? 'text-2xl' : 'text-xl'
 			)}
 			role="button"
 			tabindex="0"
@@ -96,9 +100,9 @@
 			}}
 		>
 			{#if theme.current}
-				<Sun class={layoutMode.current !== 'mobile-portrait' ? 'size-5.5' : 'size-4.5'} />
+				<Sun class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
 			{:else}
-				<Moon class={layoutMode.current !== 'mobile-portrait' ? 'size-5.5' : 'size-4.5'} />
+				<Moon class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
 			{/if}
 		</span>
 	</div>
@@ -109,7 +113,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class={layoutMode.current !== 'mobile-portrait' ? 'size-9' : 'size-8.5'}
+				class={isDesktopNavbar ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo (Ctrl+Z / Cmd+Z)"
@@ -119,7 +123,7 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class={layoutMode.current !== 'mobile-portrait' ? 'size-9' : 'size-8.5'}
+				class={isDesktopNavbar ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
@@ -129,8 +133,8 @@
 		</ButtonGroup.Root>
 	</div>
 
-	<!-- Desktop, Desktop-Portrait & Mobile-Landscape Right: Aspect Ratio, Resolution & Export -->
-	{#if layoutMode.current !== 'mobile-portrait'}
+	<!-- Desktop & Desktop-Portrait Right: Aspect Ratio, Resolution & Export -->
+	{#if isDesktopNavbar}
 		<div class="flex items-center gap-3">
 			<Select
 				type="single"

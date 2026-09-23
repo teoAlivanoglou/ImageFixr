@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import { settings, commitHistory } from '$lib/state.svelte';
 	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
 	import { ASPECT_RATIOS } from './format-constants';
 	import SectionHeader from './SectionHeader.svelte';
+	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import {
 		Select,
 		SelectContent,
@@ -17,6 +19,10 @@
 	let { class: className }: { class?: string } = $props();
 
 	createLabelGroup();
+
+	const collapsible = getContext('collapsible') ?? true;
+	let isCollapsed = $state(false);
+	let isSectionOpen = $derived(!collapsible || !isCollapsed);
 
 	let availableResolutions = $derived(getResolutionsForRatio(settings.current.aspectRatio));
 	let currentRes = $derived(
@@ -33,10 +39,11 @@
 	}
 </script>
 
-<div class={cn('flex flex-col gap-4', className)}>
-	<SectionHeader title="Canvas Format" />
+<div class={cn('flex flex-col', className)}>
+	<SectionHeader title="Canvas Format" bind:isCollapsed />
 
-	<div class="flex flex-col gap-3">
+	<CollapsibleSection open={isSectionOpen}>
+		<div class="flex flex-col gap-3 pt-2">
 		<LabeledControlRow label="Aspect Ratio" forId="format-aspect-ratio">
 			<Select
 				type="single"
@@ -88,5 +95,6 @@
 				<CanvasControls />
 			</div>
 		{/if}
-	</div>
+		</div>
+	</CollapsibleSection>
 </div>
