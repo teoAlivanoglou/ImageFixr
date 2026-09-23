@@ -48,7 +48,7 @@
 	function onMouseMove(e: MouseEvent | TouchEvent) {
 		if (!isResizing) return;
 		const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-		const targetRem = clientX / remSize;
+		const targetRem = (clientX - 7) / remSize;
 		if (resizeRafId !== null) return;
 		resizeRafId = requestAnimationFrame(() => {
 			resizeRafId = null;
@@ -170,7 +170,7 @@
 	class={cn(
 		'flex h-full w-full flex-col overflow-hidden',
 		isDesktopLayout &&
-			'grid [grid-template-columns:var(--desktop-sidebar-width)_minmax(0,1fr)] grid-rows-[auto_1fr]',
+			'grid [grid-template-columns:var(--desktop-sidebar-width)_auto_minmax(0,1fr)] grid-rows-[auto_1fr]',
 		className
 	)}
 	style="--desktop-sidebar-width: {currentWidthRem}rem; --mobile-canvas-height: {currentMobileCanvasDvh}dvh;"
@@ -178,48 +178,36 @@
 	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
 
 	{#if isDesktopLayout}
-		<div class="relative col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
+		<div class="col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
 			<Sidebar class="h-full w-full" />
+		</div>
 
-			<!-- Desktop & Mobile-Landscape Resizer handle -->
-			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-			<!-- svelte-ignore a11y_interactive_supports_focus -->
-			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<!-- Vertical Resizer Handle (Positioned to the right of the sidebar in its own divider bar) -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<!-- svelte-ignore a11y_interactive_supports_focus -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="group col-span-1 col-start-2 row-span-1 row-start-2 relative z-30 flex h-full w-3.5 shrink-0 cursor-col-resize items-center justify-center bg-background select-none before:absolute before:-inset-x-2 before:inset-y-0 before:content-['']"
+			role="separator"
+			tabindex="0"
+			onmousedown={startResize}
+			ontouchstart={startResize}
+			ondblclick={() => (currentWidthRem = DEFAULT_SIDEBAR_REM)}
+			title="Drag to resize sidebar / double-click to reset"
+		>
+			<!-- Visual indicator pill matching the portrait site handle -->
 			<div
 				class={cn(
-					'group absolute top-0 right-0 z-50 flex h-full items-center justify-center translate-x-1/2 cursor-col-resize select-none',
-					layoutMode.current === 'mobile-landscape' ? 'w-5' : 'w-3'
+					'h-10 w-1 rounded-full transition-colors',
+					isResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
 				)}
-				role="separator"
-				tabindex="0"
-				onmousedown={startResize}
-				ontouchstart={startResize}
-				ondblclick={() => (currentWidthRem = DEFAULT_SIDEBAR_REM)}
-				title="Drag to resize sidebar / double-click to reset"
-			>
-				<!-- Visual indicator -->
-				{#if layoutMode.current === 'mobile-landscape'}
-					<div
-						class={cn(
-							'h-10 w-1 rounded-full transition-colors',
-							isResizing ? 'bg-primary' : 'bg-muted-foreground/30 group-hover:bg-primary/60'
-						)}
-					></div>
-				{:else}
-					<div
-						class={cn(
-							'absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors',
-							isResizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/50'
-						)}
-					></div>
-				{/if}
-			</div>
+			></div>
 		</div>
 
 		<!-- Canvas Viewport (Desktop & Mobile-Landscape) -->
 		<Viewport
 			class={cn(
-				'col-span-1 col-start-2 row-span-1 row-start-2 h-full w-full',
+				'col-span-1 col-start-3 row-span-1 row-start-2 h-full w-full',
 				layoutMode.current === 'mobile-landscape' ? 'p-2' : 'p-4'
 			)}
 			bind:this={viewportRef}
