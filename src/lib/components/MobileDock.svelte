@@ -50,7 +50,7 @@
 				type="button"
 				role="tab"
 				class={cn(
-					'flex min-h-[36px] shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors select-none',
+					'flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-colors select-none',
 					activeTab === tab.id
 						? 'bg-primary text-primary-foreground shadow-xs'
 						: 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'

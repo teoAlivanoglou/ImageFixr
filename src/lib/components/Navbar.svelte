@@ -59,7 +59,7 @@
 
 <div
 	class={cn(
-		'col-span-full flex h-12 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] md:h-14 md:px-6',
+		'col-span-full flex h-14 w-full items-center justify-between border-b border-border bg-sidebar px-3 pt-[env(safe-area-inset-top)] md:px-6',
 		className
 	)}
 >
@@ -68,9 +68,8 @@
 		<div
 			class="pointer-events-none flex items-baseline text-lg font-extralight tracking-tight text-muted-foreground select-none md:text-2xl"
 		>
-			<strong class="font-semibold text-foreground"> Image </strong>
-			<span class="hidden sm:inline">&nbsp;Fixr</span>
-			<span class="inline sm:hidden">Fixr</span>
+			<strong class="font-semibold text-foreground">Image</strong>
+			<span>&nbsp;Fixr</span>
 		</div>
 
 		<span
@@ -170,22 +169,22 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8"
+				class="size-11 min-h-[44px] min-w-[44px]"
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
 				title="Undo"
 			>
-				<Undo2 class="size-3.5" />
+				<Undo2 class="size-4" />
 			</Button>
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8"
+				class="size-11 min-h-[44px] min-w-[44px]"
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
 				title="Redo"
 			>
-				<Redo2 class="size-3.5" />
+				<Redo2 class="size-4" />
 			</Button>
 		</ButtonGroup.Root>
 
@@ -193,18 +192,20 @@
 			<Button
 				size="icon"
 				variant="outline"
-				class="size-8"
+				class="size-11 min-h-[44px] min-w-[44px]"
 				onclick={toggleFullscreen}
 				title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 			>
 				{#if isFullscreen}
-					<Minimize class="size-3.5" />
+					<Minimize class="size-4" />
 				{:else}
-					<Maximize class="size-3.5" />
+					<Maximize class="size-4" />
 				{/if}
 			</Button>
 		{/if}
 
-		<Button size="sm" class="h-8 px-2.5 text-xs font-semibold" onclick={onExport}>Save</Button>
+		<Button size="sm" class="h-11 min-h-[44px] px-3 text-xs font-semibold" onclick={onExport}>
+			Save
+		</Button>
 	</div>
 </div>
