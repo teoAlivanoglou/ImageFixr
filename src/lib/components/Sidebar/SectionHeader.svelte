@@ -24,12 +24,6 @@
 		children?: Snippet;
 	} = $props();
 
-	$effect(() => {
-		if (!collapsible && isCollapsed) {
-			isCollapsed = false;
-		}
-	});
-
 	function handleLabelClick() {
 		if (!collapsible) {
 			if (hasSwitch) {

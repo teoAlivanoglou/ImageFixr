@@ -44,7 +44,6 @@
 				onValueChange={handleRatioChange}
 			>
 				<SelectTrigger id="format-aspect-ratio" class="h-9 w-full text-xs">
-					<span class="mr-1 text-muted-foreground">Ratio:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
@@ -66,7 +65,6 @@
 					class="h-9 w-full text-xs"
 					title={`${currentRes.label} (${currentRes.sublabel})`}
 				>
-					<span class="mr-1 text-muted-foreground">Res:</span>
 					<span class="font-medium text-foreground">{currentRes.label}</span>
 					<span class="ml-auto text-xs text-muted-foreground tabular-nums"
 						>{currentRes.sublabel}</span
