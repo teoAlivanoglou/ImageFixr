@@ -6,6 +6,7 @@
 	import { cn } from '$lib/utils';
 	import { PersistedState } from 'runed';
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
+	import { theme, history } from '$lib/state.svelte';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -123,9 +124,30 @@
 			mobileCanvasDvhStore.current = Math.round(currentMobileCanvasDvh * 10) / 10;
 		}
 	}
+
+	$effect(() => {
+		document.documentElement.classList.toggle('dark', theme.current);
+	});
+
+	function handleKeydown(event: KeyboardEvent) {
+		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+			if (event.shiftKey) {
+				if (history?.canRedo) {
+					event.preventDefault();
+					history.redo();
+				}
+			} else {
+				if (history?.canUndo) {
+					event.preventDefault();
+					history.undo();
+				}
+			}
+		}
+	}
 </script>
 
 <svelte:window
+	onkeydown={handleKeydown}
 	onmousemove={(e) => {
 		if (isResizing) onMouseMove(e);
 		if (isMobileResizing) onMobilePointerMove(e);

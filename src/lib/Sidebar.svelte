@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { theme, history } from '$lib/state.svelte';
 	import ForegroundControls from './components/Sidebar/ForegroundControls.svelte';
 	import MarginControls from './components/Sidebar/MarginControls.svelte';
 	import BorderControls from './components/Sidebar/BorderControls.svelte';
@@ -9,29 +8,7 @@
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
-
-	$effect(() => {
-		document.documentElement.classList.toggle('dark', theme.current);
-	});
-
-	function handleKeydown(event: KeyboardEvent) {
-		if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
-			if (event.shiftKey) {
-				if (history?.canRedo) {
-					event.preventDefault();
-					history.redo();
-				}
-			} else {
-				if (history?.canUndo) {
-					event.preventDefault();
-					history.undo();
-				}
-			}
-		}
-	}
 </script>
-
-<svelte:window onkeydown={handleKeydown} />
 
 <aside
 	class={cn(
