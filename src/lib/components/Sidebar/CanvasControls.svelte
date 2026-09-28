@@ -14,6 +14,7 @@
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import { createLabelGroup } from './label-group.svelte';
 	import LabeledControlRow from './LabeledControlRow.svelte';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -24,12 +25,12 @@
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<SectionHeader title="Advanced" bind:isCollapsed={settings.current.advancedCollapsed} />
+	<SectionHeader title={m.sidebar_advanced()} bind:isCollapsed={settings.current.advancedCollapsed} />
 
 	<CollapsibleSection open={isSectionOpen}>
 		<div class="control-section">
 			<div class="flex items-center justify-between gap-2 py-1">
-				<Label for="shadow-only">Shadow Only (Debug)</Label>
+				<Label for="shadow-only">{m.control_shadow_only()}</Label>
 				<Switch
 					id="shadow-only"
 					bind:checked={settings.current.shadowOnly}
@@ -37,23 +38,23 @@
 				/>
 			</div>
 
-			<LabeledControlRow label="Texture Filtering" forId="filtering">
+			<LabeledControlRow label={m.control_texture_filtering()} forId="filtering">
 				<Select
 					type="single"
 					bind:value={settings.current.filtering}
 					onValueChange={() => commitHistory()}
 				>
 					<SelectTrigger id="filtering" class="h-9 w-full text-xs">
-						{settings.current.filtering === 'linear' ? 'Linear' : 'Nearest'}
+						{settings.current.filtering === 'linear' ? m.filter_linear() : m.filter_nearest()}
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="linear">Linear</SelectItem>
-						<SelectItem value="nearest">Nearest</SelectItem>
+						<SelectItem value="linear">{m.filter_linear()}</SelectItem>
+						<SelectItem value="nearest">{m.filter_nearest()}</SelectItem>
 					</SelectContent>
 				</Select>
 			</LabeledControlRow>
 
-			<LabeledControlRow label="Auto Mipmaps" forId="auto-mipmaps">
+			<LabeledControlRow label={m.control_auto_mipmaps()} forId="auto-mipmaps">
 				<Select
 					type="single"
 					value={settings.current.autoGenerateMipmaps ? 'on' : 'off'}
@@ -63,17 +64,17 @@
 					}}
 				>
 					<SelectTrigger id="auto-mipmaps" class="h-9 w-full text-xs">
-						{settings.current.autoGenerateMipmaps ? 'Enabled' : 'Disabled'}
+						{settings.current.autoGenerateMipmaps ? m.state_enabled() : m.state_disabled()}
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="on">Enabled</SelectItem>
-						<SelectItem value="off">Disabled</SelectItem>
+						<SelectItem value="on">{m.state_enabled()}</SelectItem>
+						<SelectItem value="off">{m.state_disabled()}</SelectItem>
 					</SelectContent>
 				</Select>
 			</LabeledControlRow>
 
 			<CollapsibleSection open={settings.current.autoGenerateMipmaps}>
-				<LabeledControlRow label="Mipmap Filter" forId="mipmap-filter">
+				<LabeledControlRow label={m.control_mipmap_filter()} forId="mipmap-filter">
 					<Select
 						type="single"
 						bind:value={settings.current.mipmapFilter}
@@ -81,12 +82,12 @@
 					>
 						<SelectTrigger id="mipmap-filter" class="h-9 w-full text-xs">
 							{settings.current.mipmapFilter === 'linear'
-								? 'Linear (Trilinear)'
-								: 'Nearest (Bilinear)'}
+								? m.mipmap_trilinear()
+								: m.mipmap_bilinear()}
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="linear">Linear (Trilinear)</SelectItem>
-							<SelectItem value="nearest">Nearest (Bilinear)</SelectItem>
+							<SelectItem value="linear">{m.mipmap_trilinear()}</SelectItem>
+							<SelectItem value="nearest">{m.mipmap_bilinear()}</SelectItem>
 						</SelectContent>
 					</Select>
 				</LabeledControlRow>

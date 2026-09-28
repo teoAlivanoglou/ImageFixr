@@ -8,6 +8,7 @@
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { theme, history } from '$lib/state.svelte';
 	import { i18n } from '$lib/i18n.svelte';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -199,7 +200,7 @@
 			onmousedown={startResize}
 			ontouchstart={startResize}
 			ondblclick={() => (currentWidthRem = DEFAULT_SIDEBAR_REM)}
-			title="Drag to resize sidebar / double-click to reset"
+			title={m.tooltip_resize_sidebar()}
 		>
 			<!-- Visual indicator pill matching the portrait site handle -->
 			<div
@@ -236,7 +237,7 @@
 			onmousedown={startMobileResize}
 			ontouchstart={startMobileResize}
 			ondblclick={() => (currentMobileCanvasDvh = DEFAULT_MOBILE_CANVAS_DVH)}
-			title="Drag to resize canvas / double-click to reset"
+			title={m.tooltip_resize_canvas()}
 		>
 			<div
 				class={cn(

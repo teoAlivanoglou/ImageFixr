@@ -13,12 +13,17 @@
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { i18n } from '$lib/i18n.svelte';
 
-	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
-	import { ASPECT_RATIOS } from './Sidebar/format-constants';
+	import {
+		getResolutionsForRatio,
+		getValidResolutionPreset,
+		getLocalizedResolutionLabel
+	} from '$lib/viewport/resolutions';
+	import { getAspectRatios } from './Sidebar/format-constants';
 	import * as m from '$paraglide/messages.js';
 
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
 
+	let aspectRatios = $derived(getAspectRatios());
 	let availableResolutions = $derived(getResolutionsForRatio(settings.current.aspectRatio));
 	let currentRes = $derived(
 		availableResolutions.find((r) => r.id === settings.current.resolutionPreset) ||
@@ -109,16 +114,26 @@
 			{/if}
 		</span>
 
-		<button
-			type="button"
-			class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground cursor-pointer select-none"
+		<span
+			class={cn(
+				'inline-flex cursor-pointer items-center gap-1 text-muted-foreground transition-colors hover:text-foreground select-none',
+				isDesktopNavbar ? 'text-2xl' : 'text-xl'
+			)}
+			role="button"
+			tabindex="0"
 			aria-label={m.action_language()}
 			title={m.action_language()}
 			onclick={() => i18n.toggle()}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					i18n.toggle();
+				}
+			}}
 		>
-			<Globe class={isDesktopNavbar ? 'size-4.5' : 'size-4'} />
-			<span class="uppercase tracking-wider text-[11px]">{i18n.current}</span>
-		</button>
+			<Globe strokeWidth={1.5} class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
+			<span class="text-xs font-medium uppercase tracking-wider">{i18n.current}</span>
+		</span>
 	</div>
 
 	<!-- Center: Undo/Redo (Centered across mobile and desktop) -->
@@ -157,12 +172,12 @@
 				bind:value={settings.current.aspectRatio}
 				onValueChange={handleRatioChange}
 			>
-				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
+				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-auto min-w-32 px-2.5 text-xs">
 					<span class="text-muted-foreground">{m.aspect_ratio()}:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
-					{#each ASPECT_RATIOS as ratio (ratio.value)}
+					{#each aspectRatios as ratio (ratio.value)}
 						<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
 					{/each}
 				</SelectContent>
@@ -176,16 +191,16 @@
 				<SelectTrigger
 					id="navbar-resolution"
 					class="h-9 min-w-38 text-xs"
-					title={`${currentRes.label} (${currentRes.sublabel})`}
+					title={`${getLocalizedResolutionLabel(currentRes.label)} (${currentRes.sublabel})`}
 				>
 					<span class="text-muted-foreground">{m.resolution()}:</span>
-					<span class="font-medium text-foreground">{currentRes.label}</span>
+					<span class="font-medium text-foreground">{getLocalizedResolutionLabel(currentRes.label)}</span>
 				</SelectTrigger>
 				<SelectContent class="w-max min-w-max">
 					{#each availableResolutions as res (res.id)}
 						<SelectItem value={res.id}>
 							<div class="flex w-full items-center justify-between gap-4">
-								<span class="font-medium">{res.label}</span>
+								<span class="font-medium">{getLocalizedResolutionLabel(res.label)}</span>
 								<span class="text-xs text-muted-foreground tabular-nums">{res.sublabel}</span>
 							</div>
 						</SelectItem>

@@ -35,7 +35,7 @@
 <div
 	class={cn(
 		'relative inline-grid h-6 shrink-0 items-center rounded-md border border-input bg-muted/40 p-0.5 text-xs',
-		fullWidth ? 'w-full @[350px]:w-auto' : 'w-fit',
+		fullWidth ? 'w-full @[480px]:w-auto' : 'w-fit',
 		className
 	)}
 	style={`grid-template-columns: repeat(${options.length}, 1fr);`}
@@ -51,7 +51,7 @@
 		<button
 			type="button"
 			class={cn(
-				'relative z-10 flex h-5 cursor-pointer items-center justify-center gap-1 rounded px-3 text-center text-[11px] leading-none font-medium transition-colors duration-150 select-none',
+				'relative z-10 flex h-5 min-w-0 cursor-pointer items-center justify-center gap-1 overflow-hidden rounded px-1.5 sm:px-2 text-center text-[11px] leading-none font-medium transition-colors duration-150 select-none',
 				value === option.value ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
 				buttonClass
 			)}
@@ -65,7 +65,7 @@
 				<Icon size={iconSize} class={cn('size-2.5 shrink-0', iconClass)} />
 			{/if}
 			{#if option.label}
-				<span>{option.label}</span>
+				<span class="truncate">{option.label}</span>
 			{/if}
 		</button>
 	{/each}

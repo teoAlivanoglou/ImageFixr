@@ -1,9 +1,24 @@
+import * as m from '../../paraglide/messages.js';
+
 export interface ResolutionPreset {
 	id: string;
 	label: string;
 	sublabel: string;
 	width: number;
 	height: number;
+}
+
+export function getLocalizedResolutionLabel(label: string): string {
+	return label
+		.replace(/\bSquare\b/g, m.res_square())
+		.replace(/\bPhoto\b/g, m.res_photo())
+		.replace(/\bStory\b/g, m.res_story())
+		.replace(/\bAvatar\b/g, m.res_avatar())
+		.replace(/\bSocial\b/g, m.res_social())
+		.replace(/\bFeed\b/g, m.res_feed())
+		.replace(/\bStandard\b/g, m.res_standard())
+		.replace(/\bVertical\b/g, m.res_vertical())
+		.replace(/\bUltrawide\b/g, m.res_ultrawide());
 }
 
 export const RESOLUTION_PRESETS_BY_RATIO: Record<string, ResolutionPreset[]> = {

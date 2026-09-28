@@ -14,19 +14,20 @@
 	let { class: className }: { class?: string } = $props();
 
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
+	import * as m from '$paraglide/messages.js';
 
 	type TabId = 'foreground' | 'background' | 'margins' | 'border' | 'shadow' | 'format';
 
 	let activeTab = $state<TabId>('foreground');
 
-	const ALL_TABS: Array<{ id: TabId; label: string }> = [
-		{ id: 'foreground', label: 'Foreground' },
-		{ id: 'background', label: 'Background' },
-		{ id: 'margins', label: 'Margins' },
-		{ id: 'border', label: 'Border' },
-		{ id: 'shadow', label: 'Drop Shadow' },
-		{ id: 'format', label: 'Format' }
-	];
+	let ALL_TABS: Array<{ id: TabId; label: string }> = $derived([
+		{ id: 'foreground', label: m.sidebar_foreground() },
+		{ id: 'background', label: m.sidebar_background() },
+		{ id: 'margins', label: m.sidebar_margins() },
+		{ id: 'border', label: m.sidebar_border() },
+		{ id: 'shadow', label: m.sidebar_dropshadow() },
+		{ id: 'format', label: m.sidebar_format() }
+	]);
 
 	let TABS = $derived(
 		layoutMode.current === 'desktop-portrait'

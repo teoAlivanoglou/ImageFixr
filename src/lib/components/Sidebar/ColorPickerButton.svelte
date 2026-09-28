@@ -54,7 +54,7 @@
 			<span class="absolute inset-0" style={`background-color: ${value}`}></span>
 			<span class="relative z-10 flex h-full w-full items-center justify-center">
 				<Palette
-					strokeWidth={2}
+					strokeWidth={1.5}
 					class="size-5 transition-colors duration-150"
 					style={`color: ${iconColor}`}
 				/>

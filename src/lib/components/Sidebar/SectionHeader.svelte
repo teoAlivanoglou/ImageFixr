@@ -52,7 +52,7 @@
 
 <div class="relative mt-1 flex flex-col text-xs transition-colors">
 	<!-- Row 1: Header Bar -->
-	<div class="relative flex h-7 items-center justify-between gap-2">
+	<div class="relative flex h-7 flex-nowrap items-center justify-between gap-2 overflow-hidden">
 		<!-- Absolute Clickable Area -->
 		<button
 			type="button"
@@ -66,11 +66,11 @@
 		{#if hasSwitch}
 			<div
 				class={cn(
-					'pointer-events-none relative z-10 flex items-center gap-2 transition-colors',
+					'pointer-events-none relative z-10 flex min-w-0 shrink items-center gap-2 transition-colors',
 					enabled ? 'text-muted-foreground peer-hover:text-foreground' : 'text-muted-foreground/45'
 				)}
 			>
-				<div class="pointer-events-auto flex items-center">
+				<div class="pointer-events-auto flex shrink-0 items-center">
 					<Switch
 						id={`enable-${title.toLowerCase().replace(/\s+/g, '-')}`}
 						size="sm"
@@ -79,13 +79,13 @@
 						aria-label={`Toggle ${title}`}
 					/>
 				</div>
-				<span class="text-[11px] font-medium tracking-wider uppercase select-none">
+				<span class="truncate text-[11px] font-medium tracking-wider uppercase select-none whitespace-nowrap">
 					{title}
 				</span>
 			</div>
 		{:else}
 			<span
-				class="pointer-events-none relative z-10 text-[11px] font-medium tracking-wider text-muted-foreground uppercase transition-colors select-none peer-hover:text-foreground"
+				class="pointer-events-none relative z-10 truncate text-[11px] font-medium tracking-wider text-muted-foreground uppercase transition-colors select-none peer-hover:text-foreground whitespace-nowrap"
 			>
 				{title}
 			</span>
@@ -93,12 +93,12 @@
 
 		<!-- Divider Line -->
 		<div
-			class="pointer-events-none relative z-10 h-px flex-1 bg-border/40 transition-colors peer-hover:bg-border/80"
+			class="pointer-events-none relative z-10 h-px min-w-2 flex-1 bg-border/40 transition-colors peer-hover:bg-border/80"
 		></div>
 
 		<!-- Pill Buttons (Desktop/Wide: inline) -->
 		{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
-			<div class="pointer-events-auto relative z-10 hidden items-center @[350px]:flex">
+			<div class="pointer-events-auto relative z-10 hidden shrink-0 items-center @[480px]:flex">
 				{@render children()}
 			</div>
 		{/if}
@@ -115,9 +115,9 @@
 		{/if}
 	</div>
 
-	<!-- Pill Buttons (Narrow: dedicated full-width row) -->
+	<!-- Pill Buttons (Narrow/Standard: dedicated full-width row) -->
 	{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
-		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[350px]:hidden">
+		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[480px]:hidden">
 			{@render children()}
 		</div>
 	{/if}

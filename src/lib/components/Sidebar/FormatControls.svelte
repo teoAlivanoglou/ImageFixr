@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { settings, commitHistory } from '$lib/state.svelte';
-	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
-	import { ASPECT_RATIOS } from './format-constants';
+	import {
+		getResolutionsForRatio,
+		getValidResolutionPreset,
+		getLocalizedResolutionLabel
+	} from '$lib/viewport/resolutions';
+	import { getAspectRatios } from './format-constants';
 	import SectionHeader from './SectionHeader.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import {
@@ -25,6 +29,7 @@
 	let isCollapsed = $state(false);
 	let isSectionOpen = $derived(!collapsible || !isCollapsed);
 
+	let aspectRatios = $derived(getAspectRatios());
 	let availableResolutions = $derived(getResolutionsForRatio(settings.current.aspectRatio));
 	let currentRes = $derived(
 		availableResolutions.find((r) => r.id === settings.current.resolutionPreset) ||
@@ -55,7 +60,7 @@
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
-					{#each ASPECT_RATIOS as ratio (ratio.value)}
+					{#each aspectRatios as ratio (ratio.value)}
 						<SelectItem value={ratio.value}>{ratio.label}</SelectItem>
 					{/each}
 				</SelectContent>
@@ -71,15 +76,15 @@
 				<SelectTrigger
 					id="format-resolution"
 					class="h-9 w-full text-xs"
-					title={`${currentRes.label} (${currentRes.sublabel})`}
+					title={`${getLocalizedResolutionLabel(currentRes.label)} (${currentRes.sublabel})`}
 				>
-					<span class="font-medium text-foreground">{currentRes.label}</span>
+					<span class="font-medium text-foreground">{getLocalizedResolutionLabel(currentRes.label)}</span>
 				</SelectTrigger>
 				<SelectContent>
 					{#each availableResolutions as res (res.id)}
 						<SelectItem value={res.id}>
 							<div class="flex w-full items-center justify-between gap-4">
-								<span class="font-medium">{res.label}</span>
+								<span class="font-medium">{getLocalizedResolutionLabel(res.label)}</span>
 								<span class="text-xs text-muted-foreground tabular-nums">{res.sublabel}</span>
 							</div>
 						</SelectItem>

@@ -48,11 +48,11 @@
 		}
 	]);
 
-	const safeAreaOptions = [
-		{ value: 'custom', label: 'Custom' },
-		{ value: 'smpte-action', label: 'Action' },
-		{ value: 'smpte-title', label: 'Title' }
-	];
+	let safeAreaOptions = $derived([
+		{ value: 'custom', label: m.safe_area_custom() },
+		{ value: 'smpte-action', label: m.safe_area_action() },
+		{ value: 'smpte-title', label: m.safe_area_title() }
+	]);
 
 	let linkOptions = $derived([
 		{ value: 'linked', label: '', icon: Link, title: m.margin_link() },
@@ -170,7 +170,7 @@
 <CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
-			title="Safe Area"
+			title={m.safe_area()}
 			hasSwitch={true}
 			bind:enabled={settings.current.fgMarginEnabled}
 			bind:isCollapsed={settings.current.fgMarginCollapsed}
@@ -208,14 +208,14 @@
 					<CollapsibleSection open={settings.current.fgMarginsLinked}>
 						<!-- Linked Margin Row -->
 						<div class="flex items-center gap-1.5 py-1">
-							<span class="w-12 shrink-0 text-xs text-muted-foreground select-none"> All </span>
+							<span class="w-16 shrink-0 text-xs text-muted-foreground select-none"> {m.margin_all()} </span>
 
 							{#if settings.current.fgMarginTop > 0}
 								<button
 									type="button"
 									class="group flex h-7 w-5 shrink-0 cursor-pointer items-center justify-center"
-									aria-label="Reset all margins"
-									title="Reset all margins to 0"
+									aria-label={m.margin_reset_all()}
+									title={m.margin_reset_all()}
 									onclick={resetLinkedMargin}
 								>
 									<Undo
@@ -267,7 +267,9 @@
 									type="button"
 									onclick={toggleLinkedUnit}
 									class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-									title={`Click to switch to ${settings.current.fgMarginTopUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
+									title={m.margin_unit_tooltip({
+										unit: settings.current.fgMarginTopUnit === 'percent' ? 'pixels (px)' : 'percentage (%)'
+									})}
 								>
 									{settings.current.fgMarginTopUnit === 'percent' ? '%' : 'px'}
 								</button>
@@ -279,7 +281,7 @@
 						<!-- 4 Individual Side Rows -->
 						{#each SIDES as side}
 							<div class="flex items-center gap-1.5 py-1">
-								<span class="w-12 shrink-0 text-xs text-muted-foreground select-none">
+								<span class="w-16 shrink-0 text-xs text-muted-foreground select-none">
 									{side.label}
 								</span>
 
@@ -287,8 +289,8 @@
 									<button
 										type="button"
 										class="group flex h-7 w-5 shrink-0 cursor-pointer items-center justify-center"
-										aria-label={`Reset ${side.label} margin`}
-										title={`Reset ${side.label} margin to 0`}
+										aria-label={m.margin_reset_side({ side: side.label })}
+										title={m.margin_reset_side({ side: side.label })}
 										onclick={() => resetSideMargin(side.key)}
 									>
 										<Undo
@@ -339,7 +341,9 @@
 										type="button"
 										onclick={() => toggleSideUnit(side.key)}
 										class="flex h-7 w-8 shrink-0 cursor-pointer items-center justify-center rounded-r-md font-mono text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-										title={`Click to switch to ${settings.current[side.unitProp] === 'percent' ? 'pixels (px)' : 'percentage (%)'}`}
+										title={m.margin_unit_tooltip({
+											unit: settings.current[side.unitProp] === 'percent' ? 'pixels (px)' : 'percentage (%)'
+										})}
 									>
 										{settings.current[side.unitProp] === 'percent' ? '%' : 'px'}
 									</button>
