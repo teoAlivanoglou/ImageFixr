@@ -8,8 +8,10 @@
 	import FormatControls from './Sidebar/FormatControls.svelte';
 	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
+	import { createHeaderPillGroup } from './Sidebar/header-pill-group.svelte';
 
 	setContext('collapsible', false);
+	const headerPillGroup = createHeaderPillGroup();
 
 	let { class: className }: { class?: string } = $props();
 
@@ -45,6 +47,19 @@
 	let carouselEl = $state<HTMLElement | null>(null);
 	let canScrollLeft = $state(false);
 	let canScrollRight = $state(false);
+
+	$effect(() => {
+		if (carouselEl) {
+			const update = () => {
+				if (!carouselEl) return;
+				headerPillGroup.availableWidth = Math.max(0, carouselEl.clientWidth - 32);
+			};
+			update();
+			const ro = new ResizeObserver(update);
+			ro.observe(carouselEl);
+			return () => ro.disconnect();
+		}
+	});
 
 	let isProgrammaticScroll = false;
 	let scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;

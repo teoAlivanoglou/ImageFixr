@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import type { Component } from 'svelte';
+	import { useHeaderPillGroup } from './header-pill-group.svelte';
 
 	export type PillOption = {
 		value: string;
@@ -29,13 +30,27 @@
 		class?: string;
 	} = $props();
 
+	const group = useHeaderPillGroup();
 	const activeIndex = $derived(options.findIndex((o) => o.value === value));
+
+	const widthClass = $derived(
+		group
+			? fullWidth
+				? group.shouldWrap
+					? 'w-full'
+					: 'w-auto'
+				: 'w-fit'
+			: fullWidth
+				? 'w-full @[480px]:w-auto'
+				: 'w-fit'
+	);
 </script>
 
 <div
+	data-pill-switcher
 	class={cn(
 		'relative inline-grid h-6 shrink-0 items-center rounded-md border border-input bg-muted/40 p-0.5 text-xs',
-		fullWidth ? 'w-full @[480px]:w-auto' : 'w-fit',
+		widthClass,
 		className
 	)}
 	style={`grid-template-columns: repeat(${options.length}, 1fr);`}

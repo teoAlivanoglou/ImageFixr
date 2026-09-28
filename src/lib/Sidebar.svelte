@@ -8,11 +8,21 @@
 	import FormatControls from './components/Sidebar/FormatControls.svelte';
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { cn } from '$lib/utils';
+	import { createHeaderPillGroup } from './components/Sidebar/header-pill-group.svelte';
 
 	let { class: className }: { class?: string } = $props();
 
+	const headerPillGroup = createHeaderPillGroup();
+
 	let asideEl = $state<HTMLElement | null>(null);
 	let contentEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (asideEl) {
+			const obs = headerPillGroup.observeContainer(asideEl);
+			return () => obs.destroy();
+		}
+	});
 
 	$effect(() => {
 		if (!contentEl || !asideEl) return;

@@ -3,8 +3,22 @@
 	import { ChevronDown } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
 	import { getContext, type Snippet } from 'svelte';
+	import { useHeaderPillGroup } from './header-pill-group.svelte';
 
 	const contextCollapsible = getContext<boolean | undefined>('collapsible');
+	const headerPillGroup = useHeaderPillGroup();
+	const sectionId = Math.random().toString(36).substring(2, 9);
+	let probeEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (headerPillGroup && probeEl && children) {
+			const reg = headerPillGroup.register(sectionId, probeEl);
+			return () => reg.destroy();
+		}
+	});
+
+	let isGrouped = $derived(Boolean(headerPillGroup));
+	let shouldWrap = $derived(headerPillGroup ? headerPillGroup.shouldWrap : false);
 
 	let {
 		title,
@@ -98,7 +112,12 @@
 
 		<!-- Pill Buttons (Desktop/Wide: inline) -->
 		{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
-			<div class="pointer-events-auto relative z-10 hidden shrink-0 items-center @[480px]:flex">
+			<div
+				class={cn(
+					'pointer-events-auto relative z-10 shrink-0 items-center',
+					isGrouped ? (shouldWrap ? 'hidden' : 'flex') : 'hidden @[480px]:flex'
+				)}
+			>
 				{@render children()}
 			</div>
 		{/if}
@@ -117,8 +136,42 @@
 
 	<!-- Pill Buttons (Narrow/Standard: dedicated full-width row) -->
 	{#if (!hasSwitch || enabled) && (!collapsible || !isCollapsed) && children}
-		<div class="pointer-events-auto relative z-10 mt-1.5 flex w-full items-center @[480px]:hidden">
+		<div
+			class={cn(
+				'pointer-events-auto relative z-10 mt-1.5 w-full items-center',
+				isGrouped ? (shouldWrap ? 'flex' : 'hidden') : 'flex @[480px]:hidden'
+			)}
+		>
 			{@render children()}
 		</div>
 	{/if}
 </div>
+
+{#if children}
+	<!-- Off-screen measurement probe: measures the unconstrained single-line width of this section's header + pills in current locale -->
+	<div
+		bind:this={probeEl}
+		aria-hidden="true"
+		inert
+		class="pointer-events-none fixed -left-[9999px] top-0 -z-50 flex h-7 flex-nowrap items-center gap-2 whitespace-nowrap text-xs opacity-0 select-none"
+	>
+		{#if hasSwitch}
+			<div class="flex items-center gap-2">
+				<div class="h-4 w-7 shrink-0"></div>
+				<span class="text-[11px] font-medium tracking-wider uppercase whitespace-nowrap">{title}</span>
+			</div>
+		{:else}
+			<span class="text-[11px] font-medium tracking-wider uppercase whitespace-nowrap">{title}</span>
+		{/if}
+
+		<div class="w-4 shrink-0"></div>
+
+		<div class="flex shrink-0 items-center [&_[data-pill-switcher]]:w-auto!">
+			{@render children()}
+		</div>
+
+		{#if collapsible}
+			<div class="ml-1 h-5 w-5 shrink-0"></div>
+		{/if}
+	</div>
+{/if}
