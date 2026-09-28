@@ -170,7 +170,7 @@
 <CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
-			title={m.safe_area()}
+			title={m.sidebar_margins()}
 			hasSwitch={true}
 			bind:enabled={settings.current.fgMarginEnabled}
 			bind:isCollapsed={settings.current.fgMarginCollapsed}

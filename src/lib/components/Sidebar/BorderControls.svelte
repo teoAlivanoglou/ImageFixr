@@ -49,7 +49,7 @@
 			<div class="control-section">
 				<SliderControl
 					id="fg-border-width"
-					label={m.control_width()}
+					label={m.control_thickness()}
 					bind:value={settings.current.fgBorderWidth}
 					min={0}
 					max={50}

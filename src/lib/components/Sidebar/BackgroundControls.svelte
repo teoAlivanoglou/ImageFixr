@@ -20,8 +20,8 @@
 	);
 
 	let bgSourceOptions = $derived([
-		{ value: 'none', label: m.control_source_none() },
-		{ value: 'link', label: m.control_source_link() },
+		{ value: 'none', label: m.control_source_color() },
+		{ value: 'link', label: m.control_source_mirror() },
 		{ value: 'custom', label: m.control_source_custom() }
 	]);
 </script>
