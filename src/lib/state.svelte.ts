@@ -65,6 +65,8 @@ export interface Settings {
 	fgBorderCollapsed: boolean;
 	fgDropShadowCollapsed: boolean;
 	advancedCollapsed: boolean;
+	fgPersist: boolean;
+	bgPersist: boolean;
 }
 
 export const DEFAULT_SWATCHES = [
@@ -135,7 +137,9 @@ export const SETTINGS_DEFAULTS: Settings = {
 	fgMarginCollapsed: true,
 	fgBorderCollapsed: true,
 	fgDropShadowCollapsed: true,
-	advancedCollapsed: true
+	advancedCollapsed: true,
+	fgPersist: false,
+	bgPersist: true
 };
 
 export const settings = new PersistedState<Settings>(
@@ -203,8 +207,10 @@ $effect.root(() => {
 export type MediaState = {
 	fgName: string;
 	fgVersion: number;
+	fgPersist: boolean;
 	bgName: string;
 	bgVersion: number;
+	bgPersist: boolean;
 };
 
 export const media = new PersistedState<MediaState>(
@@ -212,8 +218,10 @@ export const media = new PersistedState<MediaState>(
 	{
 		fgName: '',
 		fgVersion: 0,
+		fgPersist: false,
 		bgName: '',
-		bgVersion: 0
+		bgVersion: 0,
+		bgPersist: true
 	},
 	{ storage: 'local', syncTabs: true }
 );

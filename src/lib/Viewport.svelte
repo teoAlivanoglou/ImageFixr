@@ -434,6 +434,9 @@
 
 		void loadImageStorage('foreground').then((data) => {
 			if (!data) {
+				if (media.current.fgName) {
+					media.current = { ...media.current, fgName: '', fgVersion: Date.now() };
+				}
 				if (fgTexture) {
 					const old = fgTexture;
 					fgTexture = undefined;
@@ -441,6 +444,7 @@
 				}
 				return;
 			}
+			media.current = { ...media.current, fgPersist: data.persist };
 			const objectUrl = URL.createObjectURL(data.file);
 			const image = new Image();
 			image.src = objectUrl;
@@ -491,12 +495,18 @@
 
 		void loadImageStorage(targetStorage).then((data) => {
 			if (!data) {
+				if (isCustom && media.current.bgName) {
+					media.current = { ...media.current, bgName: '', bgVersion: Date.now() };
+				}
 				if (bgTexture) {
 					const old = bgTexture;
 					bgTexture = undefined;
 					tick().then(() => old.destroy(true));
 				}
 				return;
+			}
+			if (isCustom) {
+				media.current = { ...media.current, bgPersist: data.persist };
 			}
 			const objectUrl = URL.createObjectURL(data.file);
 			const image = new Image();

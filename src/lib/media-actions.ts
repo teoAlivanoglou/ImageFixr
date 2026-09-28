@@ -1,5 +1,5 @@
-import { saveImageStorage, deleteImageStorage } from './image-db';
-import { media } from './state.svelte';
+import { saveImageStorage, deleteImageStorage, setImagePersistence } from './image-db';
+import { media, settings } from './state.svelte';
 
 let sessionForegroundHandle: FileSystemFileHandle | null = null;
 let sessionLastSaveHandle: FileSystemFileHandle | null = null;
@@ -33,16 +33,46 @@ export function setForegroundFileHandle(handle: FileSystemFileHandle | null): vo
 export async function selectImage(
 	target: 'foreground' | 'background',
 	file: File,
-	handle?: FileSystemFileHandle
+	handle?: FileSystemFileHandle,
+	persist?: boolean
 ): Promise<void> {
 	if (!file.type.startsWith('image/')) return;
-	await saveImageStorage(target, file);
+	const isPersist = persist ?? (target === 'foreground' ? settings.current.fgPersist : settings.current.bgPersist);
+	await saveImageStorage(target, file, { persist: isPersist });
 
 	if (target === 'foreground') {
 		sessionForegroundHandle = handle ?? null;
-		media.current = { ...media.current, fgName: file.name, fgVersion: Date.now() };
+		media.current = {
+			...media.current,
+			fgName: file.name,
+			fgVersion: Date.now(),
+			fgPersist: isPersist
+		};
 	} else {
-		media.current = { ...media.current, bgName: file.name, bgVersion: Date.now() };
+		media.current = {
+			...media.current,
+			bgName: file.name,
+			bgVersion: Date.now(),
+			bgPersist: isPersist
+		};
+	}
+}
+
+/**
+ * Toggle persistence flag for an existing image.
+ */
+export async function toggleImagePersistence(target: 'foreground' | 'background'): Promise<void> {
+	const currentPersist =
+		target === 'foreground' ? media.current.fgPersist : media.current.bgPersist;
+	const nextPersist = !currentPersist;
+	await setImagePersistence(target, nextPersist);
+
+	if (target === 'foreground') {
+		media.current = { ...media.current, fgPersist: nextPersist };
+		settings.current.fgPersist = nextPersist;
+	} else {
+		media.current = { ...media.current, bgPersist: nextPersist };
+		settings.current.bgPersist = nextPersist;
 	}
 }
 
