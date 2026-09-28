@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Pipette, Plus } from '@lucide/svelte';
+	import { Slider as SliderPrimitive } from 'bits-ui';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
 	import { cn } from '$lib/utils';
 
-	type PickerFormat = 'hex' | 'rgb' | 'hsl';
+	type PickerFormat = 'hex' | 'rgb' | 'hsb';
 	type Rgb = { r: number; g: number; b: number };
 	type Hsv = { h: number; s: number; v: number };
 
@@ -146,74 +147,6 @@
 		};
 	}
 
-	function rgbToHsl({ r, g, b }: Rgb) {
-		const rn = r / 255;
-		const gn = g / 255;
-		const bn = b / 255;
-		const max = Math.max(rn, gn, bn);
-		const min = Math.min(rn, gn, bn);
-		const l = (max + min) / 2;
-		const d = max - min;
-
-		let h = 0;
-		let s = 0;
-
-		if (d !== 0) {
-			s = d / (1 - Math.abs(2 * l - 1));
-
-			switch (max) {
-				case rn:
-					h = ((gn - bn) / d) % 6;
-					break;
-				case gn:
-					h = (bn - rn) / d + 2;
-					break;
-				default:
-					h = (rn - gn) / d + 4;
-					break;
-			}
-
-			h *= 60;
-			if (h < 0) h += 360;
-		}
-
-		return {
-			h: Math.round(h),
-			s: Math.round(s * 100),
-			l: Math.round(l * 100)
-		};
-	}
-
-	function hueToRgb(p: number, q: number, t: number) {
-		let tt = t;
-		if (tt < 0) tt += 1;
-		if (tt > 1) tt -= 1;
-		if (tt < 1 / 6) return p + (q - p) * 6 * tt;
-		if (tt < 1 / 2) return q;
-		if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
-		return p;
-	}
-
-	function hslToRgb(h: number, s: number, l: number): Rgb {
-		const hn = (((h % 360) + 360) % 360) / 360;
-		const sn = clamp(s, 0, 100) / 100;
-		const ln = clamp(l, 0, 100) / 100;
-
-		if (sn === 0) {
-			const val = Math.round(ln * 255);
-			return { r: val, g: val, b: val };
-		}
-
-		const q = ln < 0.5 ? ln * (1 + sn) : ln + sn - ln * sn;
-		const p = 2 * ln - q;
-
-		return {
-			r: Math.round(hueToRgb(p, q, hn + 1 / 3) * 255),
-			g: Math.round(hueToRgb(p, q, hn) * 255),
-			b: Math.round(hueToRgb(p, q, hn - 1 / 3) * 255)
-		};
-	}
-
 	function toRgbaString(rgb: Rgb, alpha: number) {
 		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${round(alpha, 2)})`;
 	}
@@ -235,8 +168,8 @@
 	});
 
 	let rgb = $derived(hsvToRgb(hsv));
-	let hsl = $derived(rgbToHsl(rgb));
 	let hex = $derived(rgbToHex(rgb, alpha));
+	let alphaPercent = $derived(Math.round(alpha * 100));
 
 	function emit(nextHsv: Hsv, nextAlpha: number, isCommit = false) {
 		const nextRgb = hsvToRgb(nextHsv);
@@ -302,7 +235,7 @@
 	let textInputValue = $derived.by(() => {
 		if (format === 'hex') return hex.toUpperCase();
 		if (format === 'rgb') return `${rgb.r}, ${rgb.g}, ${rgb.b}`;
-		return `${hsl.h}, ${hsl.s}%, ${hsl.l}%`;
+		return `${Math.round(hsv.h)}, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%`;
 	});
 
 	function handleTextInputChange(e: Event) {
@@ -339,8 +272,11 @@
 			.map((part) => Number(part.trim()));
 		if (parts.length !== 3 || parts.some((v) => Number.isNaN(v))) return;
 
-		const nextRgb = hslToRgb(parts[0], parts[1], parts[2]);
-		const next = rgbToHsv(nextRgb, hsv.h, hsv.s);
+		const next = {
+			h: clamp(Math.round(parts[0]), 0, 360),
+			s: clamp(round(parts[1], 1), 0, 100),
+			v: clamp(round(parts[2], 1), 0, 100)
+		};
 		hsv = next;
 		emit(next, alpha, true);
 	}
@@ -366,7 +302,7 @@
 >
 	<!-- 2D Color Plane -->
 	<div
-		class="relative w-full h-[clamp(80px,calc(100dvh-220px),192px)] shrink overflow-hidden rounded-lg border border-border/80 shadow-inner"
+		class="relative h-[clamp(80px,calc(100dvh-220px),192px)] w-full shrink overflow-hidden rounded-lg border border-border/80 shadow-inner"
 	>
 		<div class="absolute inset-0" style={`background-color: hsl(${hsv.h} 100% 50%);`}></div>
 		<div class="absolute inset-0 bg-linear-to-r from-white to-transparent"></div>
@@ -391,47 +327,83 @@
 	</div>
 
 	<!-- Hue & Alpha Sliders -->
-	<div class="space-y-2.5">
+	<div class="space-y-1.5">
 		<!-- Hue Slider -->
-		<div class="relative h-3.5 overflow-hidden rounded-full border border-border/60">
-			<input
-				type="range"
-				min={0}
-				max={360}
-				value={hsv.h}
-				oninput={(e) => {
-					const h = Number(e.currentTarget.value);
-					const next = { ...hsv, h };
-					hsv = next;
-					emit(next, alpha);
-				}}
-				onchange={() => {
-					emit(hsv, alpha, true);
-				}}
-				class="color-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
-				style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);"
-			/>
-		</div>
+		<SliderPrimitive.Root
+			type="single"
+			bind:value={hsv.h}
+			min={0}
+			max={360}
+			step={1}
+			onValueChange={(val) => {
+				const next = { ...hsv, h: val };
+				hsv = next;
+				emit(next, alpha);
+			}}
+			onValueCommit={() => {
+				emit(hsv, alpha, true);
+			}}
+			class="relative flex h-5 w-full cursor-pointer touch-none items-center select-none"
+			aria-label="Color hue slider"
+		>
+			{#snippet children({ thumbItems })}
+				<span
+					data-slot="slider-track"
+					class="relative h-3 w-full overflow-hidden rounded-full border border-border/60 bg-card"
+				>
+					<span
+						class="absolute inset-0"
+						style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);"
+					></span>
+				</span>
+				{#each thumbItems as thumb (thumb.index)}
+					<SliderPrimitive.Thumb
+						data-slot="slider-thumb"
+						index={thumb.index}
+						class="relative block size-3.5 shrink-0 cursor-pointer rounded-full border-2 border-white bg-foreground shadow-md ring-1 ring-black/25 transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden active:scale-95"
+					/>
+				{/each}
+			{/snippet}
+		</SliderPrimitive.Root>
 
 		<!-- Alpha Slider -->
-		<div class="checkerboard-bg relative h-3.5 overflow-hidden rounded-full border border-border/60">
-			<input
-				type="range"
-				min={0}
-				max={100}
-				value={Math.round(alpha * 100)}
-				oninput={(e) => {
-					const nextAlpha = Number(e.currentTarget.value) / 100;
-					alpha = nextAlpha;
-					emit(hsv, nextAlpha);
-				}}
-				onchange={() => {
-					emit(hsv, alpha, true);
-				}}
-				class="color-slider absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
-				style={`background: linear-gradient(to right, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0), rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1));`}
-			/>
-		</div>
+		<SliderPrimitive.Root
+			type="single"
+			value={alphaPercent}
+			min={0}
+			max={100}
+			step={1}
+			onValueChange={(val) => {
+				const nextAlpha = val / 100;
+				alpha = nextAlpha;
+				emit(hsv, nextAlpha);
+			}}
+			onValueCommit={() => {
+				emit(hsv, alpha, true);
+			}}
+			class="relative flex h-5 w-full cursor-pointer touch-none items-center select-none"
+			aria-label="Color opacity slider"
+		>
+			{#snippet children({ thumbItems })}
+				<span
+					data-slot="slider-track"
+					class="relative h-3 w-full overflow-hidden rounded-full border border-border/60 bg-card"
+				>
+					<span class="checkerboard-bg absolute inset-0"></span>
+					<span
+						class="absolute inset-0"
+						style={`background: linear-gradient(to right, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0), rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1));`}
+					></span>
+				</span>
+				{#each thumbItems as thumb (thumb.index)}
+					<SliderPrimitive.Thumb
+						data-slot="slider-thumb"
+						index={thumb.index}
+						class="relative block size-3.5 shrink-0 cursor-pointer rounded-full border-2 border-white bg-foreground shadow-md ring-1 ring-black/25 transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden active:scale-95"
+					/>
+				{/each}
+			{/snippet}
+		</SliderPrimitive.Root>
 	</div>
 
 	<!-- Format Controls & Eyedropper -->
@@ -467,7 +439,7 @@
 			<SelectContent>
 				<SelectItem value="hex">Hex</SelectItem>
 				<SelectItem value="rgb">RGB</SelectItem>
-				<SelectItem value="hsl">HSL</SelectItem>
+				<SelectItem value="hsb">HSB</SelectItem>
 			</SelectContent>
 		</Select>
 	</div>
@@ -479,7 +451,7 @@
 				type="button"
 				variant="outline"
 				size="icon-sm"
-				class="checkerboard-bg relative cursor-pointer overflow-hidden p-0 h-6 w-6"
+				class="relative h-6 w-6 cursor-pointer overflow-hidden rounded-md border-border bg-card p-0"
 				onclick={() => {
 					const parsedSwatch = parseHex(swatch);
 					if (!parsedSwatch) return;
@@ -495,6 +467,7 @@
 				title={`Select ${swatch} (Right-click to remove)`}
 				aria-label={`Select ${swatch}`}
 			>
+				<span class="checkerboard-bg absolute inset-0"></span>
 				<span class="absolute inset-0" style={`background-color: ${swatch};`}></span>
 			</Button>
 		{/each}
@@ -519,42 +492,5 @@
 <style>
 	.checkerboard-bg {
 		--checker-size: 8px;
-	}
-
-	.color-slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
-		appearance: none;
-		width: 14px;
-		height: 14px;
-		border-radius: 9999px;
-		border: 2px solid #ffffff;
-		background: var(--foreground);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-		cursor: pointer;
-		transition: transform 0.15s ease;
-	}
-	.color-slider::-webkit-slider-thumb:hover {
-		transform: scale(1.15);
-	}
-	.color-slider::-webkit-slider-runnable-track {
-		height: 100%;
-		border-radius: 9999px;
-	}
-	.color-slider::-moz-range-thumb {
-		width: 14px;
-		height: 14px;
-		border-radius: 9999px;
-		border: 2px solid #ffffff;
-		background: var(--foreground);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-		cursor: pointer;
-		transition: transform 0.15s ease;
-	}
-	.color-slider::-moz-range-thumb:hover {
-		transform: scale(1.15);
-	}
-	.color-slider::-moz-range-track {
-		height: 100%;
-		border-radius: 9999px;
 	}
 </style>

@@ -50,9 +50,7 @@
 			class={cn('relative h-8 w-14 shrink-0 overflow-hidden p-0', className)}
 			aria-label={ariaLabel}
 		>
-			<span
-				class="absolute inset-0 bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] [background-size:8px_8px] opacity-20"
-			></span>
+			<span class="checkerboard-bg absolute inset-0"></span>
 			<span class="absolute inset-0" style={`background-color: ${value}`}></span>
 			<span class="relative z-10 flex h-full w-full items-center justify-center">
 				<Palette
@@ -69,7 +67,7 @@
 		sideOffset={8}
 		avoidCollisions={true}
 		collisionPadding={12}
-		class="border-none bg-transparent p-0 shadow-none z-50"
+		class="z-50 border-none bg-transparent p-0 shadow-none"
 	>
 		<ColorPicker
 			bind:value
@@ -80,3 +78,9 @@
 		/>
 	</Popover.Content>
 </Popover.Root>
+
+<style>
+	.checkerboard-bg {
+		--checker-size: 8px;
+	}
+</style>
