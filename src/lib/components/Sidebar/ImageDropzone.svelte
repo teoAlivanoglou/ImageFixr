@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Trash } from '@lucide/svelte';
+	import { Trash, Pin, PinOff } from '@lucide/svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { cn } from '$lib/utils';
@@ -8,6 +8,8 @@
 		label = 'Image',
 		fileName = '',
 		placeholder = 'Drop or choose an image',
+		persist = false,
+		onTogglePersist,
 		onSelect,
 		onRemove,
 		class: className
@@ -15,6 +17,8 @@
 		label?: string;
 		fileName?: string;
 		placeholder?: string;
+		persist?: boolean;
+		onTogglePersist?: () => void;
 		onSelect: (file: File, handle?: FileSystemFileHandle) => void;
 		onRemove: () => void;
 		class?: string;
@@ -209,18 +213,43 @@
 				{displayFileName}
 			</span>
 
-			<button
-				type="button"
-				aria-label="Remove image"
-				onclick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					onRemove();
-				}}
-				class="flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-			>
-				<Trash size={13} />
-			</button>
+			<div class="flex shrink-0 items-center gap-1">
+				<button
+					type="button"
+					aria-label={persist ? 'Keep image across sessions' : 'Temporary image'}
+					title={persist ? 'Keep image across sessions' : 'Temporary image'}
+					onclick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						onTogglePersist?.();
+					}}
+					class={cn(
+						'flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 transition-colors',
+						persist
+							? 'text-primary hover:text-primary/80'
+							: 'text-muted-foreground/50 hover:text-foreground'
+					)}
+				>
+					{#if persist}
+						<Pin size={13} class="fill-current" />
+					{:else}
+						<PinOff size={13} />
+					{/if}
+				</button>
+
+				<button
+					type="button"
+					aria-label="Remove image"
+					onclick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						onRemove();
+					}}
+					class="flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+				>
+					<Trash size={13} />
+				</button>
+			</div>
 		</div>
 	</div>
 {:else}
@@ -240,6 +269,28 @@
 		ondragleave={() => (isDragging = false)}
 		ondrop={handleDrop}
 	>
+		<button
+			type="button"
+			aria-label={persist ? 'Keep image across sessions' : 'Temporary image'}
+			title={persist ? 'Keep image across sessions' : 'Temporary image'}
+			onclick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				onTogglePersist?.();
+			}}
+			class={cn(
+				'absolute top-2 right-2 flex shrink-0 cursor-pointer items-center justify-center rounded p-1 transition-colors',
+				persist
+					? 'text-primary hover:text-primary/80'
+					: 'text-muted-foreground/40 hover:text-foreground'
+			)}
+		>
+			{#if persist}
+				<Pin size={13} class="fill-current" />
+			{:else}
+				<PinOff size={13} />
+			{/if}
+		</button>
 		<span class="text-xs font-medium text-foreground transition-colors group-hover:text-foreground">
 			{placeholder}
 		</span>

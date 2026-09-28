@@ -7,7 +7,7 @@
 	import PillSwitcher from './PillSwitcher.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import { settings, appState, media, commitHistory } from '$lib/state.svelte';
-	import { selectImage, removeImage } from '$lib/media-actions';
+	import { selectImage, removeImage, toggleImagePersistence } from '$lib/media-actions';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
@@ -61,7 +61,9 @@
 						label="Image"
 						fileName={media.current.bgName}
 						placeholder="Choose image"
-						onSelect={(file, handle) => selectImage('background', file, handle)}
+						persist={media.current.bgPersist}
+						onTogglePersist={() => toggleImagePersistence('background')}
+						onSelect={(file, handle) => selectImage('background', file, handle, media.current.bgPersist)}
 						onRemove={() => removeImage('background')}
 					/>
 				</CollapsibleSection>

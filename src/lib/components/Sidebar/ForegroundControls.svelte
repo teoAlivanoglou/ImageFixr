@@ -5,7 +5,7 @@
 	import SectionHeader from './SectionHeader.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import { settings, appState, media } from '$lib/state.svelte';
-	import { selectImage, removeImage } from '$lib/media-actions';
+	import { selectImage, removeImage, toggleImagePersistence } from '$lib/media-actions';
 	import { cn } from '$lib/utils';
 
 	let { class: className }: { class?: string } = $props();
@@ -24,7 +24,9 @@
 				label="Image"
 				fileName={media.current.fgName}
 				placeholder="Drop or choose an image"
-				onSelect={(file, handle) => selectImage('foreground', file, handle)}
+				persist={media.current.fgPersist}
+				onTogglePersist={() => toggleImagePersistence('foreground')}
+				onSelect={(file, handle) => selectImage('foreground', file, handle, media.current.fgPersist)}
 				onRemove={() => removeImage('foreground')}
 			/>
 
