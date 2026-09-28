@@ -132,7 +132,7 @@
 			}}
 		>
 			<Globe strokeWidth={1.5} class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
-			<span class="text-xs font-medium uppercase tracking-wider">{i18n.current}</span>
+			<span class="text-xs font-medium uppercase tracking-wider">{i18n.current === 'en' ? m.lang_en() : m.lang_el()}</span>
 		</span>
 	</div>
 

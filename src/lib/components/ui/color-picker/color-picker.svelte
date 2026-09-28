@@ -211,6 +211,12 @@
 		emit(hsv, alpha, true);
 	}
 
+	let hasEyeDropper = $state(false);
+
+	$effect(() => {
+		hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
+	});
+
 	async function pickFromScreen() {
 		if (typeof window === 'undefined' || !('EyeDropper' in window)) return;
 
@@ -407,18 +413,24 @@
 	</div>
 
 	<!-- Format Controls & Eyedropper -->
-	<div class="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-		<Button
-			type="button"
-			variant="outline"
-			size="icon-sm"
-			onclick={pickFromScreen}
-			disabled={typeof window === 'undefined' || !('EyeDropper' in window)}
-			title="Eyedropper"
-			class="h-8 w-8"
-		>
-			<Pipette class="h-3.5 w-3.5" />
-		</Button>
+	<div
+		class={cn(
+			'grid items-center gap-2',
+			hasEyeDropper ? 'grid-cols-[auto_1fr_auto]' : 'grid-cols-[1fr_auto]'
+		)}
+	>
+		{#if hasEyeDropper}
+			<Button
+				type="button"
+				variant="outline"
+				size="icon-sm"
+				onclick={pickFromScreen}
+				title="Eyedropper"
+				class="h-8 w-8"
+			>
+				<Pipette class="h-3.5 w-3.5" />
+			</Button>
+		{/if}
 
 		<Input
 			value={textInputValue}

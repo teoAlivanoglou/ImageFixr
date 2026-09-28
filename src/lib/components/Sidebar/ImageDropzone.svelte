@@ -31,6 +31,7 @@
 	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let isDragging = $state(false);
 	let pillWidth = $state(0);
+	let buttonsWidth = $state(0);
 	const hasImage = $derived(Boolean(fileName));
 
 	let measureCanvas: HTMLCanvasElement | null = null;
@@ -46,44 +47,69 @@
 		return ctx.measureText(text).width;
 	}
 
-	function snapDelimiter(str: string, index: number, direction: 'left' | 'right', maxSnap = 7): number {
-		const delimiters = ['-', '_', ' ', '.'];
-		if (direction === 'left') {
-			for (let i = index - 1; i >= Math.max(1, index - maxSnap); i--) {
-				if (delimiters.includes(str[i])) return i;
-			}
-		} else {
-			for (let i = index; i <= Math.min(str.length - 1, index + maxSnap); i++) {
-				if (delimiters.includes(str[i])) return i + 1;
-			}
-		}
-		return index;
-	}
-
-	function fitSmartMiddleElided(name: string, maxWidth: number): string {
-		if (!name) return '';
-		if (maxWidth <= 0 || getTextWidth(name) <= maxWidth) return name;
-
+	function splitFileName(name: string): { base: string; ext: string } {
 		const lastDot = name.lastIndexOf('.');
 		const hasExt = lastDot > 0 && lastDot > name.length - 8;
-		const ext = hasExt ? name.slice(lastDot) : '';
-		const base = hasExt ? name.slice(0, lastDot) : name;
+		return {
+			base: hasExt ? name.slice(0, lastDot) : name,
+			ext: hasExt ? name.slice(lastDot) : ''
+		};
+	}
+
+	function getSmartPrefix(str: string, targetLen: number, maxSnap = 5): string {
+		const endIdx = Math.min(str.length - 1, Math.max(1, targetLen));
+		const delimiters = ['-', '_', ' ', '.'];
+		let bestIdx = endIdx;
+
+		for (let i = endIdx; i >= Math.max(1, endIdx - maxSnap); i--) {
+			if (delimiters.includes(str[i])) {
+				bestIdx = i;
+				break;
+			}
+		}
+
+		const slice = str.slice(0, bestIdx).replace(/[-_.\s]+$/, '');
+		return slice || str.slice(0, Math.max(1, targetLen));
+	}
+
+	function getSmartSuffix(str: string, targetLen: number, maxSnap = 5): string {
+		const startIdx = Math.max(1, str.length - Math.max(1, targetLen));
+		const delimiters = ['-', '_', ' ', '.'];
+		let bestIdx = startIdx;
+
+		for (let i = startIdx; i <= Math.min(str.length - 2, startIdx + maxSnap); i++) {
+			if (delimiters.includes(str[i])) {
+				bestIdx = i + 1;
+				break;
+			}
+		}
+
+		const slice = str.slice(bestIdx).replace(/^[-_.\s]+/, '');
+		return slice || str.slice(-Math.max(1, targetLen));
+	}
+
+	function fitSmartMiddleElided(base: string, maxWidth: number): string {
+		if (!base) return '';
+		if (maxWidth <= 0) return base.slice(0, 1) + '…';
+		if (getTextWidth(base) <= maxWidth) return base;
+
+		const ellipsis = '…';
+		const ellipsisWidth = getTextWidth(ellipsis);
+		const availableForChars = maxWidth - ellipsisWidth;
+		if (availableForChars <= 0) return ellipsis;
 
 		let low = 2;
-		let high = base.length;
-		let best = name;
+		let high = base.length - 1;
+		let best = base.slice(0, 1) + '…';
 
 		while (low <= high) {
 			const mid = Math.floor((low + high) / 2);
-			const rawStart = Math.ceil(mid * 0.6);
+			const rawStart = Math.ceil(mid * 0.55);
 			const rawEnd = mid - rawStart;
 
-			const startLen = snapDelimiter(base, rawStart, 'left', 7);
-			const endLen = base.length - snapDelimiter(base, base.length - rawEnd, 'right', 7);
-
-			const prefix = base.slice(0, Math.max(1, startLen)).replace(/[-_.\s]+$/, '');
-			const suffix = base.slice(-Math.max(1, endLen)).replace(/^[-_.\s]+/, '');
-			const candidate = `${prefix}…${suffix}${ext}`;
+			const prefix = getSmartPrefix(base, rawStart, 5);
+			const suffix = getSmartSuffix(base, rawEnd, 5);
+			const candidate = `${prefix}…${suffix}`;
 
 			if (getTextWidth(candidate) <= maxWidth) {
 				best = candidate;
@@ -96,11 +122,19 @@
 		return best;
 	}
 
-	const displayFileName = $derived.by(() => {
-		if (!fileName) return '';
-		if (pillWidth <= 0) return fileName;
-		const availableWidth = Math.max(20, pillWidth - 54);
-		return fitSmartMiddleElided(fileName, availableWidth);
+	let fileParts = $derived(splitFileName(fileName));
+
+	let availableBaseWidth = $derived.by(() => {
+		if (!fileName) return 0;
+		if (pillWidth <= 0) return 9999;
+		const extWidth = fileParts.ext ? getTextWidth(fileParts.ext) : 0;
+		const totalAvailable = Math.max(20, pillWidth - (buttonsWidth || 48) - 34);
+		return Math.max(10, totalAvailable - extWidth);
+	});
+
+	let displayBase = $derived.by(() => {
+		if (!fileParts.base) return '';
+		return fitSmartMiddleElided(fileParts.base, availableBaseWidth);
 	});
 
 	function handleDragOver(e: DragEvent) {
@@ -211,13 +245,16 @@
 			ondrop={handleDrop}
 		>
 			<span
-				class="truncate text-xs text-muted-foreground transition-colors group-hover:text-foreground"
+				class="flex min-w-0 max-w-full items-center text-xs text-muted-foreground transition-colors group-hover:text-foreground overflow-hidden"
 				title={fileName}
 			>
-				{displayFileName}
+				<span class="overflow-hidden whitespace-nowrap">{displayBase}</span>
+				{#if fileParts.ext}
+					<span class="shrink-0">{fileParts.ext}</span>
+				{/if}
 			</span>
 
-			<div class="flex shrink-0 items-center gap-1">
+			<div bind:clientWidth={buttonsWidth} class="flex shrink-0 items-center gap-1">
 				<button
 					type="button"
 					aria-label={persist ? m.dropzone_pin_pinned() : m.dropzone_pin_unpinned()}

@@ -98,6 +98,8 @@
 	"action_theme": "Εναλλαγή θέματος",
 	"action_fullscreen": "Πλήρης οθόνη",
 	"action_language": "Γλώσσα",
+	"lang_en": "EN",
+	"lang_el": "ΕΛ",
 	"aspect_ratio": "Αναλογία",
 	"resolution": "Ανάλυση"
 }
