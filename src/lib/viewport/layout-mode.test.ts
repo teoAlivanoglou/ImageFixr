@@ -36,3 +36,20 @@ test('computeLayoutMode correctly identifies mobile-landscape for phones in land
 	// Small landscape window
 	assert.strictEqual(computeLayoutMode(767, 500), 'mobile-landscape');
 });
+
+test('computeLayoutMode prevents phone with zoomed/scaled viewport from being identified as desktop', () => {
+	// iPhone 14/15 Pro zoomed out to 811x1758 in portrait
+	assert.strictEqual(computeLayoutMode(811, 1758, 393, 852), 'mobile-portrait');
+
+	// iPhone 14/15 Pro zoomed out to 1758x811 in landscape
+	assert.strictEqual(computeLayoutMode(1758, 811, 393, 852), 'mobile-landscape');
+
+	// iPad portrait with physical screen dimensions (>= 600 min dimension)
+	assert.strictEqual(computeLayoutMode(820, 1180, 820, 1180), 'desktop-portrait');
+
+	// iPad landscape with physical screen dimensions
+	assert.strictEqual(computeLayoutMode(1180, 820, 820, 1180), 'desktop');
+
+	// Desktop browser resized to narrow viewport (screenWidth is 1920, width is 400)
+	assert.strictEqual(computeLayoutMode(400, 800, 1920, 1080), 'mobile-portrait');
+});

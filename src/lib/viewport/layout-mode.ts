@@ -1,7 +1,21 @@
 export type LayoutMode = 'desktop' | 'desktop-portrait' | 'mobile-portrait' | 'mobile-landscape';
 
-export function computeLayoutMode(width: number, height: number): LayoutMode {
+export function computeLayoutMode(
+	width: number,
+	height: number,
+	screenWidth?: number,
+	screenHeight?: number
+): LayoutMode {
 	const isPortrait = height > width;
+
+	// If physical screen dimensions are known and indicate a phone (narrow dimension < 600px),
+	// prevent device-zoom / viewport-scale from ever misidentifying a phone as a desktop or iPad.
+	if (screenWidth !== undefined && screenHeight !== undefined) {
+		const minScreenDim = Math.min(screenWidth, screenHeight);
+		if (minScreenDim > 0 && minScreenDim < 600) {
+			return isPortrait ? 'mobile-portrait' : 'mobile-landscape';
+		}
+	}
 
 	if (isPortrait) {
 		// Portrait screens:

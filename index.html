@@ -1,24 +1,23 @@
 <!doctype html>
 <html lang="en" translate="no">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="google" content="notranslate" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+		/>
+		<title>image-fixr</title>
+		<script>
+			const darkMode = localStorage.getItem('image-fixr-dark-mode') === 'true';
+			document.documentElement.classList.toggle('dark', darkMode);
+			document.documentElement.style.backgroundColor = darkMode ? '#232323' : '#ffffff';
+		</script>
+	</head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="google" content="notranslate" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>image-fixr</title>
-  <script>
-    const darkMode = localStorage.getItem("image-fixr-dark-mode") === "true";
-    document.documentElement.classList.toggle("dark", darkMode);
-    document.documentElement.style.backgroundColor = darkMode
-      ? "#232323"
-      : "#ffffff";
-  </script>
-</head>
-
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.ts"></script>
-</body>
-
+	<body>
+		<div id="app"></div>
+		<script type="module" src="/src/main.ts"></script>
+	</body>
 </html>
