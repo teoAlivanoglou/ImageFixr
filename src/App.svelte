@@ -7,6 +7,7 @@
 	import { PersistedState } from 'runed';
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
 	import { theme, history } from '$lib/state.svelte';
+	import { i18n } from '$lib/i18n.svelte';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -127,6 +128,7 @@
 
 	$effect(() => {
 		document.documentElement.classList.toggle('dark', theme.current);
+		document.documentElement.lang = i18n.current;
 	});
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -175,11 +177,15 @@
 	)}
 	style="--desktop-sidebar-width: {currentWidthRem}rem; --mobile-canvas-height: {currentMobileCanvasDvh}dvh;"
 >
-	<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
+	{#key i18n.current}
+		<Navbar class="col-span-full shrink-0" onExport={() => viewportRef?.renderAndSave()} />
+	{/key}
 
 	{#if isDesktopLayout}
 		<div class="col-span-1 row-span-1 row-start-2 h-full min-h-0 min-w-0">
-			<Sidebar class="h-full w-full" />
+			{#key i18n.current}
+				<Sidebar class="h-full w-full" />
+			{/key}
 		</div>
 
 		<!-- Vertical Resizer Handle (Positioned to the right of the sidebar in its own divider bar) -->
@@ -240,6 +246,8 @@
 			></div>
 		</div>
 
-		<MobileDock class="flex min-h-0 flex-1" />
+		{#key i18n.current}
+			<MobileDock class="flex min-h-0 flex-1" />
+		{/key}
 	{/if}
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { theme, history, commitHistory, settings } from '$lib/state.svelte';
-	import { Sun, Moon, Undo2, Redo2, Maximize, Minimize } from '@lucide/svelte';
+	import { Sun, Moon, Undo2, Redo2, Maximize, Minimize, Globe } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
 	import {
@@ -11,6 +11,7 @@
 	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
+	import { i18n } from '$lib/i18n.svelte';
 
 	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
 	import { ASPECT_RATIOS } from './Sidebar/format-constants';
@@ -107,6 +108,17 @@
 				<Moon class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
 			{/if}
 		</span>
+
+		<button
+			type="button"
+			class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground cursor-pointer select-none"
+			aria-label={m.action_language()}
+			title={m.action_language()}
+			onclick={() => i18n.toggle()}
+		>
+			<Globe class={isDesktopNavbar ? 'size-4.5' : 'size-4'} />
+			<span class="uppercase tracking-wider text-[11px]">{i18n.current}</span>
+		</button>
 	</div>
 
 	<!-- Center: Undo/Redo (Centered across mobile and desktop) -->
