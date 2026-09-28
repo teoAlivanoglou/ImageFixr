@@ -15,6 +15,7 @@
 	import { cn } from '$lib/utils';
 	import { createLabelGroup } from './label-group.svelte';
 	import LabeledControlRow from './LabeledControlRow.svelte';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -40,11 +41,11 @@
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<SectionHeader title="Canvas Format" bind:isCollapsed />
+	<SectionHeader title={m.sidebar_format()} bind:isCollapsed />
 
 	<CollapsibleSection open={isSectionOpen}>
 		<div class="flex flex-col gap-3 pt-2">
-		<LabeledControlRow label="Aspect Ratio" forId="format-aspect-ratio">
+		<LabeledControlRow label={m.aspect_ratio()} forId="format-aspect-ratio">
 			<Select
 				type="single"
 				bind:value={settings.current.aspectRatio}
@@ -61,7 +62,7 @@
 			</Select>
 		</LabeledControlRow>
 
-		<LabeledControlRow label="Resolution" forId="format-resolution">
+		<LabeledControlRow label={m.resolution()} forId="format-resolution">
 			<Select
 				type="single"
 				bind:value={settings.current.resolutionPreset}

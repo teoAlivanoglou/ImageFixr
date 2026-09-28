@@ -9,6 +9,7 @@
 	import { settings, media, commitHistory } from '$lib/state.svelte';
 	import type { MarginUnit, SafeAreaStandard } from '$lib/state.svelte';
 	import { cn } from '$lib/utils';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -16,36 +17,36 @@
 
 	type Side = 'top' | 'right' | 'bottom' | 'left';
 
-	const SIDES = [
+	let SIDES = $derived([
 		{
 			key: 'top' as Side,
-			label: 'Top',
+			label: m.margin_top(),
 			short: 'T',
 			valProp: 'fgMarginTop' as const,
 			unitProp: 'fgMarginTopUnit' as const
 		},
 		{
 			key: 'right' as Side,
-			label: 'Right',
+			label: m.margin_right(),
 			short: 'R',
 			valProp: 'fgMarginRight' as const,
 			unitProp: 'fgMarginRightUnit' as const
 		},
 		{
 			key: 'bottom' as Side,
-			label: 'Bottom',
+			label: m.margin_bottom(),
 			short: 'B',
 			valProp: 'fgMarginBottom' as const,
 			unitProp: 'fgMarginBottomUnit' as const
 		},
 		{
 			key: 'left' as Side,
-			label: 'Left',
+			label: m.margin_left(),
 			short: 'L',
 			valProp: 'fgMarginLeft' as const,
 			unitProp: 'fgMarginLeftUnit' as const
 		}
-	] as const;
+	]);
 
 	const safeAreaOptions = [
 		{ value: 'custom', label: 'Custom' },
@@ -53,10 +54,10 @@
 		{ value: 'smpte-title', label: 'Title' }
 	];
 
-	const linkOptions = [
-		{ value: 'linked', label: '', icon: Link, title: 'Link all margins' },
-		{ value: 'unlinked', label: '', icon: Unlink, title: 'Independent per-side margins' }
-	];
+	let linkOptions = $derived([
+		{ value: 'linked', label: '', icon: Link, title: m.margin_link() },
+		{ value: 'unlinked', label: '', icon: Unlink, title: m.margin_unlink() }
+	]);
 
 	let currentStandard = $derived(
 		settings.current.fgSafeAreaStandard === 'none' ? 'custom' : settings.current.fgSafeAreaStandard
@@ -192,7 +193,7 @@
 				<!-- Additional Margins Section Header with Pill Switcher -->
 				<div class="flex items-center justify-between pt-1">
 					<Label class="text-xs text-muted-foreground">
-						{currentStandard === 'custom' ? 'Margins' : 'Additional Margins'}
+						{currentStandard === 'custom' ? m.sidebar_margins() : m.sidebar_margins()}
 					</Label>
 					<PillSwitcher
 						options={linkOptions}

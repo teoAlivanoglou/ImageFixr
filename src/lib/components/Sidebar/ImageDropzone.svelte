@@ -3,11 +3,12 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { cn } from '$lib/utils';
+	import * as m from '$paraglide/messages.js';
 
 	let {
-		label = 'Image',
+		label,
 		fileName = '',
-		placeholder = 'Drop or choose an image',
+		placeholder,
 		persist = false,
 		onTogglePersist,
 		onSelect,
@@ -23,6 +24,9 @@
 		onRemove: () => void;
 		class?: string;
 	} = $props();
+
+	let resolvedLabel = $derived(label ?? m.control_image());
+	let resolvedPlaceholder = $derived(placeholder ?? m.dropzone_placeholder());
 
 	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let isDragging = $state(false);
@@ -187,8 +191,8 @@
 
 {#if hasImage}
 	<div class={cn('flex items-center gap-4', className)}>
-		{#if label}
-			<Label class="shrink-0 font-light text-foreground">{label}</Label>
+		{#if resolvedLabel}
+			<Label class="shrink-0 font-light text-foreground">{resolvedLabel}</Label>
 		{/if}
 
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -216,8 +220,8 @@
 			<div class="flex shrink-0 items-center gap-1">
 				<button
 					type="button"
-					aria-label={persist ? 'Keep image across sessions' : 'Temporary image'}
-					title={persist ? 'Keep image across sessions' : 'Temporary image'}
+					aria-label={persist ? m.dropzone_pin_pinned() : m.dropzone_pin_unpinned()}
+					title={persist ? m.dropzone_pin_pinned() : m.dropzone_pin_unpinned()}
 					onclick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -239,7 +243,8 @@
 
 				<button
 					type="button"
-					aria-label="Remove image"
+					aria-label={m.dropzone_remove()}
+					title={m.dropzone_remove()}
 					onclick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -271,8 +276,8 @@
 	>
 		<button
 			type="button"
-			aria-label={persist ? 'Keep image across sessions' : 'Temporary image'}
-			title={persist ? 'Keep image across sessions' : 'Temporary image'}
+			aria-label={persist ? m.dropzone_pin_pinned() : m.dropzone_pin_unpinned()}
+			title={persist ? m.dropzone_pin_pinned() : m.dropzone_pin_unpinned()}
 			onclick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -292,10 +297,10 @@
 			{/if}
 		</button>
 		<span class="text-xs font-medium text-foreground transition-colors group-hover:text-foreground">
-			{placeholder}
+			{resolvedPlaceholder}
 		</span>
 		<span class="text-[11px] text-muted-foreground transition-colors">
-			Drag & drop or click to browse
+			{m.dropzone_subtext()}
 		</span>
 	</div>
 {/if}

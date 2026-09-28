@@ -14,6 +14,7 @@
 
 	import { getResolutionsForRatio, getValidResolutionPreset } from '$lib/viewport/resolutions';
 	import { ASPECT_RATIOS } from './Sidebar/format-constants';
+	import * as m from '$paraglide/messages.js';
 
 	let { onExport, class: className }: { onExport: () => void; class?: string } = $props();
 
@@ -90,7 +91,8 @@
 			)}
 			role="button"
 			tabindex="0"
-			aria-label={theme.current ? 'Use light mode' : 'Use dark mode'}
+			aria-label={m.action_theme()}
+			title={m.action_theme()}
 			onclick={() => (theme.current = !theme.current)}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
@@ -116,7 +118,8 @@
 				class={isDesktopNavbar ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canUndo}
 				onclick={() => history?.undo()}
-				title="Undo (Ctrl+Z / Cmd+Z)"
+				title={`${m.action_undo()} (Ctrl+Z / Cmd+Z)`}
+				aria-label={m.action_undo()}
 			>
 				<Undo2 class="size-4" />
 			</Button>
@@ -126,7 +129,8 @@
 				class={isDesktopNavbar ? 'size-9' : 'size-8.5'}
 				disabled={!history?.canRedo}
 				onclick={() => history?.redo()}
-				title="Redo (Ctrl+Shift+Z / Cmd+Shift+Z)"
+				title={`${m.action_redo()} (Ctrl+Shift+Z / Cmd+Shift+Z)`}
+				aria-label={m.action_redo()}
 			>
 				<Redo2 class="size-4" />
 			</Button>
@@ -142,7 +146,7 @@
 				onValueChange={handleRatioChange}
 			>
 				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-28 text-xs">
-					<span class="text-muted-foreground">Ratio:</span>
+					<span class="text-muted-foreground">{m.aspect_ratio()}:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
@@ -162,7 +166,7 @@
 					class="h-9 min-w-38 text-xs"
 					title={`${currentRes.label} (${currentRes.sublabel})`}
 				>
-					<span class="text-muted-foreground">Res:</span>
+					<span class="text-muted-foreground">{m.resolution()}:</span>
 					<span class="font-medium text-foreground">{currentRes.label}</span>
 				</SelectTrigger>
 				<SelectContent class="w-max min-w-max">
@@ -177,7 +181,7 @@
 				</SelectContent>
 			</Select>
 
-			<Button class="px-4" onclick={onExport}>Render &amp; Save PNG</Button>
+			<Button class="px-4" onclick={onExport}>{m.action_export()}</Button>
 		</div>
 	{:else}
 		<!-- Mobile Right: Fullscreen Toggle and Save -->
@@ -188,7 +192,8 @@
 					variant="ghost"
 					class="size-8.5 text-muted-foreground hover:text-foreground"
 					onclick={toggleFullscreen}
-					title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+					title={m.action_fullscreen()}
+					aria-label={m.action_fullscreen()}
 				>
 					{#if isFullscreen}
 						<Minimize class="size-4" />
@@ -198,7 +203,7 @@
 				</Button>
 			{/if}
 
-			<Button class="h-8.5 px-3 text-xs" onclick={onExport}>Save</Button>
+			<Button class="h-8.5 px-3 text-xs" onclick={onExport}>{m.action_export()}</Button>
 		</div>
 	{/if}
 </div>

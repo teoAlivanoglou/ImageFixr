@@ -7,6 +7,7 @@
 	import { settings, appState, media } from '$lib/state.svelte';
 	import { selectImage, removeImage, toggleImagePersistence } from '$lib/media-actions';
 	import { cn } from '$lib/utils';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -16,14 +17,14 @@
 </script>
 
 <div class={cn('flex flex-col', className)}>
-	<SectionHeader title="Foreground" bind:isCollapsed={settings.current.fgCollapsed} />
+	<SectionHeader title={m.sidebar_foreground()} bind:isCollapsed={settings.current.fgCollapsed} />
 
 	<CollapsibleSection open={isSectionOpen} innerClass="-mx-2.5 px-2.5">
 		<div class="control-section">
 			<ImageDropzone
-				label="Image"
+				label={m.control_image()}
 				fileName={media.current.fgName}
-				placeholder="Drop or choose an image"
+				placeholder={m.dropzone_placeholder()}
 				persist={media.current.fgPersist}
 				onTogglePersist={() => toggleImagePersistence('foreground')}
 				onSelect={(file, handle) => selectImage('foreground', file, handle, media.current.fgPersist)}
@@ -35,7 +36,7 @@
 					<div class="grid w-full grid-cols-2 items-center gap-3">
 						<SliderControl
 							id="fg-scale"
-							label="Scale"
+							label={m.control_scale()}
 							bind:value={settings.current.fgScale}
 							min={0}
 							max={2}
@@ -46,7 +47,7 @@
 
 						<SliderControl
 							id="fg-blur"
-							label="Blur"
+							label={m.control_blur()}
 							bind:value={settings.current.fgBlur}
 							min={0}
 							max={100}

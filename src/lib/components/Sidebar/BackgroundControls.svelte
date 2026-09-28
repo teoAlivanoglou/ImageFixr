@@ -9,6 +9,7 @@
 	import { settings, appState, media, commitHistory } from '$lib/state.svelte';
 	import { selectImage, removeImage, toggleImagePersistence } from '$lib/media-actions';
 	import { cn } from '$lib/utils';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -18,17 +19,17 @@
 		settings.current.bgEnabled && (!collapsible || !settings.current.bgCollapsed)
 	);
 
-	const bgSourceOptions = [
-		{ value: 'none', label: 'None' },
-		{ value: 'link', label: 'Link' },
-		{ value: 'custom', label: 'Upload' }
-	];
+	let bgSourceOptions = $derived([
+		{ value: 'none', label: m.control_source_none() },
+		{ value: 'link', label: m.control_source_link() },
+		{ value: 'custom', label: m.control_source_custom() }
+	]);
 </script>
 
 <CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
-			title="Background"
+			title={m.sidebar_background()}
 			hasSwitch={true}
 			bind:enabled={settings.current.bgEnabled}
 			bind:isCollapsed={settings.current.bgCollapsed}
@@ -50,17 +51,17 @@
 				<!-- Color Row -->
 				<ColorControl
 					id="background-color"
-					label="Color"
+					label={m.control_color()}
 					bind:value={settings.current.bgColor}
-					ariaLabel="Background Color"
+					ariaLabel={m.control_color()}
 				/>
 
 				<!-- Custom Dropzone -->
 				<CollapsibleSection open={settings.current.bgSource === 'custom'}>
 					<ImageDropzone
-						label="Image"
+						label={m.control_image()}
 						fileName={media.current.bgName}
-						placeholder="Choose image"
+						placeholder={m.dropzone_choose_image()}
 						persist={media.current.bgPersist}
 						onTogglePersist={() => toggleImagePersistence('background')}
 						onSelect={(file, handle) => selectImage('background', file, handle, media.current.bgPersist)}
@@ -73,7 +74,7 @@
 					<div class="grid w-full grid-cols-2 items-center gap-3">
 						<SliderControl
 							id="bg-scale"
-							label="Scale"
+							label={m.control_scale()}
 							bind:value={settings.current.bgScale}
 							min={0}
 							max={2}
@@ -84,7 +85,7 @@
 
 						<SliderControl
 							id="bg-blur"
-							label="Blur"
+							label={m.control_blur()}
 							bind:value={settings.current.bgBlur}
 							min={0}
 							max={100}

@@ -28,6 +28,12 @@
       ],
       "$lib/*": [
         "./src/lib/*"
+      ],
+      "$paraglide": [
+        "./src/paraglide"
+      ],
+      "$paraglide/*": [
+        "./src/paraglide/*"
       ]
     }
   },

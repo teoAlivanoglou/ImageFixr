@@ -6,6 +6,7 @@
 	import PillSwitcher from './PillSwitcher.svelte';
 	import { CollapsibleSection } from '$lib/components/ui/collapsible-section';
 	import { settings, media, commitHistory } from '$lib/state.svelte';
+	import * as m from '$paraglide/messages.js';
 
 	let { class: className }: { class?: string } = $props();
 
@@ -15,17 +16,17 @@
 		settings.current.fgBorderEnabled && (!collapsible || !settings.current.fgBorderCollapsed)
 	);
 
-	const borderPositionOptions = [
-		{ value: 'inner', label: 'Inner' },
-		{ value: 'center', label: 'Center' },
-		{ value: 'outer', label: 'Outer' }
-	];
+	let borderPositionOptions = $derived([
+		{ value: 'inner', label: m.border_inner() },
+		{ value: 'center', label: m.border_center() },
+		{ value: 'outer', label: m.border_outer() }
+	]);
 </script>
 
 <CollapsibleSection open={hasForeground || !collapsible} class={className}>
 	<div class="flex flex-col">
 		<SectionHeader
-			title="Border"
+			title={m.sidebar_border()}
 			hasSwitch={true}
 			bind:enabled={settings.current.fgBorderEnabled}
 			bind:isCollapsed={settings.current.fgBorderCollapsed}
@@ -48,7 +49,7 @@
 			<div class="control-section">
 				<SliderControl
 					id="fg-border-width"
-					label="Width"
+					label={m.control_width()}
 					bind:value={settings.current.fgBorderWidth}
 					min={0}
 					max={50}
@@ -57,9 +58,9 @@
 				/>
 				<ColorControl
 					id="fg-border-color"
-					label="Color"
+					label={m.control_color()}
 					bind:value={settings.current.fgBorderColor}
-					ariaLabel="Border Color"
+					ariaLabel={m.control_color()}
 				/>
 			</div>
 		</CollapsibleSection>
