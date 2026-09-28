@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide && vite build",
     "preview": "vite preview",
+    "test": "node --experimental-strip-types --test src/lib/image-db.test.ts src/lib/viewport/resolutions.test.ts",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "prettier --check .",
     "format": "prettier --write ."
