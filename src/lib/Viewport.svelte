@@ -417,18 +417,30 @@
 		}
 	});
 
+	let loadedFgVersion = -1;
+	let loadedFgName = '';
+	let loadedBgVersion = -1;
+	let loadedBgName = '';
+	let loadedBgSource = '';
+
 	// Sync foreground texture from IndexedDB when name or version changes
 	$effect(() => {
 		const name = media.current.fgName;
-		const _version = media.current.fgVersion;
+		const version = media.current.fgVersion;
 
 		if (!name) {
+			loadedFgVersion = version;
+			loadedFgName = '';
 			if (fgTexture) {
 				const old = fgTexture;
 				fgTexture = undefined;
 				tick().then(() => old.destroy(true));
 			}
 			updateImageLayout();
+			return;
+		}
+
+		if (version === loadedFgVersion && name === loadedFgName && fgTexture) {
 			return;
 		}
 
@@ -444,7 +456,9 @@
 				}
 				return;
 			}
-			media.current = { ...media.current, fgPersist: data.persist };
+			if (media.current.fgPersist !== data.persist) {
+				media.current = { ...media.current, fgPersist: data.persist };
+			}
 			const objectUrl = URL.createObjectURL(data.file);
 			const image = new Image();
 			image.src = objectUrl;
@@ -464,6 +478,8 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				fgTexture = tex;
+				loadedFgVersion = version;
+				loadedFgName = name;
 
 				if (old) {
 					tick().then(() => old.destroy(true));
@@ -481,15 +497,27 @@
 		const isLinked = bgSource === 'link';
 		const isCustom = bgSource === 'custom';
 		const name = isLinked ? media.current.fgName : isCustom ? media.current.bgName : '';
-		const _version = isLinked ? media.current.fgVersion : isCustom ? media.current.bgVersion : 0;
+		const version = isLinked ? media.current.fgVersion : isCustom ? media.current.bgVersion : 0;
 		const targetStorage = isLinked ? 'foreground' : 'background';
 
 		if (bgSource === 'none' || !name) {
+			loadedBgVersion = version;
+			loadedBgName = '';
+			loadedBgSource = bgSource;
 			if (bgTexture) {
 				const old = bgTexture;
 				bgTexture = undefined;
 				tick().then(() => old.destroy(true));
 			}
+			return;
+		}
+
+		if (
+			version === loadedBgVersion &&
+			name === loadedBgName &&
+			bgSource === loadedBgSource &&
+			bgTexture
+		) {
 			return;
 		}
 
@@ -505,7 +533,7 @@
 				}
 				return;
 			}
-			if (isCustom) {
+			if (isCustom && media.current.bgPersist !== data.persist) {
 				media.current = { ...media.current, bgPersist: data.persist };
 			}
 			const objectUrl = URL.createObjectURL(data.file);
@@ -528,6 +556,9 @@
 				const tex = Texture.from(image);
 				applyScaleMode(tex);
 				bgTexture = tex;
+				loadedBgVersion = version;
+				loadedBgName = name;
+				loadedBgSource = bgSource;
 
 				if (old) {
 					tick().then(() => old.destroy(true));

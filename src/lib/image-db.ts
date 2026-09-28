@@ -130,6 +130,11 @@ export async function setImagePersistence(
         store.put(result, key);
       }
     };
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
   } catch (error) {
     console.error("Failed to update image persistence in IndexedDB:", error);
   }

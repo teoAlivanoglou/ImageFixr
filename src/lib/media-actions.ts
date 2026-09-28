@@ -65,14 +65,28 @@ export async function toggleImagePersistence(target: 'foreground' | 'background'
 	const currentPersist =
 		target === 'foreground' ? media.current.fgPersist : media.current.bgPersist;
 	const nextPersist = !currentPersist;
-	await setImagePersistence(target, nextPersist);
 
+	// Optimistic update: flip state immediately for responsive, lag-free UI
 	if (target === 'foreground') {
 		media.current = { ...media.current, fgPersist: nextPersist };
 		settings.current.fgPersist = nextPersist;
 	} else {
 		media.current = { ...media.current, bgPersist: nextPersist };
 		settings.current.bgPersist = nextPersist;
+	}
+
+	try {
+		await setImagePersistence(target, nextPersist);
+	} catch (err) {
+		// Roll back if saving to IndexedDB fails
+		if (target === 'foreground') {
+			media.current = { ...media.current, fgPersist: currentPersist };
+			settings.current.fgPersist = currentPersist;
+		} else {
+			media.current = { ...media.current, bgPersist: currentPersist };
+			settings.current.bgPersist = currentPersist;
+		}
+		console.error(`Failed to update persistence for ${target}:`, err);
 	}
 }
 
