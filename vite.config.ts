@@ -1,11 +1,19 @@
 import tailwindcss from '@tailwindcss/vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { paraglide } from '@inlang/paraglide-vite';
 import { defineConfig } from 'vite';
 import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [tailwindcss(), svelte()],
+	plugins: [
+		tailwindcss(),
+		svelte(),
+		paraglide({
+			project: './project.inlang',
+			outdir: './src/paraglide'
+		})
+	],
 	resolve: {
 		alias: {
 			$lib: path.resolve('./src/lib')
