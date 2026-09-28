@@ -71,7 +71,7 @@
 
 <div
 	class={cn(
-		'col-span-full flex w-full items-center justify-between border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
+		'col-span-full grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center w-full border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
 		isDesktopNavbar
 			? 'h-14 px-4 sm:px-6'
 			: 'h-12 px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]',
@@ -79,7 +79,7 @@
 	)}
 >
 	<!-- Left: Brand & Theme Toggle -->
-	<div class="flex shrink items-center gap-2" class:gap-3={isDesktopNavbar}>
+	<div class="flex min-w-0 items-center justify-start gap-2" class:gap-3={isDesktopNavbar}>
 		<div
 			class={cn(
 				'pointer-events-none flex items-baseline font-extralight tracking-tight text-muted-foreground select-none',
@@ -87,7 +87,7 @@
 			)}
 		>
 			<strong class="font-semibold text-foreground">Image</strong>
-			<span>&nbsp;Fixr</span>
+			<span class="hidden sm:inline">&nbsp;Fixr</span>
 		</div>
 
 		<span
@@ -137,7 +137,7 @@
 	</div>
 
 	<!-- Center: Undo/Redo (Centered across mobile and desktop) -->
-	<div class="flex items-center justify-center">
+	<div class="flex shrink-0 items-center justify-center">
 		<ButtonGroup.Root>
 			<Button
 				size="icon"
@@ -166,14 +166,14 @@
 
 	<!-- Desktop & Desktop-Portrait Right: Aspect Ratio, Resolution & Export -->
 	{#if isDesktopNavbar}
-		<div class="flex items-center gap-3">
+		<div class="flex min-w-0 items-center justify-end gap-2.5 sm:gap-3">
 			<Select
 				type="single"
 				bind:value={settings.current.aspectRatio}
 				onValueChange={handleRatioChange}
 			>
-				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-auto min-w-32 px-2.5 text-xs">
-					<span class="text-muted-foreground">{m.aspect_ratio()}:</span>
+				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-auto min-w-20 xl:min-w-32 px-2.5 text-xs">
+					<span class="hidden xl:inline text-muted-foreground">{m.aspect_ratio()}:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
@@ -190,10 +190,10 @@
 			>
 				<SelectTrigger
 					id="navbar-resolution"
-					class="h-9 min-w-38 text-xs"
+					class="h-9 min-w-28 xl:min-w-38 text-xs"
 					title={`${getLocalizedResolutionLabel(currentRes.label)} (${currentRes.sublabel})`}
 				>
-					<span class="text-muted-foreground">{m.resolution()}:</span>
+					<span class="hidden xl:inline text-muted-foreground">{m.resolution()}:</span>
 					<span class="font-medium text-foreground">{getLocalizedResolutionLabel(currentRes.label)}</span>
 				</SelectTrigger>
 				<SelectContent class="w-max min-w-max">
@@ -208,11 +208,11 @@
 				</SelectContent>
 			</Select>
 
-			<Button class="px-4" onclick={onExport}>{m.action_export()}</Button>
+			<Button class="shrink-0 px-4" onclick={onExport}>{m.action_export()}</Button>
 		</div>
 	{:else}
 		<!-- Mobile Right: Fullscreen Toggle and Save -->
-		<div class="flex items-center gap-1">
+		<div class="flex min-w-0 items-center justify-end gap-1">
 			{#if canFullscreen}
 				<Button
 					size="icon"
@@ -230,7 +230,7 @@
 				</Button>
 			{/if}
 
-			<Button class="h-8.5 px-3 text-xs" onclick={onExport}>{m.action_export()}</Button>
+			<Button class="h-8.5 shrink-0 px-3 text-xs" onclick={onExport}>{m.action_export()}</Button>
 		</div>
 	{/if}
 </div>
