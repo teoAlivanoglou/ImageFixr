@@ -37,7 +37,7 @@ Every blog post, portfolio and tweet looks better when screenshots aren't raw re
 - **Image persistence** - IndexedDB storage with TTL-based session expiry and a per-image pin toggle
 - **Undo / Redo** - 50-step visual history that ignores UI-only state like collapsed sections
 - **Dark mode** - system-aware with instant toggle, no flash, no reload
-- **i18n** - English and Greek via Paraglide.js, runtime-switchable
+- **i18n** - English and Greek via Paraglide.js
 - **Responsive** - 4-tier adaptive layout: desktop-landscape, desktop-portrait, mobile-landscape, mobile-portrait
 
 ## Technical Highlights
@@ -94,4 +94,4 @@ npm run dev
 
 ## License
 
-[GPL-3.0](LICENSE) — free to use, fork, and modify, but derivatives must remain open source and credit this project.
+[GPL-3.0](LICENSE) - free to use, fork, and modify, but derivatives must remain open source and credit this project.
