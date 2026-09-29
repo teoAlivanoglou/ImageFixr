@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <a href="https://teoalivanoglou.github.io/ImageFixr/"><strong>Live App →</strong></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/svelte-5-ff3e00?logo=svelte&logoColor=white" alt="Svelte 5" />
   <img src="https://img.shields.io/badge/pixi.js-8-e72264?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTV6Ii8+PC9zdmc+" alt="PixiJS 8" />
   <img src="https://img.shields.io/badge/typescript-6-3178c6?logo=typescript&logoColor=white" alt="TypeScript" />
