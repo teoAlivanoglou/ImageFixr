@@ -22,6 +22,10 @@
 
 ---
 
+<p align="center">
+  <img src="src/assets/hero_banner.webp" alt="ImageFixr - desktop WebGL canvas and responsive mobile interface" width="100%" />
+</p>
+
 ## Why
 
 Every blog post, portfolio and tweet looks better when screenshots aren't raw rectangles floating in the void. Online tools that do this exist, but often require an account, use your images for training or advertising, or do so many things that make your workflow a headache.
