@@ -10,8 +10,25 @@ class I18nState {
 				this.current = saved;
 				setLocale(saved, { reload: false });
 			} else {
-				const active = getLocale() as 'en' | 'el';
-				this.current = active === 'el' ? 'el' : 'en';
+				// Detect from browser preferences
+				let detected: 'en' | 'el' = 'en';
+				if (typeof navigator !== 'undefined') {
+					const browserLangs = navigator.languages || (navigator.language ? [navigator.language] : []);
+					for (const lang of browserLangs) {
+						if (!lang) continue;
+						const code = lang.toLowerCase();
+						if (code.startsWith('el')) {
+							detected = 'el';
+							break;
+						}
+						if (code.startsWith('en')) {
+							detected = 'en';
+							break;
+						}
+					}
+				}
+				this.current = detected;
+				setLocale(detected, { reload: false });
 			}
 			document.documentElement.lang = this.current;
 		}

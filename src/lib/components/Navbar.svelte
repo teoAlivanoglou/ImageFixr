@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { theme, history, commitHistory, settings } from '$lib/state.svelte';
-	import { Sun, Moon, Undo2, Redo2, Maximize, Minimize, Globe } from '@lucide/svelte';
+	import { Sun, Moon, Undo2, Redo2, Maximize, Minimize } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
 	import {
@@ -11,7 +11,6 @@
 	} from '$lib/components/ui/select/index.js';
 	import { cn } from '$lib/utils';
 	import { layoutMode } from '$lib/viewport/layout-mode.svelte';
-	import { i18n } from '$lib/i18n.svelte';
 
 	import {
 		getResolutionsForRatio,
@@ -71,10 +70,10 @@
 
 <div
 	class={cn(
-		'col-span-full grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center w-full border-b border-border bg-sidebar pt-[env(safe-area-inset-top)] transition-[padding] duration-150',
+		'col-span-full grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center border-b border-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-[padding,height] duration-150',
 		isDesktopNavbar
-			? 'h-14 px-4 sm:px-6'
-			: 'h-12 px-3 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))]',
+			? 'h-[calc(3.5rem+env(safe-area-inset-top,0px))] px-4 sm:px-6'
+			: 'h-[calc(3rem+env(safe-area-inset-top,0px))] px-3 pr-[max(0.75rem,env(safe-area-inset-right,0px))] pl-[max(0.75rem,env(safe-area-inset-left,0px))]',
 		className
 	)}
 >
@@ -82,12 +81,13 @@
 	<div class="flex min-w-0 items-center justify-start gap-2" class:gap-3={isDesktopNavbar}>
 		<div
 			class={cn(
-				'pointer-events-none flex items-baseline font-extralight tracking-tight text-muted-foreground select-none',
+				'pointer-events-none flex items-baseline tracking-tight select-none',
 				isDesktopNavbar ? 'text-2xl' : 'text-lg'
 			)}
 		>
-			<strong class="font-semibold text-foreground">Image</strong>
-			<span class="hidden sm:inline">&nbsp;Fixr</span>
+			<strong class="font-semibold text-foreground">Image</strong><span
+				class="ml-0.5 font-extralight text-muted-foreground">Fixr</span
+			>
 		</div>
 
 		<span
@@ -112,27 +112,6 @@
 			{:else}
 				<Moon class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
 			{/if}
-		</span>
-
-		<span
-			class={cn(
-				'inline-flex cursor-pointer items-center gap-1 text-muted-foreground transition-colors hover:text-foreground select-none',
-				isDesktopNavbar ? 'text-2xl' : 'text-xl'
-			)}
-			role="button"
-			tabindex="0"
-			aria-label={m.action_language()}
-			title={m.action_language()}
-			onclick={() => i18n.toggle()}
-			onkeydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					i18n.toggle();
-				}
-			}}
-		>
-			<Globe strokeWidth={1.5} class={isDesktopNavbar ? 'size-5.5' : 'size-4.5'} />
-			<span class="text-xs font-medium uppercase tracking-wider">{i18n.current === 'en' ? m.lang_en() : m.lang_el()}</span>
 		</span>
 	</div>
 
@@ -172,8 +151,11 @@
 				bind:value={settings.current.aspectRatio}
 				onValueChange={handleRatioChange}
 			>
-				<SelectTrigger id="navbar-aspect-ratio" class="h-9 w-auto min-w-20 xl:min-w-32 px-2.5 text-xs">
-					<span class="hidden xl:inline text-muted-foreground">{m.aspect_ratio()}:</span>
+				<SelectTrigger
+					id="navbar-aspect-ratio"
+					class="h-9 w-auto min-w-20 px-2.5 text-xs xl:min-w-32"
+				>
+					<span class="hidden text-muted-foreground xl:inline">{m.aspect_ratio()}:</span>
 					{settings.current.aspectRatio}
 				</SelectTrigger>
 				<SelectContent>
@@ -190,11 +172,13 @@
 			>
 				<SelectTrigger
 					id="navbar-resolution"
-					class="h-9 min-w-28 xl:min-w-38 text-xs"
+					class="h-9 min-w-28 text-xs xl:min-w-38"
 					title={`${getLocalizedResolutionLabel(currentRes.label)} (${currentRes.sublabel})`}
 				>
-					<span class="hidden xl:inline text-muted-foreground">{m.resolution()}:</span>
-					<span class="font-medium text-foreground">{getLocalizedResolutionLabel(currentRes.label)}</span>
+					<span class="hidden text-muted-foreground xl:inline">{m.resolution()}:</span>
+					<span class="font-medium text-foreground"
+						>{getLocalizedResolutionLabel(currentRes.label)}</span
+					>
 				</SelectTrigger>
 				<SelectContent class="w-max min-w-max">
 					{#each availableResolutions as res (res.id)}
