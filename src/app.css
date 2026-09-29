@@ -8,6 +8,7 @@
 @custom-variant desktop (@media (width >= 1024px) or ((width >= 768px) and (orientation: landscape)));
 
 :root {
+	color-scheme: light;
 	--border: oklch(0.92 0.004 286.32);
 	--accent: oklch(0.967 0.001 286.375);
 	--background: oklch(1 0 0);
@@ -43,6 +44,7 @@
 }
 
 .dark {
+	color-scheme: dark;
 	--background: oklch(0.141 0.005 285.823);
 	--foreground: oklch(0.985 0 0);
 	--card: oklch(0.21 0.006 285.885);
@@ -135,6 +137,8 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		position: fixed;
+		inset: 0;
 	}
 	html {
 		@apply font-sans;
